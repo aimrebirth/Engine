@@ -30,7 +30,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${output_dir})
 #
 ################################################################################
 
-project(engine C CXX)
+project(Engine C CXX)
 
 if (MSVC OR XCODE)
     foreach(conf ${CMAKE_CONFIGURATION_TYPES})
