@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <polygon4/engine.h>
+#include <Polygon4/Engine.h>
 
 #include <boost/filesystem.hpp>
 

@@ -17,12 +17,18 @@
 
 cmake_minimum_required(VERSION 2.8)
 
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+
 set(output_dir  ${CMAKE_BINARY_DIR}/bin)
 set(library_dir ${CMAKE_SOURCE_DIR}/lib)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${output_dir})
 #set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${output_dir})
 #set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${output_dir})
+
+# Use solution folders.
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "CMake Targets")
 
 ################################################################################
 #
@@ -49,7 +55,7 @@ else()
     ADD_DEFINITIONS(-DBOOST_ALL_DYN_LINK)
 endif(WIN32)
 
-find_package(Boost 1.54 REQUIRED filesystem)
+find_package(Boost 1.54 REQUIRED filesystem log)
 
 ################################################################################
 #
@@ -94,6 +100,8 @@ set(CMAKE_IMPORT_LIBRARY_SUFFIX .${POLYGON4_ARCH}${CMAKE_IMPORT_LIBRARY_SUFFIX})
 # build
 #
 ################################################################################
+
+include(BuildFunctions)
 
 include_directories(${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
