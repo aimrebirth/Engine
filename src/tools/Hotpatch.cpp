@@ -51,6 +51,11 @@ std::string read_new_module_filename_store()
     return boost::filesystem::temp_directory_path().string() + hotpatch_new_filename;
 }
 
+std::string read_ver_module_filename_store()
+{
+    return boost::filesystem::temp_directory_path().string() + hotpatch_ver_filename;
+}
+
 std::wstring prepare_module_for_hotload(std::wstring game_dir, std::string module_name)
 {
     using namespace boost::filesystem;
@@ -67,6 +72,15 @@ std::wstring prepare_module_for_hotload(std::wstring game_dir, std::string modul
     const std::string ext_pdb = "pdb";
     const std::string base_dll  = base_name + ext_dll;
     const std::string base_pdb  = base_name + ext_pdb;
+
+    // Check module. If it is not changed, do not reload it.
+    LOG_DEBUG(logger, "Checking if module has not changed");
+    if (read_ver_module_filename() == std::to_string(last_write_time(dll / base_dll)))
+    {
+        LOG_DEBUG(logger, "Old module! Nothing to patch...");
+        return std::wstring();
+    }
+    LOG_DEBUG(logger, "We have a new module. Going to patch...");
 
     auto apply_index = [](std::string file, int i)
     {
@@ -89,7 +103,7 @@ std::wstring prepare_module_for_hotload(std::wstring game_dir, std::string modul
         }
         LOG_DEBUG(logger, "copied: " << result.string());
         copy_file(dll / base_pdb, bin / (apply_index(base_name, current_i) + ext_pdb), copy_option::overwrite_if_exists, ec);
-        
+
         std::ofstream ofile_old(read_old_module_filename_store());
         if (ofile_old)
             ofile_old << path(bin / (apply_index(base_name, current_i - 1) + ext_dll)).string();
@@ -97,6 +111,11 @@ std::wstring prepare_module_for_hotload(std::wstring game_dir, std::string modul
         std::ofstream ofile_new(read_new_module_filename_store());
         if (ofile_new)
             ofile_new << result.string();
+
+        std::ofstream ofile_ver(read_ver_module_filename_store());
+        if (ofile_ver)
+            ofile_ver << last_write_time(result);
+
         break;
     }
     i--;

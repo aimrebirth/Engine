@@ -46,4 +46,7 @@ std::string read_new_module_filename_store();
 DLL_EXPORT
 std::wstring prepare_module_for_hotload(std::wstring game_dir, std::string module_name);
 
+DLL_EXPORT
+std::string read_ver_module_filename_store();
+
 }
