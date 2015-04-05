@@ -59,6 +59,8 @@ std::string read_ver_module_filename_store()
 std::wstring prepare_module_for_hotload(std::wstring game_dir, std::string module_name)
 {
     using namespace boost::filesystem;
+    
+    boost::system::error_code ec;
 
     path base = path(game_dir).normalize();
     path bin = base / "Binaries" / "Win64";
@@ -73,9 +75,23 @@ std::wstring prepare_module_for_hotload(std::wstring game_dir, std::string modul
     const std::string base_dll  = base_name + ext_dll;
     const std::string base_pdb  = base_name + ext_pdb;
 
+    if (!exists(dll / base_dll))
+    {
+        LOG_DEBUG(logger, "New module does not exist, cancelling hot load");
+        return std::wstring();
+    }
+
     // Check module. If it is not changed, do not reload it.
     LOG_DEBUG(logger, "Checking if module has not changed");
-    if (read_ver_module_filename() == std::to_string(last_write_time(dll / base_dll)))
+    LOG_DEBUG(logger, "Module: " << path(dll / base_dll).string());
+    auto lwt = last_write_time(dll / base_dll, ec);
+    LOG_DEBUG(logger, "last_write_time: " << lwt);
+    if (ec)
+    {
+        LOG_DEBUG(logger, "Error occured: " << ec.message());
+        return std::wstring();
+    }
+    if (read_ver_module_filename() == std::to_string(lwt) || lwt == -1)
     {
         LOG_DEBUG(logger, "Old module! Nothing to patch...");
         return std::wstring();
@@ -93,7 +109,6 @@ std::wstring prepare_module_for_hotload(std::wstring game_dir, std::string modul
     while (1)
     {
         int current_i = i++;
-        boost::system::error_code ec;
         result = bin / (apply_index(base_name, current_i) + ext_dll);
         copy_file(dll / base_dll, result, copy_option::overwrite_if_exists, ec);
         if (ec)
@@ -114,7 +129,7 @@ std::wstring prepare_module_for_hotload(std::wstring game_dir, std::string modul
 
         std::ofstream ofile_ver(read_ver_module_filename_store());
         if (ofile_ver)
-            ofile_ver << last_write_time(result);
+            ofile_ver << last_write_time(result, ec);
 
         break;
     }
