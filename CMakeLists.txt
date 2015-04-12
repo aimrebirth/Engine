@@ -50,12 +50,12 @@ endif()
 # libraries and dependencies
 if (WIN32)
     set(Boost_USE_STATIC_LIBS ON)
-    set(Boost_USE_STATIC_RUNTIME OFF)
 else()
     ADD_DEFINITIONS(-DBOOST_ALL_DYN_LINK)
 endif(WIN32)
 
 find_package(Boost 1.54 REQUIRED filesystem log)
+find_package(SWIG 3.0 REQUIRED)
 
 ################################################################################
 #
@@ -107,5 +107,23 @@ include_directories(${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
 
 include_directories(include)
+include_directories(dep)
+
+add_library             (sqlite3 dep/sqlite3/sqlite3.c dep/sqlite3/sqlite3.h)
+project_group           (sqlite3 Extern)
+
+set(p dep/lua)
+set(lua_src
+    ${p}/lapi.c ${p}/lcode.c ${p}/lctype.c ${p}/ldebug.c ${p}/ldo.c ${p}/ldump.c ${p}/lfunc.c ${p}/lgc.c ${p}/llex.c
+    ${p}/lmem.c ${p}/lobject.c ${p}/lopcodes.c ${p}/lparser.c ${p}/lstate.c ${p}/lstring.c ${p}/ltable.c
+    ${p}/ltm.c ${p}/lundump.c ${p}/lvm.c ${p}/lzio.c
+    ${p}/lauxlib.c ${p}/lbaselib.c ${p}/lbitlib.c ${p}/lcorolib.c ${p}/ldblib.c ${p}/liolib.c
+	${p}/lmathlib.c ${p}/loslib.c ${p}/lstrlib.c ${p}/ltablib.c ${p}/lutf8lib.c ${p}/loadlib.c ${p}/linit.c
+)
+unset(p)
+include_directories(dep/lua/)
+
+add_library             (lua ${lua_src})
+project_group           (lua Extern)
 
 add_subdirectory(src)

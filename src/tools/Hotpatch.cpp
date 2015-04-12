@@ -21,53 +21,53 @@ DECLARE_STATIC_LOGGER(logger, "hotpatch");
 namespace polygon4
 {
 
-std::string read_orig_module_filename()
+String read_orig_module_filename()
 {
     return ::read_orig_module_filename();
 }
 
-std::string read_old_module_filename()
+String read_old_module_filename()
 {
     return ::read_old_module_filename();
 }
 
-std::string read_new_module_filename()
+String read_new_module_filename()
 {
     return ::read_new_module_filename();
 }
 
-std::string read_orig_module_filename_store()
+String read_orig_module_filename_store()
 {
     return boost::filesystem::temp_directory_path().string() + hotpatch_orig_filename;
 }
 
-std::string read_old_module_filename_store()
+String read_old_module_filename_store()
 {
     return boost::filesystem::temp_directory_path().string() + hotpatch_old_filename;
 }
 
-std::string read_new_module_filename_store()
+String read_new_module_filename_store()
 {
     return boost::filesystem::temp_directory_path().string() + hotpatch_new_filename;
 }
 
-std::string read_ver_module_filename_store()
+String read_ver_module_filename_store()
 {
     return boost::filesystem::temp_directory_path().string() + hotpatch_ver_filename;
 }
 
-std::wstring prepare_module_for_hotload(std::wstring game_dir, std::string module_name)
+String prepare_module_for_hotload(String game_dir, String module_name)
 {
     using namespace boost::filesystem;
     
     boost::system::error_code ec;
 
-    path base = path(game_dir).normalize();
+    path base = path(game_dir.wstring()).normalize();
     path bin = base / "Binaries" / "Win64";
-    path dll = base / "ThirdParty" / module_name / "lib";
+    path dll = base / "ThirdParty" / module_name.string() / "lib";
     path result;
 
-    LOG_DEBUG(logger, "Preparing module for hot load: " << module_name);
+    LOG_DEBUG(logger, "Preparing module for hot load: " << module_name.string());
 
     const std::string base_name = "Engine.x64.";
     const std::string ext_dll = "dll";
@@ -78,23 +78,43 @@ std::wstring prepare_module_for_hotload(std::wstring game_dir, std::string modul
     if (!exists(dll / base_dll))
     {
         LOG_DEBUG(logger, "New module does not exist, cancelling hot load");
-        return std::wstring();
+        return "";
     }
 
     // Check module. If it is not changed, do not reload it.
     LOG_DEBUG(logger, "Checking if module has not changed");
     LOG_DEBUG(logger, "Module: " << path(dll / base_dll).string());
+
     auto lwt = last_write_time(dll / base_dll, ec);
-    LOG_DEBUG(logger, "last_write_time: " << lwt);
+    auto lwt_old = read_ver_module_filename();
+
+    auto convert_time = [](time_t time)
+    {
+        if (time <= 0)
+            return std::string();
+        const int sz = 50;
+        char buf[sz] = { 0 };
+        struct tm *t = localtime(&time);
+        strftime(buf, sz, "%d.%m.%Y %H:%M:%S", t);
+        if (!*buf)
+            return std::string();
+        std::string s(buf);
+        s = s.c_str();
+        return s;
+    };
+
+    LOG_DEBUG(logger, "last_write_time    : " << convert_time(lwt) << " " << lwt);
+    LOG_DEBUG(logger, "last_write_time old: " << convert_time(stoi(lwt_old)) << " " << lwt_old);
+
     if (ec)
     {
         LOG_DEBUG(logger, "Error occured: " << ec.message());
-        return std::wstring();
+        return "";
     }
-    if (read_ver_module_filename() == std::to_string(lwt) || lwt == -1)
+    if (lwt_old == std::to_string(lwt) || lwt == -1)
     {
         LOG_DEBUG(logger, "Old module! Nothing to patch...");
-        return std::wstring();
+        return "";
     }
     LOG_DEBUG(logger, "We have a new module. Going to patch...");
 
@@ -119,15 +139,15 @@ std::wstring prepare_module_for_hotload(std::wstring game_dir, std::string modul
         LOG_DEBUG(logger, "copied: " << result.string());
         copy_file(dll / base_pdb, bin / (apply_index(base_name, current_i) + ext_pdb), copy_option::overwrite_if_exists, ec);
 
-        std::ofstream ofile_old(read_old_module_filename_store());
+        std::ofstream ofile_old(read_old_module_filename_store().string());
         if (ofile_old)
             ofile_old << path(bin / (apply_index(base_name, current_i - 1) + ext_dll)).string();
 
-        std::ofstream ofile_new(read_new_module_filename_store());
+        std::ofstream ofile_new(read_new_module_filename_store().string());
         if (ofile_new)
             ofile_new << result.string();
 
-        std::ofstream ofile_ver(read_ver_module_filename_store());
+        std::ofstream ofile_ver(read_ver_module_filename_store().string());
         if (ofile_ver)
             ofile_ver << last_write_time(result, ec);
 
@@ -140,6 +160,22 @@ std::wstring prepare_module_for_hotload(std::wstring game_dir, std::string modul
 
 }
 
+std::string &getUe4ModuleName()
+{
+    static std::string ue4_module_name;
+    return ue4_module_name;
+}
+
+void *loadSymbol(const char *symbol)
+{
+    LOG_TRACE(logger, "loadSymbol: " << symbol << " from module: " << getUe4ModuleName());
+    HMODULE h = LoadLibraryA(getUe4ModuleName().c_str());
+    LOG_TRACE(logger, "LoadLibraryA returned: " << h);
+    auto s = GetProcAddress(h, symbol);
+    LOG_TRACE(logger, "GetProcAddress returned: " << s);
+    return s;
+}
+
 typedef std::map<void*, void*> Import;
 typedef std::map<void*, uint16_t> ExportsOld;
 typedef std::map<uint16_t, void*> ExportsNew;
@@ -150,7 +186,7 @@ Import find_import_table(HMODULE hProgram, PIMAGE_IMPORT_DESCRIPTOR pImportDesc)
     for (; pImportDesc->Name; pImportDesc++)
     {
         std::string dll_name = (const char *)hProgram + pImportDesc->Name;
-        LOG_DEBUG(logger, "dll: " << dll_name);
+        LOG_TRACE(logger, "dll: " << dll_name);
 
         bool engine = dll_name.find("Engine") != -1;
         bool x64 = dll_name.find(".x64.") != -1;
@@ -163,7 +199,7 @@ Import find_import_table(HMODULE hProgram, PIMAGE_IMPORT_DESCRIPTOR pImportDesc)
             {
                 void *p = (void*)pThunk->u1.Function;
                 imports[p] = &pThunk->u1.Function;
-                LOG_DEBUG(logger, "Import: function: " << p << ", address: " << imports[p]);
+                LOG_TRACE(logger, "Import: function: " << p << ", address: " << imports[p]);
             }
             break;
         }
@@ -176,27 +212,27 @@ bool WriteToVirtualMemory(void *address, void *value)
     bool result = true;
     DWORD size = sizeof(void *);
 	DWORD dwOldProtect = 0;
-    LOG_DEBUG(logger, "Trying to write " << size << " bytes to " << address << " value " << value);
+    LOG_TRACE(logger, "Trying to write " << size << " bytes to " << address << " value " << value);
 	if (VirtualProtect(address, size, PAGE_EXECUTE_READWRITE, &dwOldProtect)) 
 	{
         if (!WriteProcessMemory(GetCurrentProcess(), address, &value, size, NULL))
         {
             result = false;
             DWORD glr = GetLastError();
-            LOG_DEBUG(logger, "WriteProcessMemory() is failed. GetLastError(): " << glr);
+            LOG_TRACE(logger, "WriteProcessMemory() is failed. GetLastError(): " << glr);
         }
         if (!VirtualProtect(address, size, dwOldProtect, &dwOldProtect))
         {
             result = false;
             DWORD glr = GetLastError();
-            LOG_DEBUG(logger, "VirtualProtect() (2) is failed. GetLastError(): " << glr);
+            LOG_TRACE(logger, "VirtualProtect() (2) is failed. GetLastError(): " << glr);
         }
 	}
     else
     {
         result = false;
         DWORD glr = GetLastError();
-        LOG_DEBUG(logger, "VirtualProtect() (1) is failed. GetLastError(): " << glr);
+        LOG_TRACE(logger, "VirtualProtect() (1) is failed. GetLastError(): " << glr);
     }
     return result;
 }
@@ -206,7 +242,7 @@ void patch_game_module(const char *module_name, const ExportsOld &exports_orig, 
     DWORD ulSize;
     HMODULE hProgram = GetModuleHandleA(module_name);
 
-    LOG_DEBUG(logger, "hProgram: " << hProgram);
+    LOG_TRACE(logger, "hProgram: " << hProgram);
 
     if (!hProgram)
         return;
@@ -214,13 +250,15 @@ void patch_game_module(const char *module_name, const ExportsOld &exports_orig, 
     PIMAGE_IMPORT_DESCRIPTOR pImportDesc = NULL;
 	pImportDesc = (PIMAGE_IMPORT_DESCRIPTOR)ImageDirectoryEntryToData(hProgram, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &ulSize);
 
-    LOG_DEBUG(logger, "pImportDesc: " << pImportDesc);
+    LOG_TRACE(logger, "pImportDesc: " << pImportDesc);
 
     if (!(pImportDesc))
         return;
     
-    LOG_DEBUG(logger, "Imports old:");
+    LOG_TRACE(logger, "Imports old:");
     auto imports = find_import_table(hProgram, pImportDesc);
+
+    bool patched = false;
 
     // PATCH !!!
     // If function is not found, left as before.
@@ -234,17 +272,21 @@ void patch_game_module(const char *module_name, const ExportsOld &exports_orig, 
             {
                 if (!WriteToVirtualMemory(i.second, n->second))
                 {
-                    LOG_DEBUG(logger, "WriteToVirtualMemory() is failed.");
+                    LOG_ERROR(logger, "WriteToVirtualMemory() is failed.");
+                }
+                else
+                {
+                    patched = true;
                 }
             }
             else
             {
-                LOG_DEBUG(logger, "New export: " << o->second << " is not found!");
+                LOG_TRACE(logger, "New export: " << o->second << " is not found!");
             }
         }
         else
         {
-            LOG_DEBUG(logger, "Old export: " << i.first << " is not found!");
+            LOG_TRACE(logger, "Old export: " << i.first << " is not found!");
         }
         o = exports_orig.find(i.first);
         if (o != exports_orig.end())
@@ -254,21 +296,30 @@ void patch_game_module(const char *module_name, const ExportsOld &exports_orig, 
             {
                 if (!WriteToVirtualMemory(i.second, n->second))
                 {
-                    LOG_DEBUG(logger, "WriteToVirtualMemory() is failed.");
+                    LOG_ERROR(logger, "WriteToVirtualMemory() is failed.");
+                }
+                else
+                {
+                    patched = true;
                 }
             }
             else
             {
-                LOG_DEBUG(logger, "New export: " << o->second << " is not found!");
+                LOG_TRACE(logger, "New export: " << o->second << " is not found!");
             }
         }
         else
         {
-            LOG_DEBUG(logger, "Orig export: " << i.first << " is not found!");
+            LOG_TRACE(logger, "Orig export: " << i.first << " is not found!");
         }
     }
+
+    if (patched)
+    {
+        getUe4ModuleName() = module_name;
+    }
     
-    LOG_DEBUG(logger, "Imports new:");
+    LOG_TRACE(logger, "Imports new:");
     imports = find_import_table(hProgram, pImportDesc);
 }
 
@@ -290,7 +341,7 @@ void patch_all_game_modules(const ExportsOld &exports_orig, const ExportsOld &ex
                 std::string module_name = szModName;
                 module_name = module_name.c_str();
 
-                LOG_DEBUG(logger, "Checking module: " << module_name);
+                LOG_TRACE(logger, "Checking module: " << module_name);
 
                 bool ue4editor = module_name.find("UE4Editor") != -1;
                 bool polygon4  = module_name.find("Polygon4") != -1;
@@ -313,17 +364,17 @@ void patch_import_table()
     const std::string old_dll  = boost::filesystem::path(read_old_module_filename()).filename().string();
     const std::string new_dll  = boost::filesystem::path(read_new_module_filename()).filename().string();
     
-    LOG_DEBUG(logger, "orig_dll: " << orig_dll);
-    LOG_DEBUG(logger, "old_dll: " << old_dll);
-    LOG_DEBUG(logger, "new_dll: " << new_dll);
+    LOG_TRACE(logger, "orig_dll: " << orig_dll);
+    LOG_TRACE(logger, "old_dll: " << old_dll);
+    LOG_TRACE(logger, "new_dll: " << new_dll);
     
     HMODULE hOrig = GetModuleHandle(orig_dll.c_str());
     HMODULE hOld = GetModuleHandle(old_dll.c_str());
     HMODULE hNew = GetModuleHandle(new_dll.c_str());
     
-    LOG_DEBUG(logger, "hOrig: " << hOrig);
-    LOG_DEBUG(logger, "hOld: " << hOld);
-    LOG_DEBUG(logger, "hNew: " << hNew);
+    LOG_TRACE(logger, "hOrig: " << hOrig);
+    LOG_TRACE(logger, "hOld: " << hOld);
+    LOG_TRACE(logger, "hNew: " << hNew);
 
     if (!(hOrig && hOld && hNew))
         return;
@@ -337,38 +388,38 @@ void patch_import_table()
     PIMAGE_EXPORT_DIRECTORY pExportDescNew = NULL;
 	pExportDescNew = (PIMAGE_EXPORT_DIRECTORY)ImageDirectoryEntryToData(hNew, TRUE, IMAGE_DIRECTORY_ENTRY_EXPORT, &ulSize);
     
-    LOG_DEBUG(logger, "pExportDescOrig: " << pExportDescOrig);
-    LOG_DEBUG(logger, "pExportDescOld: " << pExportDescOld);
-    LOG_DEBUG(logger, "pExportDescNew: " << pExportDescNew);
+    LOG_TRACE(logger, "pExportDescOrig: " << pExportDescOrig);
+    LOG_TRACE(logger, "pExportDescOld: " << pExportDescOld);
+    LOG_TRACE(logger, "pExportDescNew: " << pExportDescNew);
 
     if (!(pExportDescOrig && pExportDescOld && pExportDescNew))
         return;
 
-    LOG_DEBUG(logger, "Exports orig:");
+    LOG_TRACE(logger, "Exports orig:");
     ExportsOld exports_orig;
     for (int i = 1; i <= pExportDescOrig->NumberOfFunctions; i++)
     {
         auto address = GetProcAddress(hOrig, (LPCSTR)i);
         exports_orig[address] = i;
-        LOG_DEBUG(logger, "Export: address: " << address);
+        LOG_TRACE(logger, "Export: address: " << address);
     }
 
-    LOG_DEBUG(logger, "Exports old:");
+    LOG_TRACE(logger, "Exports old:");
     ExportsOld exports_old;
     for (int i = 1; i <= pExportDescOld->NumberOfFunctions; i++)
     {
         auto address = GetProcAddress(hOld, (LPCSTR)i);
         exports_old[address] = i;
-        LOG_DEBUG(logger, "Export: address: " << address);
+        LOG_TRACE(logger, "Export: address: " << address);
     }
 
-    LOG_DEBUG(logger, "Exports new:");
+    LOG_TRACE(logger, "Exports new:");
     ExportsNew exports_new;
     for (int i = 1; i <= pExportDescNew->NumberOfFunctions; i++)
     {
         auto address = GetProcAddress(hNew, (LPCSTR)i);
         exports_new[i] = address;
-        LOG_DEBUG(logger, "Export: address: " << address);
+        LOG_TRACE(logger, "Export: address: " << address);
     }
 
     patch_all_game_modules(exports_orig, exports_old, exports_new);
@@ -379,13 +430,13 @@ bool same_pid()
     DWORD pid = GetCurrentProcessId();
     DWORD pid2 = 0;
     auto temp = boost::filesystem::temp_directory_path().string() + hotpatch_pid_filename;
-    LOG_DEBUG(logger, "PID file: " << temp);
+    LOG_TRACE(logger, "PID file: " << temp);
     std::ifstream ifile(temp);
     if (ifile)
     {
-        LOG_DEBUG(logger, "Current PID: " << pid);
+        LOG_TRACE(logger, "Current PID: " << pid);
         ifile >> pid2;
-        LOG_DEBUG(logger, "File PID: " << pid2);
+        LOG_TRACE(logger, "File PID: " << pid2);
         if (pid == pid2)
             return true;
         ifile.close();
@@ -400,7 +451,7 @@ bool same_pid()
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
 	switch (fdwReason) 
-	{
+    {
     case DLL_PROCESS_ATTACH:
         {
             char filename[MAX_PATH] = { 0 };
@@ -409,16 +460,17 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             p = p.parent_path() / p.stem();
             LOGGER_CONFIGURE("Debug", p.string());
 
-            LOG_DEBUG(logger, "Checking PID...");
-            if (same_pid())
+            LOG_TRACE(logger, "Checking PID...");
+            bool pid = same_pid();
+            if (pid)
             {
-                LOG_DEBUG(logger, "Already exists!");
+                LOG_TRACE(logger, "Already exists!");
                 LOG_DEBUG(logger, "Patching imports...");
                 patch_import_table();
             }
             else
             {
-                LOG_DEBUG(logger, "PID is written");
+                LOG_TRACE(logger, "PID is written");
             }
         }
 		break;

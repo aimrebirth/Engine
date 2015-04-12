@@ -19,12 +19,22 @@
 #include <memory>
 #include <stdint.h>
 
+void *__default_alloc(size_t size, uint32_t Alignment)
+{
+    return malloc(size);
+}
+
+void __default_free(void *m)
+{
+    return free(m);
+}
+
 typedef void *(__cdecl *__unreal_alloc)(size_t size, uint32_t Alignment);
 typedef void  (__cdecl *__unreal_free )(void *m);
 typedef void  (__cdecl *InitMemory)(void **, void **);
 
-static __unreal_alloc __alloc = 0;
-static __unreal_free  __free  = 0;
+static __unreal_alloc __alloc = __default_alloc;
+static __unreal_free  __free = __default_free;
 
 static const char *InitMemoryName = "InitMemory";
 
@@ -37,7 +47,10 @@ InitMemory find_proc(const char *module)
     auto lib = LoadLibrary(module);
     if (!lib)
         return 0;
-    return (InitMemory)GetProcAddress(lib, InitMemoryName);
+    void *addr = GetProcAddress(lib, InitMemoryName);
+    if (!addr)
+        FreeLibrary(lib);
+    return (InitMemory)addr;
 }
 
 void try_load_mm()
@@ -78,11 +91,13 @@ static struct ______init { ______init() { try_load_mm();  } } _____init;
 
 #define OPERATOR_NEW_MSVC_PRAGMA
 
+#define ALIGN 0
+
 #define REPLACEMENT_OPERATOR_NEW_AND_DELETE \
-	OPERATOR_NEW_MSVC_PRAGMA void* operator new  ( size_t Size                  ) OPERATOR_NEW_THROW_SPEC      { return ALLOC( Size, 0 ); } \
-	OPERATOR_NEW_MSVC_PRAGMA void* operator new[]( size_t Size                  ) OPERATOR_NEW_THROW_SPEC      { return ALLOC( Size, 0 ); } \
-	OPERATOR_NEW_MSVC_PRAGMA void* operator new  ( size_t Size, std::nothrow_t& ) OPERATOR_NEW_NOTHROW_SPEC    { return ALLOC( Size, 0 ); } \
-	OPERATOR_NEW_MSVC_PRAGMA void* operator new[]( size_t Size, std::nothrow_t& ) OPERATOR_NEW_NOTHROW_SPEC    { return ALLOC( Size, 0 ); } \
+	OPERATOR_NEW_MSVC_PRAGMA void* operator new  ( size_t Size                  ) OPERATOR_NEW_THROW_SPEC      { return ALLOC( Size, ALIGN ); } \
+	OPERATOR_NEW_MSVC_PRAGMA void* operator new[]( size_t Size                  ) OPERATOR_NEW_THROW_SPEC      { return ALLOC( Size, ALIGN ); } \
+	OPERATOR_NEW_MSVC_PRAGMA void* operator new  ( size_t Size, std::nothrow_t& ) OPERATOR_NEW_NOTHROW_SPEC    { return ALLOC( Size, ALIGN ); } \
+	OPERATOR_NEW_MSVC_PRAGMA void* operator new[]( size_t Size, std::nothrow_t& ) OPERATOR_NEW_NOTHROW_SPEC    { return ALLOC( Size, ALIGN ); } \
 	void operator delete  ( void* Ptr )                                           OPERATOR_DELETE_THROW_SPEC   { FREE( Ptr ); } \
 	void operator delete[]( void* Ptr )                                           OPERATOR_DELETE_THROW_SPEC   { FREE( Ptr ); } \
 	void operator delete  ( void* Ptr, std::nothrow_t& )                          OPERATOR_DELETE_NOTHROW_SPEC { FREE( Ptr ); } \
@@ -91,4 +106,4 @@ static struct ______init { ______init() { try_load_mm();  } } _____init;
 #define ALLOC __alloc
 #define FREE  __free
 
-REPLACEMENT_OPERATOR_NEW_AND_DELETE
+//REPLACEMENT_OPERATOR_NEW_AND_DELETE

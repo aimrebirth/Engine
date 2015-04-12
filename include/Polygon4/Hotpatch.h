@@ -21,32 +21,33 @@
 #include <string>
 
 #include "dll.h"
+#include "String.h"
 
 namespace polygon4
 {
     
 DLL_EXPORT
-std::string read_orig_module_filename();
+String read_orig_module_filename();
 
 DLL_EXPORT
-std::string read_old_module_filename();
+String read_old_module_filename();
 
 DLL_EXPORT
-std::string read_new_module_filename();
+String read_new_module_filename();
 
 DLL_EXPORT
-std::string read_orig_module_filename_store();
+String read_orig_module_filename_store();
 
 DLL_EXPORT
-std::string read_old_module_filename_store();
+String read_old_module_filename_store();
 
 DLL_EXPORT
-std::string read_new_module_filename_store();
+String read_new_module_filename_store();
 
 DLL_EXPORT
-std::wstring prepare_module_for_hotload(std::wstring game_dir, std::string module_name);
+String prepare_module_for_hotload(String game_dir, String module_name);
 
 DLL_EXPORT
-std::string read_ver_module_filename_store();
+String read_ver_module_filename_store();
 
 }

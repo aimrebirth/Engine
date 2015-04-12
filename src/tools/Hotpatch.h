@@ -41,3 +41,6 @@ inline std::string read_ver_module_filename()
 {
     return read_file_in_temp(hotpatch_ver_filename);
 }
+
+std::string &getUe4ModuleName();
+void *loadSymbol(const char *symbol);

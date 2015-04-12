@@ -3,11 +3,27 @@
 #
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 ################################################################################
 
 ########################################
-# LIBRARY common
+# CUSTOM BUILD STEP API_lua
+########################################
+
+add_custom_command(OUTPUT API_lua.cpp
+    COMMAND ${SWIG_EXECUTABLE} -c++ -lua -o API_lua.cpp ${CMAKE_CURRENT_SOURCE_DIR}/API.i
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/API.i
+)
+add_custom_target(api_lua
+    DEPENDS API_lua.cpp
+    SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/API.i
+)
+project_group           (api_lua API)
+
+
+########################################
+# LIBRARY memory
 ########################################
 
 add_library             (memory Tools/Memory.cpp)
@@ -32,11 +48,12 @@ project_group           (hotpatchable Tools)
 ########################################
 
 file(GLOB engine_inc "${CMAKE_SOURCE_DIR}/include/polygon4/*")
+file(GLOB engine_src "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
 
 set(engine_src
-    Engine.cpp
-    Mods.cpp
-    Test.cpp
+    ${engine_src}
+
+    API.i
 
     Tools/Logger.cpp
     Tools/Logger.h
@@ -45,34 +62,20 @@ set(engine_src
 )
 
 add_library             (Engine SHARED ${engine_src} ${engine_inc})
-target_link_libraries   (Engine memory ${Boost_LIBRARIES} dbghelp)
+target_link_libraries   (Engine memory lua sqlite3 ${Boost_LIBRARIES} dbghelp)
+add_dependencies        (Engine api_lua)
 set_output_directory    (Engine ${library_dir})
 get_target_property     (name Engine NAME)
 set_target_properties   (Engine PROPERTIES PDB_NAME ${name}.${POLYGON4_ARCH})
 
 
 ########################################
-# EXECUTABLE Injector
-########################################
-
-set(injector_src
-    Tools/Injector.cpp
-    Tools/Hotpatch.h
-)
-
-add_executable          (injector ${injector_src})
-target_link_libraries   (injector ${Boost_LIBRARIES})
-set_output_directory    (injector ${library_dir})
-project_group           (injector Tools)
-
-
-########################################
 # EXECUTABLE Fix PDB
 ########################################
 
-add_executable          (pdbfix Tools/PdbFix.cpp)
-target_link_libraries   (pdbfix dbghelp)
-set_output_directory    (pdbfix ${library_dir})
-project_group           (pdbfix Tools)
+#add_executable          (pdbfix Tools/PdbFix.cpp)
+#target_link_libraries   (pdbfix dbghelp)
+#set_output_directory    (pdbfix ${library_dir})
+#project_group           (pdbfix Tools)
 
 ################################################################################
