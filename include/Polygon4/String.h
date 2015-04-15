@@ -80,6 +80,14 @@ public:
     {
         return wstring();
     }
+    operator char*() const
+    {
+        return (char *)data.get();
+    }
+    operator wchar_t*() const
+    {
+        return (wchar_t *)data.get();
+    }
 
     bool empty() const
     {

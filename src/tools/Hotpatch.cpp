@@ -18,6 +18,8 @@
 
 DECLARE_STATIC_LOGGER(logger, "hotpatch");
 
+std::string find_executable_in_path(const std::string &file, std::string path = "");
+
 namespace polygon4
 {
 
@@ -65,6 +67,11 @@ String prepare_module_for_hotload(String game_dir, String module_name)
     path base = path(game_dir.wstring()).normalize();
     path bin = base / "Binaries" / "Win64";
     path dll = base / "ThirdParty" / module_name.string() / "lib";
+    std::string win64dir = "win64";
+    path win64 = base / "ThirdParty" / module_name.string() / win64dir;
+    path project = win64 / "src" / "Engine.vcxproj.user";
+    path pdbfix = dll / "pdbfix.exe";
+    path fixproject = dll / "fixproject.exe";
     path result;
 
     LOG_DEBUG(logger, "Preparing module for hot load: " << module_name.string());
@@ -78,7 +85,7 @@ String prepare_module_for_hotload(String game_dir, String module_name)
     if (!exists(dll / base_dll))
     {
         LOG_DEBUG(logger, "New module does not exist, cancelling hot load");
-        return "";
+        return L"";
     }
 
     // Check module. If it is not changed, do not reload it.
@@ -109,12 +116,12 @@ String prepare_module_for_hotload(String game_dir, String module_name)
     if (ec)
     {
         LOG_DEBUG(logger, "Error occured: " << ec.message());
-        return "";
+        return L"";
     }
     if (lwt_old == std::to_string(lwt) || lwt == -1)
     {
         LOG_DEBUG(logger, "Old module! Nothing to patch...");
-        return "";
+        return L"";
     }
     LOG_DEBUG(logger, "We have a new module. Going to patch...");
 
@@ -129,7 +136,8 @@ String prepare_module_for_hotload(String game_dir, String module_name)
     while (1)
     {
         int current_i = i++;
-        result = bin / (apply_index(base_name, current_i) + ext_dll);
+        result          = bin / (apply_index(base_name, current_i) + ext_dll);
+        path result_pdb = bin / (apply_index(base_name, current_i) + ext_pdb);
         copy_file(dll / base_dll, result, copy_option::overwrite_if_exists, ec);
         if (ec)
         {
@@ -137,7 +145,7 @@ String prepare_module_for_hotload(String game_dir, String module_name)
             continue;
         }
         LOG_DEBUG(logger, "copied: " << result.string());
-        copy_file(dll / base_pdb, bin / (apply_index(base_name, current_i) + ext_pdb), copy_option::overwrite_if_exists, ec);
+        copy_file(dll / base_pdb, result_pdb, copy_option::overwrite_if_exists, ec);
 
         std::ofstream ofile_old(read_old_module_filename_store().string());
         if (ofile_old)
@@ -146,10 +154,45 @@ String prepare_module_for_hotload(String game_dir, String module_name)
         std::ofstream ofile_new(read_new_module_filename_store().string());
         if (ofile_new)
             ofile_new << result.string();
-
+        
         std::ofstream ofile_ver(read_ver_module_filename_store().string());
         if (ofile_ver)
             ofile_ver << last_write_time(result, ec);
+        
+        LOG_DEBUG(logger, "Fixing PDB");
+
+        {
+            std::string cmd;
+            cmd += "\"" + fixproject.string() + "\"" + " ";
+            cmd += "\"" + project.string() + "\"" + " ";
+            cmd += "\"" + result.filename().stem().string() + "\"" + " ";
+            cmd += "\"" + (dll / result.filename().stem().string()).string() + "\"" + " ";
+            LOG_DEBUG(logger, "fix project: " << cmd);
+            STARTUPINFO si = { 0 };
+            PROCESS_INFORMATION pi = { 0 };
+            CreateProcess(fixproject.string().c_str(), (char *)cmd.c_str(), 0, 0, TRUE, CREATE_NO_WINDOW, 0, 0, &si, &pi);
+            WaitForSingleObject(pi.hProcess, INFINITE);
+            DWORD rc = 0;
+            GetExitCodeProcess(pi.hProcess, &rc);
+            LOG_DEBUG(logger, "fix project rc: " << rc);
+        }
+        {
+            std::string cmake = find_executable_in_path("cmake");
+            std::string cmd;
+            cmd += "cmake --build \"" + win64.string() + "\" --config RelWithDebInfo";
+            LOG_DEBUG(logger, "cmake exe: " << cmake);
+            LOG_DEBUG(logger, "cmake cmd: " << cmd);
+            STARTUPINFO si = { 0 };
+            PROCESS_INFORMATION pi = { 0 };
+            CreateProcess(cmake.c_str(), (char *)cmd.c_str(), 0, 0, TRUE, CREATE_NO_WINDOW, 0, 0, &si, &pi);
+            WaitForSingleObject(pi.hProcess, INFINITE);
+            DWORD rc = 0;
+            GetExitCodeProcess(pi.hProcess, &rc);
+            LOG_DEBUG(logger, "cmake rc: " << rc);
+        }
+
+        copy_file(dll / (apply_index(base_name, current_i) + ext_dll), result, copy_option::overwrite_if_exists, ec);
+        copy_file(dll / (apply_index(base_name, current_i) + ext_pdb), result_pdb, copy_option::overwrite_if_exists, ec);
 
         break;
     }
@@ -158,6 +201,29 @@ String prepare_module_for_hotload(String game_dir, String module_name)
     return result.wstring();
 }
 
+}
+
+std::string find_executable_in_path(const std::string &file, std::string path) 
+{
+    BOOST_ASSERT(file.find_first_of("\\/") == std::string::npos);
+
+    std::string result; 
+    const char *exts[] = { "", ".exe", ".com", ".bat", NULL }; 
+    const char **ext = exts;
+    while (*ext) 
+    { 
+        char buf[MAX_PATH]; 
+        char *dummy;
+        DWORD size = ::SearchPathA(path.empty() ? NULL : path.c_str(), file.c_str(), *ext, MAX_PATH, buf, &dummy); 
+        BOOST_ASSERT(size < MAX_PATH); 
+        if (size > 0) 
+        { 
+            result = buf; 
+            break; 
+        } 
+        ++ext; 
+    }
+    return result; 
 }
 
 std::string &getUe4ModuleName()

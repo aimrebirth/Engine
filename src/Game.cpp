@@ -21,23 +21,33 @@
 #include <boost/filesystem.hpp>
 #include <sqlite3/sqlite3.h>
 
+#include <tools/Logger.h>
+DECLARE_STATIC_LOGGER(logger, "game");
+
 #include <Polygon4/API.h>
 
-#include <tools/Logger.h>
-
-#include "tools/Hotpatch.h"
 #include "Db.h"
 #include "Sector.h"
-
-DECLARE_STATIC_LOGGER(logger, "game");
+#include "Script.h"
 
 namespace polygon4
 {
 
-Game::Game(std::shared_ptr<Database> db)
-    : db(db)
+Game::Game(std::shared_ptr<Database> db, std::shared_ptr<Script> script)
+    : db(db), script(script)
 {
+    if (!db)
+        throw std::exception("Database is not loaded!");
+    if (!script)
+        throw std::exception("ScriptRunner is not loaded!");
+
+    bindAPI();
     loadSectors();
+}
+
+Game::~Game()
+{
+
 }
 
 void Game::loadSectors()
@@ -53,9 +63,24 @@ void Game::loadSectors()
     db->execute("select * from sectors;", this, callback);
 }
 
+void Game::run()
+{
+    script->main(this);
+}
+
+void Game::bindAPI()
+{
+}
+
 void Game::OpenLevel(std::string level)
 {
-    API_CALL(OpenLevel, sectors[level]->getDisplayedName(), sectors[level]->getResourceName());
+    API_CALL_MSG(sectors[level]->getDisplayedName(), OpenLevel, sectors[level]->getResourceName());
+    REGISTER_API(OnOpenLevel, std::bind(&Script::OnOpenLevel, script.get(), this, level));
+}
+
+void Game::SpawnPlayer(Vector v, Rotation r)
+{
+    API_CALL(SpawnPlayer, v, r);
 }
 
 } // namespace polygon4

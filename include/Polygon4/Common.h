@@ -52,7 +52,7 @@ inline std::wstring to_wstring(const std::string &s)
     return converter.from_bytes(s.c_str());
 }
 
-inline std::string to_string(const std::wstring &s)
+inline std::string to_string(const std::wstring s)
 {
     std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
     return converter.to_bytes(s.c_str());

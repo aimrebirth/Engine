@@ -18,48 +18,27 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
-#include <stdint.h>
+#include "Script.h"
 
-#include <Polygon4/Common.h>
+struct lua_State;
 
 namespace polygon4
 {
 
-class Game;
-
-enum class ScriptLanguage : uint8_t
-{
-    Unknown,
-
-    Lua,
-};
-
-class Script
+class ScriptLua : public Script
 {
 public:
-    Script(const std::string &filename);
-    virtual ~Script(){}
-
-    static std::shared_ptr<Script> createScript(const std::string &filename, std::string language);
-
+    ScriptLua(const std::string &filename);
+    virtual ~ScriptLua();
+    
 public: /* API*/
-    virtual void main(Game *game) = 0;
+    virtual void main(Game *game);
 
-    virtual void OnOpenLevel(Game *game, std::string level) = 0;
-
-protected:
-    std::string filename;
-    ScriptLanguage language = ScriptLanguage::Unknown;
-
-protected:
+    virtual void OnOpenLevel(Game *game, std::string level);
 
 private:
-    DISALLOW_COPY_CONSTRUCTORS(Script);
+    lua_State *L;
 };
-
-std::string getScriptName(std::wstring path, std::wstring scriptName);
 
 } // namespace polygon4
 

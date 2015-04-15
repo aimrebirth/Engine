@@ -21,27 +21,51 @@
 #include <functional>
 
 #include "dll.h"
-#include "Common.h"
+#include "UnrealTypes.h"
+#include "String.h"
 
 namespace polygon4
 {
 
 struct API
 {
-    std::function<void(std::string)> OpenLevel;
+#define API_FUNCTION(type, name) \
+    type name
+#include "API_functions.h"
+#undef API_FUNCTION
 };
 
-extern API api;
-
 DLL_EXPORT
-void InitAPI(API api);
+API &getAPI();
 
 }
 
-#define API_CALL(func, msg, ...) \
-    LOG_DEBUG(logger, #func << msg); \
-    if (api.func) \
-        api.func( ( __VA_ARGS__ ) ); \
-    else \
+#ifndef POLYGON4_ENGINE
+
+#define LOG_DEBUG(...)
+#define LOG_TRACE(...)
+#define LOG_ERROR(...)
+
+#endif
+
+#define API_CALL(func, ...) \
+    LOG_DEBUG(logger, "API call: " << #func); \
+    if (polygon4::getAPI().func) \
+        polygon4::getAPI().func( __VA_ARGS__ ); \
+                else \
         LOG_ERROR(logger, "API call is not set: " << #func)
 
+#define API_CALL_MSG(msg, func, ...) \
+    LOG_DEBUG(logger, "API call: " << #func << ": " << msg); \
+    if (polygon4::getAPI().func) \
+        polygon4::getAPI().func( __VA_ARGS__ ); \
+                else \
+        LOG_ERROR(logger, "API call is not set: " << #func)
+
+#define REGISTER_API(api, function) \
+    polygon4::getAPI().api = function; \
+    LOG_TRACE("api", "Register API: " << #api)
+
+#define UNREGISTER_API(api) \
+    polygon4::getAPI().api = decltype(polygon4::API::api)(); \
+    LOG_TRACE("api", "Unregister API: " << #api)

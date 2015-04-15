@@ -19,12 +19,10 @@
 #include "Script.h"
 
 #include <boost/filesystem.hpp>
-#include <lua.hpp>
 
-#include <API_lua.cpp>
+#include "ScriptLua.h"
 
 #include <tools/Logger.h>
-
 DECLARE_STATIC_LOGGER(logger, "script");
 
 namespace polygon4
@@ -32,48 +30,29 @@ namespace polygon4
 
 std::string getScriptName(std::wstring path, std::wstring scriptName)
 {
+    //ScriptLua a;
     boost::filesystem::path p = path;
     p = p / "Scripts" / scriptName;
     return boost::filesystem::absolute(p).normalize().string();
 }
 
-bool runScript(const std::string &filename, std::string language, Game *game)
+std::shared_ptr<Script> Script::createScript(const std::string &filename, std::string language)
 {
     std::transform(language.begin(), language.end(), language.begin(), ::tolower);
 
-    LOG_DEBUG(logger, "Executing " << language << " script: " << filename);
+    LOG_DEBUG(logger, "Creating " << language << " script executor on file: " << filename);
 
+    std::shared_ptr<Script> script;
     if (language == "lua")
     {
-        lua_State *L;
-        L = luaL_newstate();
-        luaopen_base(L);
-        luaopen_Polygon4(L);
-        int rc = luaL_loadfile(L, filename.c_str());
-        if (rc == 0)
-        {
-            rc = lua_pcall(L, 0, 0, 0);
-            if (rc)
-            {
-                LOG_ERROR(logger, "Error: " << lua_tostring(L, -1));
-            }
-
-            lua_getglobal(L, "main");
-            SWIG_NewPointerObj(L, game, SWIGTYPE_p_polygon4__Game, 0);
-            rc = lua_pcall(L, 1, 0, 0);
-            if (rc)
-            {
-                LOG_ERROR(logger, "Error: " << lua_tostring(L, -1));
-            }
-        }
-        else
-        {
-            LOG_ERROR(logger, "Unable to load script: " << lua_tostring(L, -1));
-        }
-        ::lua_close(L);
-        return rc == 0;
+        script = std::make_shared<ScriptLua>(filename);
     }
-    return false;
+    return script;
+}
+
+Script::Script(const std::string &filename)
+    : filename(filename)
+{
 }
 
 } // namespace polygon4

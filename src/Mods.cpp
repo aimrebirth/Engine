@@ -43,18 +43,29 @@ Mod::~Mod()
     
 bool Mod::newGame()
 {
+    if (state == GameState::Bad)
+    {
+        LOG_ERROR(logger, "Game is in bad state!");
+        return false;
+    }
     if (state != GameState::None)
     {
         LOG_ERROR(logger, "Game is not in initial state!");
         return false;
     }
-    Database::loadCommonDatabase(to_string(getCommonContent().getDatabaseName()));
-    db = std::make_shared<Database>(to_string(databaseName), usesCommonContent);
-    if (!db->isLoaded())
+    try
+    {
+        Database::loadCommonDatabase(to_string(getCommonContent().getDatabaseName()));
+        db = std::make_shared<Database>(to_string(databaseName), usesCommonContent);
+        auto script = Script::createScript(getScriptName(path, mainScriptName), scriptLanguage);
+        game = std::make_shared<Game>(db, script);
+        game->run();
+    }
+    catch (std::exception e)
+    {
+        LOG_ERROR(logger, "Cannot start game: " << e.what());
         return false;
-    game = std::make_shared<Game>(db);
-    if (!runScript(getScriptName(path, mainScriptName), scriptLanguage, game.get()))
-        return false;
+    }
     return true;
 }
 
@@ -70,6 +81,8 @@ bool Mod::stopGame()
 
 bool Mod::operator<(const Mod &rhs) const
 {
+    if (name.wstring() != rhs.name.wstring())
+        return name.wstring() < rhs.name.wstring();
     return dir.wstring() < rhs.dir.wstring();
 }
 
@@ -104,11 +117,9 @@ const Mods &enumerateMods(String dd, String cd)
     namespace bf = boost::filesystem;
     namespace pt = boost::property_tree;
 
-    LOG_DEBUG(logger, "dd: " << dd.wstring());
-    LOG_DEBUG(logger, "cd: " << cd.wstring());
-    std::wstring dataDirectory = dd;
+    std::wstring dataDirectory = dd.wstring();
     dataDirectory = bf::absolute(dataDirectory).normalize().wstring();
-    std::wstring contentDirectory = cd;
+    std::wstring contentDirectory = cd.wstring();
     contentDirectory = bf::absolute(contentDirectory).normalize().wstring();
 
     static Mods mods;

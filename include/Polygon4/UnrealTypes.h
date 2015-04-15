@@ -18,48 +18,21 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
-#include <stdint.h>
-
-#include <Polygon4/Common.h>
-
 namespace polygon4
 {
 
-class Game;
-
-enum class ScriptLanguage : uint8_t
+struct Vector
 {
-    Unknown,
-
-    Lua,
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 0.0f;
 };
 
-class Script
+struct Rotation
 {
-public:
-    Script(const std::string &filename);
-    virtual ~Script(){}
-
-    static std::shared_ptr<Script> createScript(const std::string &filename, std::string language);
-
-public: /* API*/
-    virtual void main(Game *game) = 0;
-
-    virtual void OnOpenLevel(Game *game, std::string level) = 0;
-
-protected:
-    std::string filename;
-    ScriptLanguage language = ScriptLanguage::Unknown;
-
-protected:
-
-private:
-    DISALLOW_COPY_CONSTRUCTORS(Script);
+    float pitch = 0.0f;
+    float yaw = 0.0f;
+    float roll = 0.0f;
 };
 
-std::string getScriptName(std::wstring path, std::wstring scriptName);
-
-} // namespace polygon4
-
+}

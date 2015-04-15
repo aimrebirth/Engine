@@ -23,14 +23,6 @@ project_group           (api_lua API)
 
 
 ########################################
-# LIBRARY memory
-########################################
-
-add_library             (memory Tools/Memory.cpp)
-project_group           (memory Tools)
-
-
-########################################
 # LIBRARY hotpatchable
 ########################################
 
@@ -52,7 +44,7 @@ file(GLOB engine_src "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp" "${CMAKE_CURRENT_SOURCE
 
 set(engine_src
     ${engine_src}
-
+    
     API.i
 
     Tools/Logger.cpp
@@ -62,20 +54,42 @@ set(engine_src
 )
 
 add_library             (Engine SHARED ${engine_src} ${engine_inc})
-target_link_libraries   (Engine memory lua sqlite3 ${Boost_LIBRARIES} dbghelp)
-add_dependencies        (Engine api_lua)
+target_link_libraries   (Engine lua sqlite3 ${Boost_LIBRARIES} dbghelp)
+add_dependencies        (Engine api_lua clean_hotpatch)
 set_output_directory    (Engine ${library_dir})
 get_target_property     (name Engine NAME)
+set_target_properties   (Engine PROPERTIES OUTPUT_NAME ${name}.${POLYGON4_ARCH})
 set_target_properties   (Engine PROPERTIES PDB_NAME ${name}.${POLYGON4_ARCH})
+target_compile_definitions(Engine PRIVATE -DPOLYGON4_ENGINE)
+
+
+########################################
+# CUSTOM BUILD STEP clean_hotpatch
+########################################
+
+add_custom_target(clean_hotpatch
+    COMMAND fixproject ${CMAKE_CURRENT_BINARY_DIR}/Engine.vcxproj.user ${name}.${POLYGON4_ARCH} ${library_dir}/${name}.${POLYGON4_ARCH}
+    DEPENDS fixproject
+)
+project_group           (clean_hotpatch Tools)
 
 
 ########################################
 # EXECUTABLE Fix PDB
 ########################################
 
-#add_executable          (pdbfix Tools/PdbFix.cpp)
-#target_link_libraries   (pdbfix dbghelp)
-#set_output_directory    (pdbfix ${library_dir})
-#project_group           (pdbfix Tools)
+add_executable          (pdbfix Tools/PdbFix.cpp)
+target_link_libraries   (pdbfix dbghelp)
+set_output_directory    (pdbfix ${library_dir})
+project_group           (pdbfix Tools)
+
+
+########################################
+# EXECUTABLE Fix project
+########################################
+
+add_executable          (fixproject Tools/FixProject.cpp)
+set_output_directory    (fixproject ${library_dir})
+project_group           (fixproject Tools)
 
 ################################################################################

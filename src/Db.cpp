@@ -36,6 +36,8 @@ Database::Database(std::string dbname, bool usesCommonContent)
 {
     loadDatabase(dbname);
     this->usesCommonContent = usesCommonContent;
+    if (!isLoaded())
+        throw std::exception("Database is not loaded!");
 }
 
 Database::~Database()

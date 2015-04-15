@@ -16,20 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+API_FUNCTION(std::function<void(String)>, OpenLevel);
+API_FUNCTION(std::function<void(void)>, OnOpenLevel);
 
-#include <Polygon4/API.h>
-
-#include <assert.h>
-
-namespace polygon4
-{
-
-API &getAPI()
-{
-    static API api;
-    return api;
-}
-
-}
-
+API_FUNCTION(std::function<void(Vector, Rotation)>, SpawnPlayer);

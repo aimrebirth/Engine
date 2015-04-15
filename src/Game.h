@@ -22,6 +22,7 @@
 #include <set>
 
 #include "Common.h"
+#include <Polygon4/UnrealTypes.h>
 
 class sqlite3;
 
@@ -29,21 +30,29 @@ namespace polygon4
 {
 
 class Database;
+class Script;
 
 class Game
 {
 public:
     Game(){}
-    Game(std::shared_ptr<Database> db);
+    Game(std::shared_ptr<Database> db, std::shared_ptr<Script> script);
+    virtual ~Game();
+
+    void run();
 
 public: /* API*/
     void OpenLevel(std::string level);
+    void SpawnPlayer(Vector v, Rotation r);
 
 private:
     std::shared_ptr<Database> db;
+    std::shared_ptr<Script> script;
 
     Sectors sectors;
     void loadSectors();
+
+    void bindAPI();
 };
 
 } // namespace polygon4
