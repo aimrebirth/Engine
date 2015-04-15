@@ -20,14 +20,52 @@
 
 #include <Polygon4/API.h>
 
+#include <assert.h>
+
+#include <tools/Logger.h>
+DECLARE_STATIC_LOGGER(logger, "api");
+
 namespace polygon4
 {
 
-API api;
-
-void InitAPI(API api)
+void RegisterAPI(API api)
 {
-    polygon4::api = api;
+    getAPI().registerAPI(api);
+}
+
+void UnregisterAPI(API api)
+{
+    getAPI().unregisterAPI(api);
+}
+
+void API::registerAPI(API rhs)
+{
+#define API_FUNCTION(type, name) \
+    if (rhs.name) \
+    { \
+        name = rhs.name; \
+        LOG_TRACE(logger, "Register API: " << #type << " " << #name); \
+    }
+#include <Polygon4/API_functions.h>
+#undef API_FUNCTION
+}
+
+void API::unregisterAPI(API rhs)
+{
+#define API_FUNCTION(type, name) \
+    if (rhs.name) \
+    { \
+        name.swap(type()); \
+        LOG_TRACE(logger, "Unregister API: " << #type << " " << #name); \
+    }
+#include <Polygon4/API_functions.h>
+#undef API_FUNCTION
+}
+
+API &getAPI()
+{
+    static API api;
+    return api;
 }
 
 }
