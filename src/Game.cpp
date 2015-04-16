@@ -75,7 +75,7 @@ void Game::bindAPI()
 void Game::OpenLevel(std::string level)
 {
     API_CALL_MSG(sectors[level]->getDisplayedName(), OpenLevel, sectors[level]->getResourceName());
-    REGISTER_API(OnOpenLevel, std::bind(&Script::OnOpenLevel, script.get(), this, level));
+    REGISTER_API_N_CALLS(OnOpenLevel, 1, std::bind(&Script::OnOpenLevel, script.get(), this, level));
 }
 
 void Game::SpawnPlayer(Vector v, Rotation r)

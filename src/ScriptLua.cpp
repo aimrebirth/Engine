@@ -64,8 +64,6 @@ void ScriptLua::main(Game *game)
 
 void ScriptLua::OnOpenLevel(Game *game, std::string level)
 {
-    UNREGISTER_API(OnOpenLevel);
-
     LOG_DEBUG(logger, "OnOpenLevel(): " << level);
 
     lua_getglobal(L, "OnOpenLevel");

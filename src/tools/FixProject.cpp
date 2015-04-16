@@ -1,10 +1,22 @@
 #include <fstream>
 #include <iostream>
 
-#include <boost/filesystem.hpp>
-
 using namespace std;
-using namespace boost::filesystem;
+
+string user = "\
+<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\
+<Project ToolsVersion=\"12.0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n\
+    <PropertyGroup>\n\
+        <TargetName>%s</TargetName>\n\
+    </PropertyGroup>\n\
+    <ItemDefinitionGroup>\n\
+        <Link>\n\
+            <ImportLibrary>%s</ImportLibrary>\n\
+            <ProgramDataBaseFile>%s</ProgramDataBaseFile>\n\
+        </Link>\n\
+    </ItemDefinitionGroup>\n\
+</Project>\n\
+";
 
 int main(int argc, char *argv[])
 {
@@ -13,48 +25,13 @@ int main(int argc, char *argv[])
         printf("Usage: %s file.project file_without_ext addition_part", argv[0]);
         return 1;
     }
-    
-    ifstream ifile(argv[1]);
-    if (!ifile)
-    {
-        printf("Cannot open the input file: %s", argv[1]);
-        return 1;
-    }
 
-    string target = "TargetName";
-    string lib = "ImportLibrary";
-    string pdb = "ProgramDataBaseFile";
-    string out;
-    while (ifile)
-    {
-        string s;
-        getline(ifile, s);
+    string base = argv[3];
+    string lib = base + ".lib";
+    string pdb = base + ".pdb";
 
-        if (s.find("<" + target + ">") != string::npos)
-        {
-            out += "<" + target + ">";
-            out += argv[2];
-            out += "</" + target + ">";
-        }
-        else if (s.find("<" + lib + ">") != string::npos)
-        {
-            out += "<" + lib + ">";
-            out += argv[3] + string(".lib");
-            out += "</" + lib + ">";
-        }
-        else if (s.find("<" + pdb + ">") != string::npos)
-        {
-            out += "<" + pdb + ">";
-            out += argv[3] + string(".pdb");
-            out += "</" + pdb + ">";
-        }
-        else
-        {
-            out += s;
-        }
-        out += "\n";
-    }
-    ifile.close();
+    char buf[8192] = { 0 };
+    sprintf(buf, user.c_str(), argv[2], lib.c_str(), pdb.c_str());
 
     ofstream ofile(argv[1]);
     if (!ofile)
@@ -62,7 +39,7 @@ int main(int argc, char *argv[])
         printf("Cannot open the output file: %s", argv[1]);
         return 1;
     }
-    ofile << out;
+    ofile << buf;
 
     return 0;
 }

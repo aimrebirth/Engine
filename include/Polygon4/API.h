@@ -30,7 +30,8 @@ namespace polygon4
 struct API
 {
 #define API_FUNCTION(type, name) \
-    type name
+    type name; \
+    int n_##name = -1
 #include "API_functions.h"
 #undef API_FUNCTION
 };
@@ -49,23 +50,44 @@ API &getAPI();
 #endif
 
 #define API_CALL(func, ...) \
-    LOG_DEBUG(logger, "API call: " << #func); \
-    if (polygon4::getAPI().func) \
-        polygon4::getAPI().func( __VA_ARGS__ ); \
-                else \
-        LOG_ERROR(logger, "API call is not set: " << #func)
+    { \
+        LOG_DEBUG(logger, "API call: " << #func); \
+        \
+        auto &api = polygon4::getAPI(); \
+        if (api.func && api.n_##func != 0) \
+        { \
+            api.func( __VA_ARGS__ ); \
+            api.n_##func--; \
+        } \
+        else \
+            LOG_ERROR(logger, "API call is not set: " << #func); \
+    }
 
 #define API_CALL_MSG(msg, func, ...) \
-    LOG_DEBUG(logger, "API call: " << #func << ": " << msg); \
-    if (polygon4::getAPI().func) \
-        polygon4::getAPI().func( __VA_ARGS__ ); \
-                else \
-        LOG_ERROR(logger, "API call is not set: " << #func)
+    { \
+        LOG_DEBUG(logger, "API call: " << #func << ": " << msg); \
+        \
+        auto &api = polygon4::getAPI(); \
+        if (api.func && api.n_##func != 0) \
+        { \
+            api.func( __VA_ARGS__ ); \
+            api.n_##func--; \
+        } \
+        else \
+            LOG_ERROR(logger, "API call is not set: " << #func); \
+    }
 
 #define REGISTER_API(api, function) \
     polygon4::getAPI().api = function; \
+    polygon4::getAPI().n_##api = -1; \
+    LOG_TRACE("api", "Register API: " << #api)
+
+#define REGISTER_API_N_CALLS(api, n, function) \
+    polygon4::getAPI().api = function; \
+    polygon4::getAPI().n_##api = n; \
     LOG_TRACE("api", "Register API: " << #api)
 
 #define UNREGISTER_API(api) \
     polygon4::getAPI().api = decltype(polygon4::API::api)(); \
+    polygon4::getAPI().n_##api = -1; \
     LOG_TRACE("api", "Unregister API: " << #api)
