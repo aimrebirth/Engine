@@ -124,6 +124,17 @@ const Mods &enumerateMods(String dd, String cd)
 
     static Mods mods;
     mods.clear();
+
+    if (!bf::exists(dataDirectory))
+    {
+        LOG_ERROR(logger, "Data directory does not exist: " << dataDirectory.c_str());
+        return mods;
+    }
+    if (!bf::exists(contentDirectory))
+    {
+        LOG_ERROR(logger, "Content directory does not exist: " << contentDirectory.c_str());
+        return mods;
+    }
     
     bf::path p(dataDirectory);
     bf::directory_iterator end;
