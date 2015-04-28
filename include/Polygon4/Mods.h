@@ -24,17 +24,13 @@
 #include "dll.h"
 
 #include "Common.h"
-#include "String.h"
 
-#define MOD_FILENAME "mod.json"
-
-class sqlite3;
+#include <Polygon4/String.h>
 
 namespace polygon4
 {
 
 class Game;
-class Database;
 
 enum class GameState : uint8_t
 {
@@ -51,7 +47,6 @@ class DLL_EXPORT Mod
 {
     DLL_EXPORT
     friend const Mods &enumerateMods(String dataDirectory, String contentDirectory);
-    static Mod &getCommonContent();
 
 private:
     Mod(){}
@@ -59,58 +54,20 @@ private:
 public:
     ~Mod();
 
+    bool isOk() const;
+
     bool newGame();
     bool loadGame(String filename);
     bool stopGame();
-    
-public:
-    DECLARE_GET_SET(String, Dir);
-    DECLARE_GET_SET(String, Path);
-    DECLARE_GET_SET(String, DataDir);
-    DECLARE_GET_SET(String, ContentDir);
-
-    DECLARE_GET_SET(String, Name);
-    DECLARE_GET_SET(String, Author);
-    DECLARE_GET_SET(String, Version);
-    DECLARE_GET_SET(String, Created);
-    DECLARE_GET_SET(String, Modified);
-    DECLARE_GET_SET(String, Comment);
-
-    DECLARE_GET_SET(String, DatabaseName);
-    
-    DECLARE_GET_SET(std::string, ScriptLanguage);
-    DECLARE_GET_SET(String, MainScriptName);
-
-    DECLARE_GET_SET(bool, UsesCommonContent);
 
 public:
     bool operator<(const Mod &rhs) const;
 
 private:
-    String dataDir;
-    String contentDir;
-
-    String dir;
-    String path; // with dir
-
-    String name;
-    String author;
-    String version;
-    String date_created;
-    String date_modified;
-    String comment;
-
-    String databaseName;
-
-    std::string scriptLanguage;
-    String mainScriptName;
-
     // game data
-    std::shared_ptr<Database> db;
     std::shared_ptr<Game> game;
     GameState state = GameState::None;
     bool saved = false;
-    bool usesCommonContent;
 };
 
 DLL_EXPORT

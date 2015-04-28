@@ -19,15 +19,12 @@
 #include "Game.h"
 
 #include <boost/filesystem.hpp>
-#include <sqlite3/sqlite3.h>
 
 #include <tools/Logger.h>
 DECLARE_STATIC_LOGGER(logger, "game");
 
 #include <Polygon4/API.h>
 
-#include "Db.h"
-#include "Sector.h"
 #include "Script.h"
 
 namespace polygon4
@@ -42,25 +39,10 @@ Game::Game(std::shared_ptr<Database> db, std::shared_ptr<Script> script)
         throw std::exception("ScriptRunner is not loaded!");
 
     bindAPI();
-    loadSectors();
 }
 
 Game::~Game()
 {
-
-}
-
-void Game::loadSectors()
-{
-    auto callback = [](void *object, int ncols, char **cols, char **names) -> int
-    {
-        Game *game = (Game *)object;
-        std::shared_ptr<Sector> s = std::make_shared<Sector>();
-        if (s->load(ncols, cols, names))
-            game->sectors[cols[1]] = s;
-        return 0;
-    };
-    db->execute("select * from sectors;", this, callback);
 }
 
 void Game::run()
@@ -74,8 +56,9 @@ void Game::bindAPI()
 
 void Game::OpenLevel(std::string level)
 {
-    API_CALL_MSG(sectors[level]->getDisplayedName(), OpenLevel, sectors[level]->getResourceName());
-    REGISTER_API_N_CALLS(OnOpenLevel, 1, std::bind(&Script::OnOpenLevel, script.get(), this, level));
+    //std::shared_ptr<engine::Sector> object = std::static_pointer_cast<engine::Sector>(sectors[level]->object());
+    //API_CALL_MSG(object->name.get(), OpenLevel, object->resource);
+    //REGISTER_API_N_CALLS(OnOpenLevel, 1, std::bind(&Script::OnOpenLevel, script.get(), this, level));
 }
 
 void Game::SpawnPlayer(Vector v, Rotation r)

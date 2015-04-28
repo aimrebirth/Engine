@@ -98,14 +98,14 @@ endif(MSVC)
 
 include(BuildFunctions)
 
+add_definitions(-DUSE_LOGGER)
+
 include_directories(${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
 
 include_directories(include)
 include_directories(dep)
-
-add_library             (sqlite3 dep/sqlite3/sqlite3.c dep/sqlite3/sqlite3.h)
-project_group           (sqlite3 Extern)
+include_directories(dep/dbmgr/include)
 
 set(p dep/lua)
 set(lua_src
@@ -120,5 +120,9 @@ include_directories(dep/lua/)
 
 add_library             (lua ${lua_src})
 project_group           (lua Extern)
+
+add_subdirectory(dep/dbmgr)
+project_group           (sqlite3 Extern)
+project_group           (DatabaseManager Extern)
 
 add_subdirectory(src)

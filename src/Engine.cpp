@@ -16,32 +16,38 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <Polygon4/Engine.h>
 
-#include "Object.h"
+#include <Polygon4/Storage.h>
+
+#define DB_FILENAME "db.sqlite"
 
 namespace polygon4
 {
 
-class DbObject : public Object
+std::shared_ptr<Engine> Engine::createEngine(String modsDirectory)
 {
-public:
-    DbObject();
-    virtual ~DbObject();
-
-public:
-    ObjectName getResourceName() const;
-    void setResourceName(const ObjectName &name);
-
-    virtual bool load(int ncols, char **cols, char **names) = 0;
-    virtual bool save() const = 0;
-protected:
-    bool loaded = false;
-
-    // fields
-    int id = 0;
-    ObjectName resourceName;
-};
-
+    std::shared_ptr<Engine> engine(new Engine(modsDirectory));
+    if (!engine->storage())
+        return std::shared_ptr<Engine>(0);
+    return engine;
 }
 
+Engine::Engine(String modsDirectory)
+    : modsDirectory(modsDirectory)
+{
+    storage_ = initStorage(modsDirectory.string() + "/" DB_FILENAME);
+    storage_->load();
+}
+
+Engine::~Engine()
+{
+    storage_->save();
+}
+
+std::shared_ptr<Storage> Engine::storage() const
+{
+    return storage_;
+}
+
+} // namespace polygon4

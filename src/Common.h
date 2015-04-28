@@ -18,19 +18,18 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
-#include <unordered_map>
-#include <vector>
+//#include "db/DbTypes.h"
 
 namespace polygon4
 {
 
-class Sector;
-
-typedef std::string ObjectName;
-
-typedef std::unordered_map<ObjectName, class Object *> Objects;
-typedef std::unordered_map<ObjectName, std::shared_ptr<Sector>> Sectors;
+/*using engine::Strings;
+using engine::Weapons;
+using engine::Projectiles;
+using engine::Equipments;
+using engine::Goods;
+using engine::Gliders;
+using engine::Configurations;
+using engine::Sectors;*/
 
 }

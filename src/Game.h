@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
 #include <set>
 
@@ -48,9 +49,6 @@ public: /* API*/
 private:
     std::shared_ptr<Database> db;
     std::shared_ptr<Script> script;
-
-    Sectors sectors;
-    void loadSectors();
 
     void bindAPI();
 };

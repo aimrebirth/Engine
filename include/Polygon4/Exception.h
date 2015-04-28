@@ -18,44 +18,36 @@
 
 #pragma once
 
-#include "Common.h"
+#include <exception>
+#include <sstream>
+#include <string>
+
+#define EXCEPTION_PARAMS __FILE__, __FUNCTION__, __LINE__
+#define EXCEPTION(msg) polygon4::Exception(EXCEPTION_PARAMS, msg)
 
 namespace polygon4
 {
 
-class Object
+class Exception : public std::exception
 {
 public:
-    Object();
-    virtual ~Object();
-
-public:
-    ObjectName getInternalName() const;
-    ObjectName getDisplayedName() const;
-
-    bool hasObject(const ObjectName &name);
-    Object *getObject(const ObjectName &name);
-
-protected:
-    void setInternalName(const ObjectName &name);
-    void setDisplayedName(const ObjectName &name);
-    
-    bool addObject();
-    bool addObject(const ObjectName &name, Object *object);
-    bool removeObject();
-    bool removeObject(const ObjectName &name);
-
-    template <typename T>
-    static T addObjectPrefix(T name, T prefix)
+    Exception(){}
+    Exception(const char *file, const char *function, int line, const char *msg)
     {
-        return name + "_" + prefix;
+        std::stringstream ss;
+        ss << "Exception in file: " << file << " function: " << function << " line: " << line << ". "
+           << "Error description: " << msg << ".";
+
+        _what_str = ss.str();
     }
+    virtual ~Exception() throw () {} 
 
+    virtual const char *what() const throw ()
+    {
+        return _what_str.c_str();
+    }
 private:
-    ObjectName internalName;
-    ObjectName displayedName;
-
-    static Objects &getObjects();
+    std::string _what_str;
 };
 
-}
+} //namepsace gqp

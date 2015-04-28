@@ -39,7 +39,7 @@ project_group           (hotpatchable Tools)
 # SHARED LIBRARY Engine
 ########################################
 
-file(GLOB engine_inc "${CMAKE_SOURCE_DIR}/include/polygon4/*")
+file(GLOB_RECURSE engine_inc "${CMAKE_SOURCE_DIR}/include/polygon4/*")
 file(GLOB engine_src "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
 
 set(engine_src
@@ -54,7 +54,7 @@ set(engine_src
 )
 
 add_library             (Engine SHARED ${engine_src} ${engine_inc})
-target_link_libraries   (Engine lua sqlite3 ${Boost_LIBRARIES} dbghelp)
+target_link_libraries   (Engine DatabaseManager lua ${Boost_LIBRARIES} dbghelp)
 add_dependencies        (Engine api_lua clean_hotpatch)
 set_output_directory    (Engine ${library_dir})
 get_target_property     (name Engine NAME)
@@ -91,5 +91,19 @@ project_group           (pdbfix Tools)
 add_executable          (fixproject Tools/FixProject.cpp)
 set_output_directory    (fixproject ${library_dir})
 project_group           (fixproject Tools)
+
+
+########################################
+# EXECUTABLE Fix test
+########################################
+
+add_executable          (testEngine test/main.cpp)
+target_link_libraries   (testEngine Engine)
+set_output_directory    (testEngine ${library_dir})
+
+
+########################################
+# subdirectories
+########################################
 
 ################################################################################

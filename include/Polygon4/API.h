@@ -19,10 +19,13 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 
 #include "dll.h"
 #include "UnrealTypes.h"
-#include "String.h"
+#include <Polygon4/String.h>
+
+#define API_INFINITE_CALLS -1
 
 namespace polygon4
 {
@@ -30,10 +33,13 @@ namespace polygon4
 struct API
 {
 #define API_FUNCTION(type, name) \
-    type name; \
-    int n_##name = -1
+    std::shared_ptr<type> name; \
+    int n_##name = API_INFINITE_CALLS
 #include "API_functions.h"
 #undef API_FUNCTION
+
+    API(){}
+    ~API(){}
 };
 
 DLL_EXPORT
@@ -54,9 +60,9 @@ API &getAPI();
         LOG_DEBUG(logger, "API call: " << #func); \
         \
         auto &api = polygon4::getAPI(); \
-        if (api.func && api.n_##func != 0) \
+        if (api.func && *api.func.get() && api.n_##func != 0) \
         { \
-            api.func( __VA_ARGS__ ); \
+            api.func->operator()( __VA_ARGS__ ); \
             api.n_##func--; \
         } \
         else \
@@ -68,9 +74,9 @@ API &getAPI();
         LOG_DEBUG(logger, "API call: " << #func << ": " << msg); \
         \
         auto &api = polygon4::getAPI(); \
-        if (api.func && api.n_##func != 0) \
+        if (api.func && *api.func.get() && api.n_##func != 0) \
         { \
-            api.func( __VA_ARGS__ ); \
+            api.func->operator()( __VA_ARGS__ ); \
             api.n_##func--; \
         } \
         else \
@@ -78,16 +84,16 @@ API &getAPI();
     }
 
 #define REGISTER_API(api, function) \
-    polygon4::getAPI().api = function; \
-    polygon4::getAPI().n_##api = -1; \
+    polygon4::getAPI().api = std::make_shared<decltype(polygon4::API::api)::element_type>(function); \
+    polygon4::getAPI().n_##api = API_INFINITE_CALLS; \
     LOG_TRACE("api", "Register API: " << #api)
 
 #define REGISTER_API_N_CALLS(api, n, function) \
-    polygon4::getAPI().api = function; \
+    polygon4::getAPI().api = std::make_shared<decltype(polygon4::API::api)::element_type>(function); \
     polygon4::getAPI().n_##api = n; \
     LOG_TRACE("api", "Register API: " << #api)
 
 #define UNREGISTER_API(api) \
-    polygon4::getAPI().api = decltype(polygon4::API::api)(); \
-    polygon4::getAPI().n_##api = -1; \
+    polygon4::getAPI().api = nullptr; \
+    polygon4::getAPI().n_##api = API_INFINITE_CALLS; \
     LOG_TRACE("api", "Unregister API: " << #api)

@@ -18,8 +18,6 @@
 
 #pragma once
 
-#define USE_LOGGER 1
-
 #if USE_LOGGER
 
 #include <boost/log/trivial.hpp>

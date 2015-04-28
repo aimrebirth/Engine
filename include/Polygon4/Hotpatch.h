@@ -21,7 +21,7 @@
 #include <string>
 
 #include "dll.h"
-#include "String.h"
+#include <Polygon4/String.h>
 
 namespace polygon4
 {

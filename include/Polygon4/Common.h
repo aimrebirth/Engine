@@ -21,10 +21,6 @@
 #include <memory>
 #include <stdint.h>
 
-#include <codecvt>
-#include <locale>
-#include <string>
-
 #define DECLARE_GET_SET(type, name) \
     public: \
         type get##name() const; \
@@ -39,21 +35,3 @@
     private: \
         name(const name &) = delete; \
         name &operator=(const name &) = delete
-
-inline std::wstring to_wstring(const char *s)
-{
-    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-    return converter.from_bytes(s);
-}
-
-inline std::wstring to_wstring(const std::string &s)
-{
-    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-    return converter.from_bytes(s.c_str());
-}
-
-inline std::string to_string(const std::wstring s)
-{
-    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-    return converter.to_bytes(s.c_str());
-}

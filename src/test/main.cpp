@@ -16,20 +16,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <iostream>
+#include <string>
 
-#include "DbObject.h"
+#include <Polygon4/Engine.h>
+#include <Polygon4/Storage.h>
 
-namespace polygon4
+using namespace std;
+using namespace polygon4;
+
+int main(int argc, char *argv[])
 {
+    string dir = "../../../../";
+    auto engine = Engine::createEngine(dir + "Mods");
 
-class Sector : public DbObject
-{
-public:
-    virtual bool load(int ncols, char **cols, char **names);
-    virtual bool save() const;
+    auto &mods = engine->storage()->modifications;
+    for (auto &mod : mods)
+        cout << mod.first << "\n";
 
-private:
-};
+    shared_ptr<detail::Modification> mod(new detail::Modification);
+    mod->id = 2;
+    mod->name = "sdsdfsdfsdf";
+    mod->directory = "sdfsdf";
+    engine->storage()->modifications[mod->id] = mod;
 
+    for (auto &mod : mods)
+        cout << mod.first << "\n";
+    return 0;
 }
+

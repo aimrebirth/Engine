@@ -16,33 +16,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "Sector.h"
+#pragma once
 
-#include <Polygon4/Common.h>
+#include <memory>
 
-#include <tools/Logger.h>
+#include "dll.h"
 
-DECLARE_STATIC_LOGGER(logger, "sector");
+#include <Polygon4/String.h>
+#include <Polygon4/Storage.h>
 
 namespace polygon4
 {
-    
-bool Sector::load(int ncols, char **cols, char **names)
-{
-    if (loaded)
-        return false;
-    id = std::stoi(cols[0]);
-    setInternalName("SEC_" + std::string(cols[1]));
-    setDisplayedName(cols[2]);
-    setResourceName(cols[3]);
-    addObject();
-    loaded = true;
-    return true;
-}
 
-bool Sector::save() const
+class DLL_EXPORT Engine
 {
-    return true;
-}
+public:
+    virtual ~Engine();
 
-}
+    static std::shared_ptr<Engine> createEngine(String modsDirectory);
+
+    std::shared_ptr<Storage> storage() const;
+
+private:
+    Engine(String modsDirectory);
+
+    String modsDirectory;
+    std::shared_ptr<Storage> storage_;
+};
+
+} // namespace polygon4
