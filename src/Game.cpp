@@ -30,14 +30,8 @@ DECLARE_STATIC_LOGGER(logger, "game");
 namespace polygon4
 {
 
-Game::Game(std::shared_ptr<Database> db, std::shared_ptr<Script> script)
-    : db(db), script(script)
+Game::Game()
 {
-    if (!db)
-        throw std::exception("Database is not loaded!");
-    if (!script)
-        throw std::exception("ScriptRunner is not loaded!");
-
     bindAPI();
 }
 
