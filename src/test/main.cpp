@@ -17,10 +17,11 @@
  */
 
 #include <iostream>
+#include <locale>
 #include <string>
 
 #include <Polygon4/Engine.h>
-#include <Polygon4/Storage.h>
+#include <Polygon4/Modification.h>
 
 using namespace std;
 using namespace polygon4;
@@ -29,19 +30,8 @@ int main(int argc, char *argv[])
 {
     string dir = "../../../../";
     auto engine = Engine::createEngine(dir + "Mods");
+    auto &mods = engine->getModifications().set();
 
-    auto &mods = engine->storage()->modifications;
-    for (auto &mod : mods)
-        cout << mod.first << "\n";
-
-    shared_ptr<detail::Modification> mod(new detail::Modification);
-    mod->id = 2;
-    mod->name = "sdsdfsdfsdf";
-    mod->directory = "sdfsdf";
-    engine->storage()->modifications[mod->id] = mod;
-
-    for (auto &mod : mods)
-        cout << mod.first << "\n";
     return 0;
 }
 

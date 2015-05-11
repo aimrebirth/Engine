@@ -16,7 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-API_FUNCTION(std::function<void(String)>, OpenLevel);
-API_FUNCTION(std::function<void(void)>, OnOpenLevel);
+API_FUNCTION(GetModsDir, void(String&));
 
-API_FUNCTION(std::function<void(Vector, Rotation)>, SpawnPlayer);
+API_FUNCTION(OpenLevel, void(String));
+API_FUNCTION(OnOpenLevel, void(String));
+
+API_FUNCTION(SpawnStaticObjects, void(Ptr<polygon4::detail::Map>));
+API_FUNCTION(SpawnMechanoid, void(Ptr<polygon4::detail::Mechanoid>));

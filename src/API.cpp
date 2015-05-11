@@ -20,8 +20,6 @@
 
 #include <Polygon4/API.h>
 
-#include <assert.h>
-
 namespace polygon4
 {
 

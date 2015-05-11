@@ -19,29 +19,35 @@
 #pragma once
 
 #include <memory>
+#include <set>
 
 #include "dll.h"
 
+#include <Polygon4/Vector.h>
 #include <Polygon4/String.h>
 #include <Polygon4/Storage.h>
 
 namespace polygon4
 {
 
+class Modification;
+class Save;
+
 class DLL_EXPORT Engine
 {
 public:
+	static std::shared_ptr<Engine> createEngine(String modificationsDirectory);
+
+public:
     virtual ~Engine();
 
-    static std::shared_ptr<Engine> createEngine(String modsDirectory);
-
-    std::shared_ptr<Storage> storage() const;
+	Vector<Modification> getModifications() const;
+	//std::set<Save> getSaves() const;
 
 private:
-    Engine(String modsDirectory);
+	Engine(std::shared_ptr<Storage> storage);
 
-    String modsDirectory;
-    std::shared_ptr<Storage> storage_;
+	std::shared_ptr<Storage> storage;
 };
 
 } // namespace polygon4

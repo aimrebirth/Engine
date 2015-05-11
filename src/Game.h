@@ -25,19 +25,30 @@
 #include "Common.h"
 #include <Polygon4/UnrealTypes.h>
 
-class sqlite3;
-
 namespace polygon4
 {
 
-class Database;
+namespace detail
+{
+    class Modification;
+}
+
 class Script;
+
+enum class GameState : uint8_t
+{
+	None = 0x0,
+	Initialized,
+	Started,
+	Ended,
+	Bad
+};
 
 class Game
 {
 public:
     Game(){}
-    Game(std::shared_ptr<Database> db, std::shared_ptr<Script> script);
+    Game(std::shared_ptr<detail::Modification> data, std::shared_ptr<Script> script);
     virtual ~Game();
 
     void run();
@@ -47,8 +58,11 @@ public: /* API*/
     void SpawnPlayer(Vector v, Rotation r);
 
 private:
-    std::shared_ptr<Database> db;
+    std::shared_ptr<detail::Modification> data;
     std::shared_ptr<Script> script;
+
+	GameState state = GameState::None;
+	bool saved = false;
 
     void bindAPI();
 };

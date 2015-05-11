@@ -19,35 +19,48 @@
 #include <Polygon4/Engine.h>
 
 #include <Polygon4/Storage.h>
+#include <Polygon4/Modification.h>
 
 #define DB_FILENAME "db.sqlite"
 
 namespace polygon4
 {
 
-std::shared_ptr<Engine> Engine::createEngine(String modsDirectory)
+std::shared_ptr<Engine> Engine::createEngine(String modificationsDirectory)
 {
-    std::shared_ptr<Engine> engine(new Engine(modsDirectory));
-    if (!engine->storage())
-        return std::shared_ptr<Engine>(0);
-    return engine;
+	static std::shared_ptr<Storage> storage;
+	try
+	{
+		storage = initStorage(modificationsDirectory.string() + "/" DB_FILENAME);
+		storage->load();
+	}
+	catch (std::exception e)
+	{
+		return std::shared_ptr<Engine>(0);
+	}
+	return std::shared_ptr<Engine>(new Engine(storage));
 }
 
-Engine::Engine(String modsDirectory)
-    : modsDirectory(modsDirectory)
+Engine::Engine(std::shared_ptr<Storage> storage)
+	: storage(storage)
 {
-    storage_ = initStorage(modsDirectory.string() + "/" DB_FILENAME);
-    storage_->load();
 }
 
 Engine::~Engine()
 {
-    storage_->save();
 }
 
-std::shared_ptr<Storage> Engine::storage() const
+Vector<Modification> Engine::getModifications() const
 {
-    return storage_;
+	Vector<Modification> mods;
+	for (auto &mod : storage->modifications)
+		mods.push_back(mod.second);
+	return mods;
 }
+
+/*std::set<Save> Engine::getSaves() const
+{
+	return std::set<Save>();
+}*/
 
 } // namespace polygon4

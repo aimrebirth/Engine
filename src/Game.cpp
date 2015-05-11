@@ -24,20 +24,16 @@
 DECLARE_STATIC_LOGGER(logger, "game");
 
 #include <Polygon4/API.h>
+#include <Polygon4/Types.h>
 
 #include "Script.h"
 
 namespace polygon4
 {
 
-Game::Game(std::shared_ptr<Database> db, std::shared_ptr<Script> script)
-    : db(db), script(script)
+Game::Game(std::shared_ptr<detail::Modification> data, std::shared_ptr<Script> script)
+    : data(data), script(script)
 {
-    if (!db)
-        throw std::exception("Database is not loaded!");
-    if (!script)
-        throw std::exception("ScriptRunner is not loaded!");
-
     bindAPI();
 }
 
@@ -47,7 +43,16 @@ Game::~Game()
 
 void Game::run()
 {
-    script->main(this);
+    //script->main(this);
+    API_CALL(OpenLevel, data->directory.wstring() + data->player_mechanoid->map->resource.wstring());
+    REGISTER_API_N_CALLS(OnOpenLevel, 1, [&](String resource)
+    {
+        API_CALL(SpawnStaticObjects, data->player_mechanoid->map);
+        for (auto &level : data->maps)
+            if (level->map->resource == resource)
+                script->OnOpenLevel(this, level->map->text_id);
+        API_CALL(SpawnMechanoid, data->player_mechanoid.ptr);
+    });
 }
 
 void Game::bindAPI()
@@ -63,7 +68,7 @@ void Game::OpenLevel(std::string level)
 
 void Game::SpawnPlayer(Vector v, Rotation r)
 {
-    API_CALL(SpawnPlayer, v, r);
+    //API_CALL(SpawnPlayer, v, r);
 }
 
 } // namespace polygon4

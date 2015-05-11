@@ -18,60 +18,44 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
 #include <set>
 
 #include "dll.h"
-
-#include "Common.h"
 
 #include <Polygon4/String.h>
 
 namespace polygon4
 {
 
+namespace detail
+{
+    class Modification;
+}
+
 class Game;
 
-enum class GameState : uint8_t
+class DLL_EXPORT Modification
 {
-    None            =   0x0,
-    Initialized,
-    Started,
-    Ended,
-    Bad
-};
-    
-typedef std::set<class Mod> Mods;
-
-class DLL_EXPORT Mod
-{
-    DLL_EXPORT
-    friend const Mods &enumerateMods(String dataDirectory, String contentDirectory);
-
-private:
-    Mod(){}
+public:
+    std::shared_ptr<detail::Modification> data;
 
 public:
-    ~Mod();
-
-    bool isOk() const;
+	Modification(){}
+    Modification(std::shared_ptr<detail::Modification> modification);
+	~Modification();
 
     bool newGame();
     bool loadGame(String filename);
-    bool stopGame();
 
 public:
-    bool operator<(const Mod &rhs) const;
+	bool operator<(const Modification &rhs) const;
 
 private:
     // game data
     std::shared_ptr<Game> game;
-    GameState state = GameState::None;
-    bool saved = false;
 };
-
-DLL_EXPORT
-const Mods &enumerateMods(String dataDirectory, String contentDirectory);
 
 } // namespace polygon4
 

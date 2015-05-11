@@ -30,7 +30,6 @@ namespace polygon4
 
 std::string getScriptName(std::wstring path, std::wstring scriptName)
 {
-    //ScriptLua a;
     boost::filesystem::path p = path;
     p = p / "Scripts" / scriptName;
     return boost::filesystem::absolute(p).normalize().string();

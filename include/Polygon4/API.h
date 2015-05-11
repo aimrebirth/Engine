@@ -23,7 +23,7 @@
 
 #include "dll.h"
 #include "UnrealTypes.h"
-#include <Polygon4/String.h>
+#include <Polygon4/Types.h>
 
 #define API_INFINITE_CALLS -1
 
@@ -32,8 +32,8 @@ namespace polygon4
 
 struct API
 {
-#define API_FUNCTION(type, name) \
-    std::shared_ptr<type> name; \
+#define API_FUNCTION(name, type) \
+    std::shared_ptr<std::function<type>> name; \
     int n_##name = API_INFINITE_CALLS
 #include "API_functions.h"
 #undef API_FUNCTION
@@ -55,32 +55,26 @@ API &getAPI();
 
 #endif
 
+#define __API_CALL(func, ...) \
+    auto &api =  polygon4::getAPI(); \
+    if (api.func && *api.func.get() && api.n_##func != 0) \
+    { \
+        api.func->operator()( __VA_ARGS__ ); \
+        api.n_##func--; \
+    } \
+    else \
+        LOG_ERROR(logger, "API call is not set: " << #func);
+
 #define API_CALL(func, ...) \
     { \
         LOG_DEBUG(logger, "API call: " << #func); \
-        \
-        auto &api = polygon4::getAPI(); \
-        if (api.func && *api.func.get() && api.n_##func != 0) \
-        { \
-            api.func->operator()( __VA_ARGS__ ); \
-            api.n_##func--; \
-        } \
-        else \
-            LOG_ERROR(logger, "API call is not set: " << #func); \
+        __API_CALL(func, __VA_ARGS__ ); \
     }
 
 #define API_CALL_MSG(msg, func, ...) \
     { \
         LOG_DEBUG(logger, "API call: " << #func << ": " << msg); \
-        \
-        auto &api = polygon4::getAPI(); \
-        if (api.func && *api.func.get() && api.n_##func != 0) \
-        { \
-            api.func->operator()( __VA_ARGS__ ); \
-            api.n_##func--; \
-        } \
-        else \
-            LOG_ERROR(logger, "API call is not set: " << #func); \
+        __API_CALL(func, __VA_ARGS__ ); \
     }
 
 #define REGISTER_API(api, function) \
