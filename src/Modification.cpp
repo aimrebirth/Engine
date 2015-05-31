@@ -44,16 +44,19 @@ Modification::~Modification()
     
 bool Modification::newGame()
 {
+    if (data->directory.empty())
+    {
+        LOG_ERROR(logger, "Game directory is not set!");
+        return false;
+    }
     if (data->script_language.empty())
     {
-        //state = GameState::Bad;
-        LOG_ERROR(logger, "Script language is empty!");
+        LOG_ERROR(logger, "Script language is not set!");
         return false;
     }
     if (data->script_main.empty())
     {
-        //state = GameState::Bad;
-        LOG_ERROR(logger, "Main script name is empty!");
+        LOG_ERROR(logger, "Main script name is not set!");
         return false;
     }
 
@@ -64,6 +67,11 @@ bool Modification::newGame()
         auto script = Script::createScript(getScriptName(path.wstring() + data->directory.wstring(), data->script_main), data->script_language);
         game = std::make_shared<Game>(data, script);
         game->run();
+        if (game->getState() == GameState::Bad)
+        {
+            LOG_ERROR(logger, "Game did not start correctly!");
+            return false;
+        }
     }
     catch (std::exception e)
     {

@@ -52,6 +52,7 @@ public:
     virtual ~Game();
 
     void run();
+    GameState getState() const;
 
 public: /* API*/
     void OpenLevel(std::string level);

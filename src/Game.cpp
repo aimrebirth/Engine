@@ -41,10 +41,26 @@ Game::~Game()
 {
 }
 
+GameState Game::getState() const
+{
+    return state;
+}
+
 void Game::run()
 {
-    //script->main(this);
-    API_CALL(OpenLevel, data->directory.wstring() + data->player_mechanoid->map->resource.wstring());
+    if (!data->player_mechanoid)
+    {
+        LOG_ERROR(logger, "Player mechanoid is not set!");
+        state = GameState::Bad;
+        return;
+    }
+    if (!data->player_mechanoid->map)
+    {
+        LOG_ERROR(logger, "Player mechanoid map is not set!");
+        state = GameState::Bad;
+        return;
+    }
+    API_CALL(OpenLevel, data->player_mechanoid->map->resource.wstring());
     REGISTER_API_N_CALLS(OnOpenLevel, 1, [&](String resource)
     {
         API_CALL(SpawnStaticObjects, data->player_mechanoid->map);
