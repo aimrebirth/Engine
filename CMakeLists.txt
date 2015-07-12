@@ -23,8 +23,6 @@ set(output_dir  ${CMAKE_BINARY_DIR}/bin)
 set(library_dir ${CMAKE_SOURCE_DIR}/lib)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${output_dir})
-#set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${output_dir})
-#set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${output_dir})
 
 # Use solution folders.
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -42,8 +40,6 @@ if (MSVC OR XCODE)
     foreach(conf ${CMAKE_CONFIGURATION_TYPES})
         string(TOUPPER ${conf} conf2)
         set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${conf2} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-        #set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${conf2} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-        #set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${conf2} ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
     endforeach()
 endif()
 
@@ -83,8 +79,6 @@ endif()
 ################################################################################
 
 if (MSVC)
-    add_definitions(-DITERATOR_DEBUG_LEVEL=0)
-
     set(disable_msvc_warnings "/W1 /wd4996")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MP ${disable_msvc_warnings}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP ${disable_msvc_warnings}")
@@ -105,8 +99,6 @@ link_directories(${Boost_LIBRARY_DIRS})
 
 include_directories(include)
 include_directories(dep)
-include_directories(dep/dbmgr/include)
-
 set(p dep/lua)
 set(lua_src
     ${p}/lapi.c ${p}/lcode.c ${p}/lctype.c ${p}/ldebug.c ${p}/ldo.c ${p}/ldump.c ${p}/lfunc.c ${p}/lgc.c ${p}/llex.c
@@ -121,7 +113,12 @@ include_directories(dep/lua/)
 add_library             (lua ${lua_src})
 project_group           (lua Extern)
 
-add_subdirectory(dep/dbmgr)
+if (NOT DATABASE_MANAGER_DIR)
+    message(FATAL_ERROR "Please, set DATABASE_MANAGER_DIR variable")
+endif()
+
+add_subdirectory(${DATABASE_MANAGER_DIR} DatabaseManager)
+include_directories(${DATABASE_MANAGER_DIR}/include)
 project_group           (sqlite3 Extern)
 project_group           (DatabaseManager Extern)
 

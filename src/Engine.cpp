@@ -21,6 +21,9 @@
 #include <Polygon4/Storage.h>
 #include <Polygon4/Modification.h>
 
+#include "tools/Logger.h"
+DECLARE_STATIC_LOGGER(logger, "engine");
+
 #define DB_FILENAME "db.sqlite"
 
 namespace polygon4
@@ -34,8 +37,9 @@ std::shared_ptr<Engine> Engine::createEngine(String modificationsDirectory)
 		storage = initStorage(modificationsDirectory.string() + "/" DB_FILENAME);
 		storage->load();
 	}
-	catch (std::exception e)
+	catch (std::exception &e)
 	{
+        LOG_ERROR(logger, "Cannot load storage: " << e.what());
 		return std::shared_ptr<Engine>(0);
 	}
 	return std::shared_ptr<Engine>(new Engine(storage));

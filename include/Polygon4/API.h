@@ -25,6 +25,10 @@
 #include "UnrealTypes.h"
 #include <Polygon4/Types.h>
 
+#ifndef UE_LOG
+#define UE_LOG(...)
+#endif
+
 #define API_INFINITE_CALLS -1
 
 namespace polygon4
@@ -56,26 +60,40 @@ API &getAPI();
 #endif
 
 #define __API_CALL(func, ...) \
-    auto &api =  polygon4::getAPI(); \
-    if (api.func && *api.func.get() && api.n_##func != 0) \
-    { \
-        api.func->operator()( __VA_ARGS__ ); \
-        api.n_##func--; \
-    } \
-    else \
-        LOG_ERROR(logger, "API call is not set: " << #func);
+    do { \
+        try { \
+            auto &api =  polygon4::getAPI(); \
+            if (api.func && *api.func.get() && api.n_##func != 0) \
+            { \
+                api.func->operator()( __VA_ARGS__ ); \
+                api.n_##func--; \
+            } \
+            else \
+            { \
+                LOG_ERROR(logger, "API call is not set: " ## #func); \
+                UE_LOG(Polygon4, Error, L"API call is not set: %s", L#func); \
+            } \
+        } \
+        catch (const std::exception &e) \
+        { \
+            LOG_ERROR(logger, "Error during API call '" ## #func ## "': " << e.what()); \
+            UE_LOG(Polygon4, Error, TEXT("Error during API call '%s': %s"), L#func, e.what()); \
+        } \
+    } while (0)
 
 #define API_CALL(func, ...) \
-    { \
+    do { \
         LOG_DEBUG(logger, "API call: " << #func); \
+        UE_LOG(Polygon4, Log, TEXT("API call: %s"), L#func); \
         __API_CALL(func, __VA_ARGS__ ); \
-    }
+    } while (0)
 
 #define API_CALL_MSG(msg, func, ...) \
-    { \
+    do { \
         LOG_DEBUG(logger, "API call: " << #func << ": " << msg); \
+        UE_LOG(Polygon4, Log, TEXT("API call: %s"), L#func); \
         __API_CALL(func, __VA_ARGS__ ); \
-    }
+    } while (0)
 
 #define REGISTER_API(api, function) \
     polygon4::getAPI().api = std::make_shared<decltype(polygon4::API::api)::element_type>(function); \

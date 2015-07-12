@@ -73,7 +73,7 @@ bool Modification::newGame()
             return false;
         }
     }
-    catch (std::exception e)
+    catch (std::exception &e)
     {
         LOG_ERROR(logger, "Cannot start game: " << e.what());
         return false;
@@ -88,10 +88,12 @@ bool Modification::loadGame(String filename)
 
 bool Modification::operator<(const Modification &rhs) const
 {
-    if (data == rhs.data || data)
+    if (!data && !rhs.data)
         return false;
-    if (!data)
+    if (data && !rhs.data)
         return true;
+    if (!data && rhs.data)
+        return false;
     return data->directory < rhs.data->directory;
 }
 

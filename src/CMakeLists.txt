@@ -82,16 +82,6 @@ project_group           (clean_hotpatch Tools)
 
 
 ########################################
-# EXECUTABLE Fix PDB
-########################################
-
-add_executable          (pdbfix Tools/PdbFix.cpp)
-target_link_libraries   (pdbfix dbghelp)
-set_output_directory    (pdbfix ${library_dir})
-project_group           (pdbfix Tools)
-
-
-########################################
 # EXECUTABLE Fix project
 ########################################
 

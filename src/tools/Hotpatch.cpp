@@ -82,17 +82,19 @@ String prepare_module_for_hotload(String game_dir, String module_name)
     const std::string base_dll  = base_name + ext_dll;
     const std::string base_pdb  = base_name + ext_pdb;
 
-    if (!exists(dll / base_dll))
+    auto new_module = canonical(dll / base_dll);
+
+    if (!exists(new_module))
     {
-        LOG_DEBUG(logger, "New module does not exist, cancelling hot load");
+        LOG_DEBUG(logger, "New module '" << new_module << "' does not exist, cancelling hot load");
         return L"";
     }
 
     // Check module. If it is not changed, do not reload it.
     LOG_DEBUG(logger, "Checking if module has not changed");
-    LOG_DEBUG(logger, "Module: " << path(dll / base_dll).string());
+    LOG_DEBUG(logger, "Module: " << new_module.string());
 
-    auto lwt = last_write_time(dll / base_dll, ec);
+    auto lwt = last_write_time(new_module, ec);
     auto lwt_old = read_ver_module_filename();
 
     auto convert_time = [](time_t time)
@@ -426,9 +428,9 @@ void patch_import_table()
 {
     DWORD ulSize;
     
-    const std::string orig_dll  = boost::filesystem::path(read_orig_module_filename()).filename().string();
-    const std::string old_dll  = boost::filesystem::path(read_old_module_filename()).filename().string();
-    const std::string new_dll  = boost::filesystem::path(read_new_module_filename()).filename().string();
+    const std::string orig_dll = boost::filesystem::path(read_orig_module_filename()).filename().string();
+    const std::string old_dll = boost::filesystem::path(read_old_module_filename()).filename().string();
+    const std::string new_dll = boost::filesystem::path(read_new_module_filename()).filename().string();
     
     LOG_TRACE(logger, "orig_dll: " << orig_dll);
     LOG_TRACE(logger, "old_dll: " << old_dll);
@@ -543,4 +545,3 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 	}
     return TRUE;
 }
-
