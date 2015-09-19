@@ -40,22 +40,22 @@ String read_new_module_filename()
 
 String read_orig_module_filename_store()
 {
-    return boost::filesystem::temp_directory_path().string() + hotpatch_orig_filename;
+    return make_temp_filename(hotpatch_orig_filename);
 }
 
 String read_old_module_filename_store()
 {
-    return boost::filesystem::temp_directory_path().string() + hotpatch_old_filename;
+    return make_temp_filename(hotpatch_old_filename);
 }
 
 String read_new_module_filename_store()
 {
-    return boost::filesystem::temp_directory_path().string() + hotpatch_new_filename;
+    return make_temp_filename(hotpatch_new_filename);
 }
 
 String read_ver_module_filename_store()
 {
-    return boost::filesystem::temp_directory_path().string() + hotpatch_ver_filename;
+    return make_temp_filename(hotpatch_ver_filename);
 }
 
 String prepare_module_for_hotload(String game_dir, String module_name)
@@ -465,7 +465,7 @@ void patch_import_table()
 
     LOG_TRACE(logger, "Exports orig:");
     ExportsOld exports_orig;
-    for (int i = 1; i <= pExportDescOrig->NumberOfFunctions; i++)
+    for (size_t i = 1; i <= pExportDescOrig->NumberOfFunctions; i++)
     {
         auto address = GetProcAddress(hOrig, (LPCSTR)i);
         exports_orig[address] = i;
@@ -474,7 +474,7 @@ void patch_import_table()
 
     LOG_TRACE(logger, "Exports old:");
     ExportsOld exports_old;
-    for (int i = 1; i <= pExportDescOld->NumberOfFunctions; i++)
+    for (size_t i = 1; i <= pExportDescOld->NumberOfFunctions; i++)
     {
         auto address = GetProcAddress(hOld, (LPCSTR)i);
         exports_old[address] = i;
@@ -483,7 +483,7 @@ void patch_import_table()
 
     LOG_TRACE(logger, "Exports new:");
     ExportsNew exports_new;
-    for (int i = 1; i <= pExportDescNew->NumberOfFunctions; i++)
+    for (size_t i = 1; i <= pExportDescNew->NumberOfFunctions; i++)
     {
         auto address = GetProcAddress(hNew, (LPCSTR)i);
         exports_new[i] = address;
@@ -497,7 +497,7 @@ bool same_pid()
 {
     DWORD pid = GetCurrentProcessId();
     DWORD pid2 = 0;
-    auto temp = boost::filesystem::temp_directory_path().string() + hotpatch_pid_filename;
+    auto temp = make_temp_filename(hotpatch_pid_filename);
     LOG_TRACE(logger, "PID file: " << temp);
     std::ifstream ifile(temp);
     if (ifile)

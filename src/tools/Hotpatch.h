@@ -11,9 +11,14 @@
 #define hotpatch_new_filename   hotpatch_base_filename ".new"
 #define hotpatch_ver_filename   hotpatch_base_filename ".ver"
 
+inline std::string make_temp_filename(const std::string &filename)
+{
+    return (boost::filesystem::temp_directory_path() / filename).string();
+}
+
 inline std::string read_file_in_temp(const std::string &filename)
 {
-    auto temp = boost::filesystem::temp_directory_path().string() + filename;
+    auto temp = make_temp_filename(filename);
     std::ifstream ifile(temp);
     if (!ifile)
         return "";

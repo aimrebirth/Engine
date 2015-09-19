@@ -5,7 +5,7 @@ using namespace std;
 
 string user = "\
 <?xml version=\"1.0\" encoding=\"utf-8\"?>\n\
-<Project ToolsVersion=\"12.0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n\
+<Project ToolsVersion=\"14.0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n\
     <PropertyGroup>\n\
         <TargetName>%s</TargetName>\n\
     </PropertyGroup>\n\
