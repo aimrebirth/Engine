@@ -58,23 +58,73 @@ String read_ver_module_filename_store()
     return make_temp_filename(hotpatch_ver_filename);
 }
 
+std::string convert_time(time_t time)
+{
+    if (time <= 0)
+        return std::string();
+    const int sz = 50;
+    char buf[sz] = { 0 };
+    struct tm *t = localtime(&time);
+    strftime(buf, sz, "%d.%m.%Y %H:%M:%S", t);
+    if (!*buf)
+        return std::string();
+    std::string s(buf);
+    s = s.c_str();
+    return s;
+};
+
+void write_module_last_write_time(String game_dir, String module_name)
+{
+    using namespace boost::filesystem;
+
+    boost::system::error_code ec;
+
+    path base = path(to_wstring(game_dir)).normalize();
+    path dll = base / "ThirdParty" / to_string(module_name) / "lib";
+
+    const std::string base_name = "Engine.x64.";
+    const std::string ext_dll = "dll";
+    const std::string base_dll = base_name + ext_dll;
+
+    auto old_module = canonical(dll / base_dll);
+
+    if (!exists(old_module))
+    {
+        LOG_DEBUG(logger, "Old module '" << old_module << "' does not exist, writing '-1' as last write time");
+
+        std::ofstream ofile_ver(to_string(read_ver_module_filename_store()));
+        if (ofile_ver)
+            ofile_ver << -1;
+
+        return;
+    }
+
+    auto lwt = last_write_time(old_module, ec);
+
+    LOG_DEBUG(logger, "last_write_time    : " << convert_time(lwt) << " " << lwt);
+
+    std::ofstream ofile_ver(to_string(read_ver_module_filename_store()));
+    if (ofile_ver)
+        ofile_ver << last_write_time(old_module, ec);
+}
+
 String prepare_module_for_hotload(String game_dir, String module_name)
 {
     using namespace boost::filesystem;
     
     boost::system::error_code ec;
 
-    path base = path(game_dir.wstring()).normalize();
+    path base = path(to_wstring(game_dir)).normalize();
     path bin = base / "Binaries" / "Win64";
-    path dll = base / "ThirdParty" / module_name.string() / "lib";
+    path dll = base / "ThirdParty" / to_string(module_name) / "lib";
     std::string win64dir = "win64";
-    path win64 = base / "ThirdParty" / module_name.string() / win64dir;
+    path win64 = base / "ThirdParty" / to_string(module_name) / win64dir;
     path project = win64 / "src" / "Engine.vcxproj.user";
     path pdbfix = dll / "pdbfix.exe";
     path fixproject = dll / "fixproject.exe";
     path result;
 
-    LOG_DEBUG(logger, "Preparing module for hot load: " << module_name.string());
+    LOG_DEBUG(logger, "Preparing module for hot load: " << to_string(module_name));
 
     const std::string base_name = "Engine.x64.";
     const std::string ext_dll = "dll";
@@ -96,21 +146,6 @@ String prepare_module_for_hotload(String game_dir, String module_name)
 
     auto lwt = last_write_time(new_module, ec);
     auto lwt_old = read_ver_module_filename();
-
-    auto convert_time = [](time_t time)
-    {
-        if (time <= 0)
-            return std::string();
-        const int sz = 50;
-        char buf[sz] = { 0 };
-        struct tm *t = localtime(&time);
-        strftime(buf, sz, "%d.%m.%Y %H:%M:%S", t);
-        if (!*buf)
-            return std::string();
-        std::string s(buf);
-        s = s.c_str();
-        return s;
-    };
 
     LOG_DEBUG(logger, "last_write_time    : " << convert_time(lwt) << " " << lwt);
     LOG_DEBUG(logger, "last_write_time old: " << convert_time(stoi(lwt_old)) << " " << lwt_old);
@@ -149,15 +184,15 @@ String prepare_module_for_hotload(String game_dir, String module_name)
         LOG_DEBUG(logger, "copied: " << result.string());
         copy_file(dll / base_pdb, result_pdb, copy_option::overwrite_if_exists, ec);
 
-        std::ofstream ofile_old(read_old_module_filename_store().string());
+        std::ofstream ofile_old(to_string(read_old_module_filename_store()));
         if (ofile_old)
             ofile_old << path(bin / (apply_index(base_name, current_i - 1) + ext_dll)).string();
 
-        std::ofstream ofile_new(read_new_module_filename_store().string());
+        std::ofstream ofile_new(to_string(read_new_module_filename_store()));
         if (ofile_new)
             ofile_new << result.string();
         
-        std::ofstream ofile_ver(read_ver_module_filename_store().string());
+        std::ofstream ofile_ver(to_string(read_ver_module_filename_store()));
         if (ofile_ver)
             ofile_ver << last_write_time(result, ec);
         

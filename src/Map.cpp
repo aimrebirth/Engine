@@ -16,18 +16,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <Polygon4/Map.h>
 
-#include <Polygon4/API.h>
+#include <tools/Logger.h>
+DECLARE_STATIC_LOGGER(logger, "maps");
 
 namespace polygon4
 {
 
-API &getAPI()
+Map::Map(const Base &rhs)
+    : Base(rhs)
 {
-    static API api;
-    return api;
 }
 
+bool Map::loadObjects()
+{
+    for (auto &v : *buildings)
+        v->spawn();
+    for (auto &v : *objects)
+        v->spawn();
+    return true;
 }
 
+} // namespace polygon4

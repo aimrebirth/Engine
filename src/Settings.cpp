@@ -16,59 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include <memory>
-#include <string>
-#include <set>
-
-#include "Common.h"
-#include <Polygon4/UnrealTypes.h>
+#include <Polygon4/Settings.h>
 
 namespace polygon4
 {
 
-namespace detail
+Settings &getSettings()
 {
-    class Modification;
+    static Settings settings;
+    return settings;
 }
 
-class Script;
-
-enum class GameState : uint8_t
-{
-	None = 0x0,
-	Initialized,
-	Started,
-	Ended,
-	Bad
-};
-
-class Game
-{
-public:
-    Game(){}
-    Game(std::shared_ptr<detail::Modification> data, std::shared_ptr<Script> script);
-    virtual ~Game();
-
-    void run();
-    GameState getState() const;
-
-public: /* API*/
-    void OpenLevel(std::string level);
-    void SpawnPlayer(Vector v, Rotation r);
-
-private:
-    std::shared_ptr<detail::Modification> data;
-    std::shared_ptr<Script> script;
-
-	GameState state = GameState::None;
-	bool saved = false;
-
-    void bindAPI();
-};
-
 } // namespace polygon4
-
-polygon4::Game *ptrToGame(void *ptr);
-

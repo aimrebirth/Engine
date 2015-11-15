@@ -23,15 +23,23 @@
 #include <Polygon4/Engine.h>
 #include <Polygon4/Modification.h>
 
-using namespace std;
-using namespace polygon4;
+class Modification : public polygon4::detail::Modification
+{
+    using Base = polygon4::detail::Modification;
+public:
+    Modification() = default;
+    Modification(const polygon4::detail::Modification &m)
+        : Base(m)
+    {
+    }
+};
 
 int main(int argc, char *argv[])
 {
-    string dir = "../../../../";
-    auto engine = Engine::createEngine(dir + "Mods");
-    auto &mods = engine->getModifications().set();
-
+    polygon4::detail::CTable<polygon4::detail::Modification> m;
+    auto v = m.createAtEnd();
+    v->directory = "a";
+    v->replace<Modification>(v.get());
     return 0;
 }
 

@@ -18,36 +18,61 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <set>
 
-#include "dll.h"
-
-#include <Polygon4/Vector.h>
-#include <Polygon4/String.h>
-#include <Polygon4/Storage.h>
+#include <Polygon4/DataManager/String.h>
+#include <Polygon4/DataManager/Storage.h>
 
 namespace polygon4
 {
 
+using Function = std::function<void()>;
+
 class Modification;
 class Save;
 
-class DLL_EXPORT Engine
+class DLL_EXPORT IEngine
 {
 public:
-	static std::shared_ptr<Engine> createEngine(String modificationsDirectory);
+    virtual ~IEngine();
+
+    virtual void initChildren() = 0;
+
+    template <class T, class... Args>
+    static std::shared_ptr<T> create(Args&&... args)
+    {
+        auto p = std::make_shared<T>(std::forward<Args>(args)...);
+        p->initChildren();
+        return p;
+    }
+
+    virtual bool reloadStorage() = 0;
+    virtual bool reloadMods() = 0;
+
+    virtual void ShowMainMenu() = 0;
+    virtual void HideMainMenu() = 0;
+
+    virtual void OnLevelLoaded() = 0;
+    Function LoadLevelObjects;
+};
+
+class DLL_EXPORT Engine : public IEngine
+{
+protected:
+    Engine(const String &modificationsDirectory);
 
 public:
     virtual ~Engine();
 
-	Vector<Modification> getModifications() const;
-	//std::set<Save> getSaves() const;
+    virtual bool reloadStorage() override;
+    virtual bool reloadMods() override;
 
-private:
-	Engine(std::shared_ptr<Storage> storage);
-
+protected:
 	std::shared_ptr<Storage> storage;
 };
+
+extern IEngine *gEngine;
 
 } // namespace polygon4

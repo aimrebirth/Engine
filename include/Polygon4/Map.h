@@ -18,8 +18,20 @@
 
 #pragma once
 
-#ifdef WIN32
-#define DLL_EXPORT __declspec(dllexport)
-#else
-#define DLL_EXPORT
-#endif
+#include <Polygon4/DataManager/Types.h>
+
+namespace polygon4
+{
+
+class DLL_EXPORT Map : public detail::Map
+{
+    using Base = detail::Map;
+
+public:
+    Map(const Base &);
+
+    virtual bool loadObjects() override final;
+};
+
+} // namespace polygon4
+

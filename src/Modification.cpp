@@ -20,10 +20,10 @@
 
 #include <boost/filesystem.hpp>
 
-#include <Polygon4/API.h>
-#include <Polygon4/Types.h>
+#include <Polygon4/DataManager/Types.h>
+#include <Polygon4/Engine.h>
+#include <Polygon4/Settings.h>
 
-#include "Game.h"
 #include "Script.h"
 
 #include <tools/Logger.h>
@@ -32,46 +32,54 @@ DECLARE_STATIC_LOGGER(logger, "mods");
 namespace polygon4
 {
 
-Modification::Modification(Ptr<detail::Modification> modification)
-	: data(modification)
-{
-
-}
-
-Modification::~Modification()
+Modification::Modification(const Base &rhs)
+    : Base(rhs)
 {
 }
-    
+
 bool Modification::newGame()
 {
-    if (data->directory.empty())
+    if (directory.empty())
     {
         LOG_ERROR(logger, "Game directory is not set!");
         return false;
     }
-    if (data->script_language.empty())
+    if (script_language.empty())
     {
         LOG_ERROR(logger, "Script language is not set!");
         return false;
     }
-    if (data->script_main.empty())
+    if (script_main.empty())
     {
         LOG_ERROR(logger, "Main script name is not set!");
         return false;
     }
 
-    String path;
-    API_CALL(GetModsDir, path);
+    const auto &path = getSettings().modsDir;
     try
     {
-        auto script = Script::createScript(getScriptName(path.wstring() + data->directory.wstring(), data->script_main), data->script_language);
-        game = std::make_shared<Game>(data, script);
-        game->run();
-        if (game->getState() == GameState::Bad)
+        auto script_name = getScriptName(to_wstring(path + directory), to_wstring(script_main));
+        auto script = Script::createScript(script_name, to_string(script_language));
+
+        auto &pmap = player_mechanoid->map->map;
+        auto i = std::find_if(maps->begin(), maps->end(), [&pmap](const auto &map)
         {
-            LOG_ERROR(logger, "Game did not start correctly!");
+            return map->map == pmap;
+        });
+        if (i == maps->end())
+        {
+            LOG_ERROR(logger, "Cannot find map: " << to_string(pmap->resource));
             return false;
         }
+
+        if (!pmap->loadLevel())
+            return false;
+
+        gEngine->HideMainMenu();
+        gEngine->LoadLevelObjects = std::bind(&IMap::loadObjects, *pmap);
+
+
+        //spawnMechanoid(data->player_mechanoid);
     }
     catch (std::exception &e)
     {
@@ -81,20 +89,14 @@ bool Modification::newGame()
     return true;
 }
 
-bool Modification::loadGame(String filename)
+bool Modification::loadGame(const String &filename)
 {
     return false;
 }
 
 bool Modification::operator<(const Modification &rhs) const
 {
-    if (!data && !rhs.data)
-        return false;
-    if (data && !rhs.data)
-        return true;
-    if (!data && rhs.data)
-        return false;
-    return data->directory < rhs.data->directory;
+    return directory < rhs.directory;
 }
 
 } // namespace polygon4

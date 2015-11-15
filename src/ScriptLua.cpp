@@ -22,8 +22,6 @@
 
 #include <API_lua.cpp>
 
-#include <Polygon4/API.h>
-
 #include <tools/Logger.h>
 DECLARE_STATIC_LOGGER(logger, "script_lua");
 
@@ -50,7 +48,7 @@ ScriptLua::ScriptLua(const std::string &filename)
     }
 }
 
-void ScriptLua::main(Game *game)
+/*void ScriptLua::main(Game *game)
 {
     LOG_DEBUG(logger, "main()");
 
@@ -73,7 +71,7 @@ void ScriptLua::OnOpenLevel(Game *game, std::string level)
     {
         LOG_ERROR(logger, "Error: " << lua_tostring(L, -1));
     }
-}
+}*/
 
 ScriptLua::~ScriptLua()
 {

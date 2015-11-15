@@ -3,12 +3,12 @@
 %include <std_string.i>
 
 %{
-#include "Game.h"
+#include "../include/Polygon4/UnrealTypes.h"
 %}
 
 %include "../include/Polygon4/UnrealTypes.h"
 
-namespace polygon4
+/*namespace polygon4
 {
 
 class Game
@@ -18,5 +18,5 @@ public:
     //void SpawnPlayer(Vector v, Rotation r);
 };
 
-}
+}*/
 

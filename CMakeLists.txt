@@ -24,6 +24,8 @@ set(library_dir ${CMAKE_SOURCE_DIR}/lib)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${output_dir})
 
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS 1)
+
 # Use solution folders.
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "CMake Targets")
@@ -93,6 +95,8 @@ endif(MSVC)
 include(BuildFunctions)
 
 add_definitions(-DUSE_LOGGER)
+set(POLYGON4_ENGINE 1)
+add_definitions(-DPOLYGON4_ENGINE=1)
 
 include_directories(${Boost_INCLUDE_DIRS})
 link_directories(${Boost_LIBRARY_DIRS})
@@ -113,13 +117,13 @@ include_directories(dep/lua/)
 add_library             (lua ${lua_src})
 project_group           (lua Extern)
 
-if (NOT DATABASE_MANAGER_DIR)
-    message(FATAL_ERROR "Please, set DATABASE_MANAGER_DIR variable")
+if (NOT DATA_MANAGER_DIR)
+    message(FATAL_ERROR "Please, set DATA_MANAGER_DIR variable")
 endif()
 
-add_subdirectory(${DATABASE_MANAGER_DIR} DatabaseManager)
-include_directories(${DATABASE_MANAGER_DIR}/include)
-project_group           (sqlite3 Extern)
-project_group           (DatabaseManager Extern)
+set(SOLUTION_FOLDER Extern)
+add_subdirectory(${DATA_MANAGER_DIR} DataManager)
+include_directories(${DATA_MANAGER_DIR}/include)
+include_directories(${DATA_MANAGER_ADDITIONAL_INCLUDES})
 
 add_subdirectory(src)

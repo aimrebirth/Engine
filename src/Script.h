@@ -27,8 +27,6 @@
 namespace polygon4
 {
 
-class Game;
-
 enum class ScriptLanguage : uint8_t
 {
     Unknown,
@@ -38,6 +36,8 @@ enum class ScriptLanguage : uint8_t
 
 class Script
 {
+    DISALLOW_COPY_CONSTRUCTORS(Script);
+
 public:
     Script(const std::string &filename);
     virtual ~Script(){}
@@ -45,18 +45,13 @@ public:
     static std::shared_ptr<Script> createScript(const std::string &filename, std::string language);
 
 public: /* API*/
-    virtual void main(Game *game) = 0;
+    //virtual void main(Game *game) = 0;
 
-    virtual void OnOpenLevel(Game *game, std::string level) = 0;
+    //virtual void OnOpenLevel(Game *game, std::string level) = 0;
 
 protected:
     std::string filename;
     ScriptLanguage language = ScriptLanguage::Unknown;
-
-protected:
-
-private:
-    DISALLOW_COPY_CONSTRUCTORS(Script);
 };
 
 std::string getScriptName(std::wstring path, std::wstring scriptName);

@@ -32,9 +32,9 @@ public:
     virtual ~ScriptLua();
     
 public: /* API*/
-    virtual void main(Game *game);
+    //virtual void main(Game *game);
 
-    virtual void OnOpenLevel(Game *game, std::string level);
+    //virtual void OnOpenLevel(Game *game, std::string level);
 
 private:
     lua_State *L;

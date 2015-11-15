@@ -22,39 +22,24 @@
 #include <string>
 #include <set>
 
-#include "dll.h"
-
-#include <Polygon4/String.h>
+#include <Polygon4/DataManager/Types.h>
 
 namespace polygon4
 {
 
-namespace detail
-{
-    class Modification;
-}
-
 class Game;
 
-class DLL_EXPORT Modification
+class DLL_EXPORT Modification : public detail::Modification
 {
-public:
-    std::shared_ptr<detail::Modification> data;
+    using Base = detail::Modification;
 
 public:
-	Modification(){}
-    Modification(std::shared_ptr<detail::Modification> modification);
-	~Modification();
+    Modification(const Base &);
 
-    bool newGame();
-    bool loadGame(String filename);
+    virtual bool newGame() override final;
+    virtual bool loadGame(const String &filename) override final;
 
-public:
-	bool operator<(const Modification &rhs) const;
-
-private:
-    // game data
-    std::shared_ptr<Game> game;
+    bool operator<(const Modification &rhs) const;
 };
 
 } // namespace polygon4

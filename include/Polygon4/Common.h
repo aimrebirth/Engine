@@ -32,6 +32,5 @@
     void class::set##name(type var) { this->var = var; }
 
 #define DISALLOW_COPY_CONSTRUCTORS(name) \
-    private: \
-        name(const name &) = delete; \
-        name &operator=(const name &) = delete
+    name(const name &) = delete; \
+    name &operator=(const name &) = delete

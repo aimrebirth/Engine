@@ -20,8 +20,8 @@
 
 #include <string>
 
-#include "dll.h"
-#include <Polygon4/String.h>
+#include <Polygon4/DataManager/dll.h>
+#include <Polygon4/DataManager/String.h>
 
 namespace polygon4
 {
@@ -45,9 +45,12 @@ DLL_EXPORT
 String read_new_module_filename_store();
 
 DLL_EXPORT
-String prepare_module_for_hotload(String game_dir, String module_name);
+String read_ver_module_filename_store();
 
 DLL_EXPORT
-String read_ver_module_filename_store();
+void write_module_last_write_time(String game_dir, String module_name);
+
+DLL_EXPORT
+String prepare_module_for_hotload(String game_dir, String module_name);
 
 }

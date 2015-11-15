@@ -18,8 +18,10 @@
 
 #include <Polygon4/Engine.h>
 
-#include <Polygon4/Storage.h>
+#include <Polygon4/DataManager/Storage.h>
+#include <Polygon4/DataManager/Helpers.h> // to keep helper symbols in dll
 #include <Polygon4/Modification.h>
+#include <Polygon4/Settings.h>
 
 #include "tools/Logger.h"
 DECLARE_STATIC_LOGGER(logger, "engine");
@@ -29,42 +31,52 @@ DECLARE_STATIC_LOGGER(logger, "engine");
 namespace polygon4
 {
 
-std::shared_ptr<Engine> Engine::createEngine(String modificationsDirectory)
+IEngine *gEngine;
+
+IEngine::~IEngine()
 {
-	static std::shared_ptr<Storage> storage;
-	try
-	{
-		storage = initStorage(modificationsDirectory.string() + "/" DB_FILENAME);
-		storage->load();
-	}
-	catch (std::exception &e)
-	{
-        LOG_ERROR(logger, "Cannot load storage: " << e.what());
-		return std::shared_ptr<Engine>(0);
-	}
-	return std::shared_ptr<Engine>(new Engine(storage));
 }
 
-Engine::Engine(std::shared_ptr<Storage> storage)
-	: storage(storage)
+Engine::Engine(const String &modificationsDirectory)
 {
+    gEngine = this;
+    getSettings().modsDir = modificationsDirectory;
+    reloadStorage();
 }
 
 Engine::~Engine()
 {
+    // workaround for linker not to hide these symbols from data manager
+    auto dummy = []()
+    {
+        detail::getTableNameByType(detail::EObjectType::Any);
+        detail::getTableType("");
+    };
+    dummy();
 }
 
-Vector<Modification> Engine::getModifications() const
+bool Engine::reloadStorage()
 {
-	Vector<Modification> mods;
-	for (auto &mod : storage->modifications)
-		mods.push_back(mod.second);
-	return mods;
+    try
+    {
+        auto s = initStorage(to_string(getSettings().modsDir) + "/" DB_FILENAME);
+        s->load();
+        storage = s;
+    }
+    catch (std::exception &e)
+    {
+        LOG_ERROR(logger, "Cannot load storage: " << e.what());
+        return false;
+    }
+    return true;
 }
 
-/*std::set<Save> Engine::getSaves() const
+bool Engine::reloadMods()
 {
-	return std::set<Save>();
-}*/
+    if (!reloadStorage())
+        return false;
+    initChildren();
+    return true;
+}
 
 } // namespace polygon4
