@@ -20,29 +20,27 @@
 
 #ifdef WIN32
 
-auto dll_alloc = &malloc;
-auto dll_free = &free;
+decltype(malloc) *dll_alloc = nullptr;
+decltype(free) *dll_free = nullptr;
 
-void Polygon4InitMm(decltype(malloc) alloc, decltype(free) free)
+void* alloc_internal(size_t size)
 {
-    dll_alloc = alloc;
-    dll_free = free;
+    return dll_alloc(size);
 }
 
-void Polygon4ResetMm()
+void free_internal(void* ptr)
 {
-    dll_alloc = &malloc;
-    dll_free = &free;
+    dll_free(ptr);
 }
 
-void* operator new  (size_t size){ return dll_alloc(size); }
-void* operator new[](size_t size) { return dll_alloc(size); }
-void* operator new  (size_t size, const std::nothrow_t&) throw(){ return dll_alloc(size); }
-void* operator new[](size_t size, const std::nothrow_t&) throw() { return dll_alloc(size); }
-void operator delete  (void* ptr) { dll_free(ptr); }
-void operator delete[](void* ptr) { dll_free(ptr); }
-void operator delete  (void* ptr, const std::nothrow_t&) throw() { dll_free(ptr); }
-void operator delete[](void* ptr, const std::nothrow_t&) throw() { dll_free(ptr); }
+void* operator new  (size_t size) { return alloc_internal(size); }
+void* operator new[](size_t size) { return alloc_internal(size); }
+void* operator new  (size_t size, const std::nothrow_t&) throw() { return alloc_internal(size); }
+void* operator new[](size_t size, const std::nothrow_t&) throw() { return alloc_internal(size); }
+void operator delete  (void* ptr) { free_internal(ptr); }
+void operator delete[](void* ptr) { free_internal(ptr); }
+void operator delete  (void* ptr, const std::nothrow_t&) throw() { free_internal(ptr); }
+void operator delete[](void* ptr, const std::nothrow_t&) throw() { free_internal(ptr); }
 
 #define POLYGON4_INIT_MEMORY_FUNCTION Polygon4InitMemory
 #define POLYGON4_INIT_MEMORY_FUNCTION_NAME "Polygon4InitMemory"
@@ -62,7 +60,7 @@ POLYGON4_INIT_MEMORY_FUNCTION find_proc(const char *module)
     return (POLYGON4_INIT_MEMORY_FUNCTION)GetProcAddress(lib, InitMemoryName);
 }
 
-void try_load_mm()
+bool try_load_mm()
 {
     HMODULE hMods[1024];
     auto hProcess = GetCurrentProcess();
@@ -79,20 +77,21 @@ void try_load_mm()
                 if (proc)
                 {
                     proc((void **)&dll_alloc, (void **)&dll_free);
-                    return;
+                    return true;
                 }
             }
         }
     }
+    return false;
 }
 
-/*static
+static
 struct ______init
 {
     ______init()
     {
         try_load_mm();
     }
-} ______init;*/
+} ______init;
 
 #endif

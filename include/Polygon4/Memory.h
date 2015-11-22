@@ -16,6 +16,8 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#pragma once
+
 #include <memory>
 #include <stdint.h>
 
@@ -40,13 +42,29 @@
         *free = (void*)&dll_free; \
     }
 
-DLL_EXPORT
-void Polygon4InitMm(decltype(malloc) alloc, decltype(free) free);
-DLL_EXPORT
-void Polygon4ResetMm();
+#include <Windows.h>
+
+extern "C"
+HRESULT WINAPI __HrLoadAllImportsForDll(LPCSTR szDll);
+extern "C"
+BOOL WINAPI __FUnloadDelayLoadedDLL2(LPCSTR szDll);
 
 #else // !WIN32
 
 #define POLYGON4_UNREAL_MEMORY_STUB
 
 #endif
+
+inline void Polygon4InitMm(const char *dll)
+{
+#if WIN32
+    __HrLoadAllImportsForDll(dll);
+#endif
+}
+
+inline void Polygon4ResetMm(const char *dll)
+{
+#if WIN32
+    __FUnloadDelayLoadedDLL2(dll);
+#endif
+}

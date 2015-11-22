@@ -1,9 +1,7 @@
 #include <fstream>
 #include <iostream>
 
-using namespace std;
-
-string user = "\
+const std::string user = "\
 <?xml version=\"1.0\" encoding=\"utf-8\"?>\n\
 <Project ToolsVersion=\"14.0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\n\
     <PropertyGroup>\n\
@@ -26,14 +24,14 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    string base = argv[3];
-    string lib = base + ".lib";
-    string pdb = base + ".pdb";
+    std::string base = argv[3];
+    auto lib = base + ".lib";
+    auto pdb = base + ".pdb";
 
     char buf[8192] = { 0 };
     sprintf(buf, user.c_str(), argv[2], lib.c_str(), pdb.c_str());
 
-    ofstream ofile(argv[1]);
+    std::ofstream ofile(argv[1]);
     if (!ofile)
     {
         printf("Cannot open the output file: %s", argv[1]);

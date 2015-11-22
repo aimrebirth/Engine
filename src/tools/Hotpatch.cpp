@@ -132,19 +132,20 @@ String prepare_module_for_hotload(String game_dir, String module_name)
     const std::string base_dll  = base_name + ext_dll;
     const std::string base_pdb  = base_name + ext_pdb;
 
-    auto new_module = canonical(dll / base_dll);
+    auto main_module_dll = canonical(dll / base_dll);
+    auto main_module_pdb = canonical(dll / base_pdb);
 
-    if (!exists(new_module))
+    if (!exists(main_module_dll))
     {
-        LOG_DEBUG(logger, "New module '" << new_module << "' does not exist, cancelling hot load");
+        LOG_DEBUG(logger, "New module '" << main_module_dll << "' does not exist, cancelling hot load");
         return L"";
     }
 
     // Check module. If it is not changed, do not reload it.
     LOG_DEBUG(logger, "Checking if module has not changed");
-    LOG_DEBUG(logger, "Module: " << new_module.string());
+    LOG_DEBUG(logger, "Module: " << main_module_dll.string());
 
-    auto lwt = last_write_time(new_module, ec);
+    auto lwt = last_write_time(main_module_dll, ec);
     auto lwt_old = read_ver_module_filename();
 
     LOG_DEBUG(logger, "last_write_time    : " << convert_time(lwt) << " " << lwt);
@@ -155,7 +156,7 @@ String prepare_module_for_hotload(String game_dir, String module_name)
         LOG_DEBUG(logger, "Error occured: " << ec.message());
         return L"";
     }
-    if (lwt_old == std::to_string(lwt) || lwt == -1)
+    if (std::stoi(lwt_old) >= lwt || lwt == -1)
     {
         LOG_DEBUG(logger, "Old module! Nothing to patch...");
         return L"";
@@ -175,14 +176,14 @@ String prepare_module_for_hotload(String game_dir, String module_name)
         int current_i = i++;
         result          = bin / (apply_index(base_name, current_i) + ext_dll);
         path result_pdb = bin / (apply_index(base_name, current_i) + ext_pdb);
-        copy_file(dll / base_dll, result, copy_option::overwrite_if_exists, ec);
+        copy_file(main_module_dll, result, copy_option::overwrite_if_exists, ec);
         if (ec)
         {
             LOG_DEBUG(logger, "dst dll is busy: " << result.string());
             continue;
         }
         LOG_DEBUG(logger, "copied: " << result.string());
-        copy_file(dll / base_pdb, result_pdb, copy_option::overwrite_if_exists, ec);
+        //copy_file(main_module_pdb, result_pdb, copy_option::overwrite_if_exists, ec);
 
         std::ofstream ofile_old(to_string(read_old_module_filename_store()));
         if (ofile_old)
@@ -191,13 +192,9 @@ String prepare_module_for_hotload(String game_dir, String module_name)
         std::ofstream ofile_new(to_string(read_new_module_filename_store()));
         if (ofile_new)
             ofile_new << result.string();
-        
-        std::ofstream ofile_ver(to_string(read_ver_module_filename_store()));
-        if (ofile_ver)
-            ofile_ver << last_write_time(result, ec);
-        
-        LOG_DEBUG(logger, "Fixing PDB");
 
+        // fix project: to get new dll with number in name
+        //  not fixed dlls cannot take correct pdb
         {
             std::string cmd;
             cmd += "\"" + fixproject.string() + "\"" + " ";
@@ -213,6 +210,7 @@ String prepare_module_for_hotload(String game_dir, String module_name)
             GetExitCodeProcess(pi.hProcess, &rc);
             LOG_DEBUG(logger, "fix project rc: " << rc);
         }
+        // cmake build: get new dll with number in name
         {
             std::string cmake = find_executable_in_path("cmake");
             std::string cmd;
@@ -227,7 +225,27 @@ String prepare_module_for_hotload(String game_dir, String module_name)
             GetExitCodeProcess(pi.hProcess, &rc);
             LOG_DEBUG(logger, "cmake rc: " << rc);
         }
+        // fix pdb: in new dll
+        {
+            std::string cmd;
+            cmd += "\"" + pdbfix.string() + "\"" + " ";
+            cmd += "\"" + (dll / result.filename()).string() + "\"" + " ";
+            LOG_DEBUG(logger, "pdb fix: " << cmd);
+            STARTUPINFO si = { 0 };
+            PROCESS_INFORMATION pi = { 0 };
+            CreateProcess(pdbfix.string().c_str(), (char *)cmd.c_str(), 0, 0, TRUE, CREATE_NO_WINDOW, 0, 0, &si, &pi);
+            WaitForSingleObject(pi.hProcess, INFINITE);
+            DWORD rc = 0;
+            GetExitCodeProcess(pi.hProcess, &rc);
+            LOG_DEBUG(logger, "pdb fix rc: " << rc);
+        }
 
+        // should be after dll fix
+        std::ofstream ofile_ver(to_string(read_ver_module_filename_store()));
+        if (ofile_ver)
+            ofile_ver << last_write_time(result, ec);
+
+        // copy FIXED dll and NEW pdb
         copy_file(dll / (apply_index(base_name, current_i) + ext_dll), result, copy_option::overwrite_if_exists, ec);
         copy_file(dll / (apply_index(base_name, current_i) + ext_pdb), result_pdb, copy_option::overwrite_if_exists, ec);
 
@@ -350,6 +368,7 @@ void patch_game_module(const char *module_name, const ExportsOld &exports_orig, 
     if (!hProgram)
         return;
     
+    // IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT
     PIMAGE_IMPORT_DESCRIPTOR pImportDesc = NULL;
 	pImportDesc = (PIMAGE_IMPORT_DESCRIPTOR)ImageDirectoryEntryToData(hProgram, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &ulSize);
 

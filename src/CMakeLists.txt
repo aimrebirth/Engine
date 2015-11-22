@@ -71,14 +71,24 @@ target_compile_definitions(Engine PRIVATE -DPOLYGON4_ENGINE)
 
 
 ########################################
-# CUSTOM BUILD STEP clean_hotpatch
+# EXECUTABLE Fix PDB
 ########################################
 
-add_custom_target(clean_hotpatch
-    COMMAND fixproject ${CMAKE_CURRENT_BINARY_DIR}/Engine.vcxproj.user ${name}.${POLYGON4_ARCH} ${library_dir}/${name}.${POLYGON4_ARCH}
-    DEPENDS fixproject
+add_executable          (pdbfix Tools/PdbFix.cpp)
+target_link_libraries   (pdbfix dbghelp)
+set_output_directory    (pdbfix ${library_dir})
+project_group           (pdbfix Tools)
+
+
+########################################
+# CUSTOM BUILD STEP do_pdb_fix
+########################################
+
+add_custom_target(do_pdb_fix ALL
+    COMMAND pdbfix $<TARGET_FILE:Engine>
+    DEPENDS pdbfix Engine
 )
-project_group           (clean_hotpatch Tools)
+project_group           (do_pdb_fix Tools)
 
 
 ########################################
@@ -91,7 +101,18 @@ project_group           (fixproject Tools)
 
 
 ########################################
-# EXECUTABLE Fix test
+# CUSTOM BUILD STEP clean_hotpatch
+########################################
+
+add_custom_target(clean_hotpatch
+    COMMAND fixproject ${CMAKE_CURRENT_BINARY_DIR}/Engine.vcxproj.user ${name}.${POLYGON4_ARCH} ${library_dir}/${name}.${POLYGON4_ARCH}
+    DEPENDS fixproject
+)
+project_group           (clean_hotpatch Tools)
+
+
+########################################
+# EXECUTABLE test
 ########################################
 
 add_executable          (testEngine test/main.cpp)
