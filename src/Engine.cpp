@@ -19,7 +19,6 @@
 #include <Polygon4/Engine.h>
 
 #include <Polygon4/DataManager/Storage.h>
-#include <Polygon4/DataManager/Helpers.h> // to keep helper symbols in dll
 #include <Polygon4/Modification.h>
 #include <Polygon4/Settings.h>
 
@@ -46,13 +45,6 @@ Engine::Engine(const String &modificationsDirectory)
 
 Engine::~Engine()
 {
-    // workaround for linker not to hide these symbols from data manager
-    auto dummy = []()
-    {
-        detail::getTableNameByType(detail::EObjectType::Any);
-        detail::getTableType("");
-    };
-    dummy();
 }
 
 bool Engine::reloadStorage()

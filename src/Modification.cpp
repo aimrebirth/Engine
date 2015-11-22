@@ -62,11 +62,11 @@ bool Modification::newGame()
         auto script = Script::createScript(script_name, to_string(script_language));
 
         auto &pmap = player_mechanoid->map->map;
-        auto i = std::find_if(maps->begin(), maps->end(), [&pmap](const auto &map)
+        auto i = std::find_if(maps.begin(), maps.end(), [&pmap](const auto &map)
         {
             return map->map == pmap;
         });
-        if (i == maps->end())
+        if (i == maps.end())
         {
             LOG_ERROR(logger, "Cannot find map: " << to_string(pmap->resource));
             return false;

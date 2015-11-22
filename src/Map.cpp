@@ -31,9 +31,9 @@ Map::Map(const Base &rhs)
 
 bool Map::loadObjects()
 {
-    for (auto &v : *buildings)
+    for (auto &v : buildings)
         v->spawn();
-    for (auto &v : *objects)
+    for (auto &v : objects)
         v->spawn();
     return true;
 }
