@@ -36,8 +36,8 @@ IEngine::~IEngine()
 {
     int a = 5;
     a++;
-    //int b = 5;
-    //b++;
+    int b = 5;
+    b++;
 }
 
 Engine::Engine(const String &modificationsDirectory)

@@ -105,7 +105,7 @@ void write_module_last_write_time(String game_dir, String module_name)
 
     std::ofstream ofile_ver(to_string(read_ver_module_filename_store()));
     if (ofile_ver)
-        ofile_ver << last_write_time(old_module, ec);
+        ofile_ver << -1;// last_write_time(old_module, ec);
 }
 
 String prepare_module_for_hotload(String game_dir, String module_name)
@@ -301,12 +301,43 @@ typedef std::map<void*, void*> Import;
 typedef std::map<void*, uint16_t> ExportsOld;
 typedef std::map<uint16_t, void*> ExportsNew;
 
-Import find_import_table(HMODULE hProgram, PIMAGE_IMPORT_DESCRIPTOR pImportDesc)
+bool WriteToVirtualMemory(void *address, void *value)
+{
+    bool result = true;
+    DWORD size = sizeof(void *);
+    DWORD dwOldProtect = 0;
+    LOG_TRACE(logger, "Writing " << size << " bytes to " << address << " value " << value);
+    if (VirtualProtect(address, size, PAGE_EXECUTE_READWRITE, &dwOldProtect))
+    {
+        if (!WriteProcessMemory(GetCurrentProcess(), address, &value, size, NULL))
+        {
+            result = false;
+            DWORD glr = GetLastError();
+            LOG_TRACE(logger, "WriteProcessMemory() is failed. GetLastError(): " << glr);
+        }
+        DWORD dwOldProtect2 = 0;
+        if (!VirtualProtect(address, size, dwOldProtect, &dwOldProtect2))
+        {
+            result = false;
+            DWORD glr = GetLastError();
+            LOG_TRACE(logger, "VirtualProtect() (2) is failed. GetLastError(): " << glr);
+        }
+    }
+    else
+    {
+        result = false;
+        DWORD glr = GetLastError();
+        LOG_TRACE(logger, "VirtualProtect() (1) is failed. GetLastError(): " << glr);
+    }
+    return result;
+}
+
+Import find_import_table(HMODULE hProgram, PIMAGE_DELAYLOAD_DESCRIPTOR pImportDesc)
 {
     Import imports;
-    for (; pImportDesc->Name; pImportDesc++)
+    for (; pImportDesc->DllNameRVA; pImportDesc++)
     {
-        std::string dll_name = (const char *)hProgram + pImportDesc->Name;
+        std::string dll_name = (const char *)hProgram + pImportDesc->DllNameRVA;
         LOG_TRACE(logger, "dll: " << dll_name);
 
         bool engine = dll_name.find("Engine") != -1;
@@ -315,47 +346,23 @@ Import find_import_table(HMODULE hProgram, PIMAGE_IMPORT_DESCRIPTOR pImportDesc)
 
         if (engine && x64 && dll)
         {
-            PIMAGE_THUNK_DATA pThunk = (PIMAGE_THUNK_DATA)((PBYTE)hProgram + pImportDesc->FirstThunk);
+            PIMAGE_THUNK_DATA pThunk = (PIMAGE_THUNK_DATA)((PBYTE)hProgram + pImportDesc->ImportAddressTableRVA);
             for (; pThunk->u1.Function; pThunk++)
             {
                 void *p = (void*)pThunk->u1.Function;
                 imports[p] = &pThunk->u1.Function;
                 LOG_TRACE(logger, "Import: function: " << p << ", address: " << imports[p]);
             }
-            break;
+
+            // set to null, because delayed dll will unload all import on its unload
+            // but we want to keep them
+            // maybe not needed atm
+            //pThunk = (PIMAGE_THUNK_DATA)((PBYTE)hProgram + pImportDesc->UnloadInformationTableRVA);
+            //for (; pThunk->u1.Function; pThunk++)
+            //    WriteToVirtualMemory(&pThunk->u1.Function, 0);
         }
     }
     return imports;
-}
-
-bool WriteToVirtualMemory(void *address, void *value)
-{
-    bool result = true;
-    DWORD size = sizeof(void *);
-	DWORD dwOldProtect = 0;
-    LOG_TRACE(logger, "Trying to write " << size << " bytes to " << address << " value " << value);
-	if (VirtualProtect(address, size, PAGE_EXECUTE_READWRITE, &dwOldProtect)) 
-	{
-        if (!WriteProcessMemory(GetCurrentProcess(), address, &value, size, NULL))
-        {
-            result = false;
-            DWORD glr = GetLastError();
-            LOG_TRACE(logger, "WriteProcessMemory() is failed. GetLastError(): " << glr);
-        }
-        if (!VirtualProtect(address, size, dwOldProtect, &dwOldProtect))
-        {
-            result = false;
-            DWORD glr = GetLastError();
-            LOG_TRACE(logger, "VirtualProtect() (2) is failed. GetLastError(): " << glr);
-        }
-	}
-    else
-    {
-        result = false;
-        DWORD glr = GetLastError();
-        LOG_TRACE(logger, "VirtualProtect() (1) is failed. GetLastError(): " << glr);
-    }
-    return result;
 }
 
 void patch_game_module(const char *module_name, const ExportsOld &exports_orig, const ExportsOld &exports_old, const ExportsNew &exports_new)
@@ -368,9 +375,8 @@ void patch_game_module(const char *module_name, const ExportsOld &exports_orig, 
     if (!hProgram)
         return;
     
-    // IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT
-    PIMAGE_IMPORT_DESCRIPTOR pImportDesc = NULL;
-	pImportDesc = (PIMAGE_IMPORT_DESCRIPTOR)ImageDirectoryEntryToData(hProgram, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &ulSize);
+    PIMAGE_DELAYLOAD_DESCRIPTOR pImportDesc = NULL;
+    pImportDesc = (PIMAGE_DELAYLOAD_DESCRIPTOR)ImageDirectoryEntryToData(hProgram, TRUE, IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT, &ulSize);
 
     LOG_TRACE(logger, "pImportDesc: " << pImportDesc);
 
