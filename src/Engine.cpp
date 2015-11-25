@@ -34,10 +34,6 @@ IEngine *gEngine;
 
 IEngine::~IEngine()
 {
-    int a = 5;
-    a++;
-    int b = 5;
-    b++;
 }
 
 Engine::Engine(const String &modificationsDirectory)
@@ -55,7 +51,7 @@ bool Engine::reloadStorage()
 {
     try
     {
-        auto s = initStorage(to_string(getSettings().modsDir) + "/" DB_FILENAME);
+        auto s = initStorage(getSettings().modsDir.toString() + "/" DB_FILENAME);
         s->load();
         storage = s;
     }

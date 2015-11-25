@@ -79,8 +79,8 @@ void write_module_last_write_time(String game_dir, String module_name)
 
     boost::system::error_code ec;
 
-    path base = path(to_wstring(game_dir)).normalize();
-    path dll = base / "ThirdParty" / to_string(module_name) / "lib";
+    path base = path(game_dir).normalize();
+    path dll = base / "ThirdParty" / module_name / "lib";
 
     const std::string base_name = "Engine.x64.";
     const std::string ext_dll = "dll";
@@ -92,7 +92,7 @@ void write_module_last_write_time(String game_dir, String module_name)
     {
         LOG_DEBUG(logger, "Old module '" << old_module << "' does not exist, writing '-1' as last write time");
 
-        std::ofstream ofile_ver(to_string(read_ver_module_filename_store()));
+        std::ofstream ofile_ver(read_ver_module_filename_store());
         if (ofile_ver)
             ofile_ver << -1;
 
@@ -103,9 +103,9 @@ void write_module_last_write_time(String game_dir, String module_name)
 
     LOG_DEBUG(logger, "last_write_time    : " << convert_time(lwt) << " " << lwt);
 
-    std::ofstream ofile_ver(to_string(read_ver_module_filename_store()));
+    std::ofstream ofile_ver(read_ver_module_filename_store());
     if (ofile_ver)
-        ofile_ver << -1;// last_write_time(old_module, ec);
+        ofile_ver << last_write_time(old_module, ec);
 }
 
 String prepare_module_for_hotload(String game_dir, String module_name)
@@ -114,17 +114,17 @@ String prepare_module_for_hotload(String game_dir, String module_name)
     
     boost::system::error_code ec;
 
-    path base = path(to_wstring(game_dir)).normalize();
+    path base = path(game_dir).normalize();
     path bin = base / "Binaries" / "Win64";
-    path dll = base / "ThirdParty" / to_string(module_name) / "lib";
+    path dll = base / "ThirdParty" / module_name / "lib";
     std::string win64dir = "win64";
-    path win64 = base / "ThirdParty" / to_string(module_name) / win64dir;
+    path win64 = base / "ThirdParty" / module_name / win64dir;
     path project = win64 / "src" / "Engine.vcxproj.user";
     path pdbfix = dll / "pdbfix.exe";
     path fixproject = dll / "fixproject.exe";
     path result;
 
-    LOG_DEBUG(logger, "Preparing module for hot load: " << to_string(module_name));
+    LOG_DEBUG(logger, "Preparing module for hot load: " << module_name.toString());
 
     const std::string base_name = "Engine.x64.";
     const std::string ext_dll = "dll";
@@ -183,13 +183,12 @@ String prepare_module_for_hotload(String game_dir, String module_name)
             continue;
         }
         LOG_DEBUG(logger, "copied: " << result.string());
-        //copy_file(main_module_pdb, result_pdb, copy_option::overwrite_if_exists, ec);
 
-        std::ofstream ofile_old(to_string(read_old_module_filename_store()));
+        std::ofstream ofile_old(read_old_module_filename_store());
         if (ofile_old)
             ofile_old << path(bin / (apply_index(base_name, current_i - 1) + ext_dll)).string();
 
-        std::ofstream ofile_new(to_string(read_new_module_filename_store()));
+        std::ofstream ofile_new(read_new_module_filename_store());
         if (ofile_new)
             ofile_new << result.string();
 
@@ -240,14 +239,14 @@ String prepare_module_for_hotload(String game_dir, String module_name)
             LOG_DEBUG(logger, "pdb fix rc: " << rc);
         }
 
-        // should be after dll fix
-        std::ofstream ofile_ver(to_string(read_ver_module_filename_store()));
-        if (ofile_ver)
-            ofile_ver << last_write_time(result, ec);
-
         // copy FIXED dll and NEW pdb
         copy_file(dll / (apply_index(base_name, current_i) + ext_dll), result, copy_option::overwrite_if_exists, ec);
         copy_file(dll / (apply_index(base_name, current_i) + ext_pdb), result_pdb, copy_option::overwrite_if_exists, ec);
+
+        // should be after dll fix and copy
+        std::ofstream ofile_ver(read_ver_module_filename_store());
+        if (ofile_ver)
+            ofile_ver << last_write_time(result, ec);
 
         break;
     }

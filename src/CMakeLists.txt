@@ -65,9 +65,21 @@ target_link_libraries   (Engine DataManager logger lua ${Boost_LIBRARIES} dbghel
 add_dependencies        (Engine api_lua clean_hotpatch)
 set_output_directory    (Engine ${library_dir})
 get_target_property     (name Engine NAME)
-set_target_properties   (Engine PROPERTIES OUTPUT_NAME ${name}.${POLYGON4_ARCH})
-set_target_properties   (Engine PROPERTIES PDB_NAME ${name}.${POLYGON4_ARCH})
+set_target_properties   (Engine PROPERTIES OUTPUT_NAME ${name}.${POLYGON4_ARCH_FULL})
+set_target_properties   (Engine PROPERTIES PDB_NAME ${name}.${POLYGON4_ARCH_FULL})
 target_compile_definitions(Engine PRIVATE -DPOLYGON4_ENGINE)
+
+add_custom_command(TARGET Engine POST_BUILD
+    COMMAND pdbfix $<TARGET_FILE:Engine>
+    DEPENDS pdbfix Engine
+)
+
+if (WIN32)
+    add_custom_command(TARGET Engine POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:Engine> ${CMAKE_SOURCE_DIR}/../../Binaries/Win${POLYGON4_ARCH}/
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_PDB_FILE:Engine> ${CMAKE_SOURCE_DIR}/../../Binaries/Win${POLYGON4_ARCH}/
+    )
+endif()
 
 
 ########################################
@@ -78,17 +90,6 @@ add_executable          (pdbfix Tools/PdbFix.cpp)
 target_link_libraries   (pdbfix dbghelp)
 set_output_directory    (pdbfix ${library_dir})
 project_group           (pdbfix Tools)
-
-
-########################################
-# CUSTOM BUILD STEP do_pdb_fix
-########################################
-
-add_custom_target(do_pdb_fix ALL
-    COMMAND pdbfix $<TARGET_FILE:Engine>
-    DEPENDS pdbfix Engine
-)
-project_group           (do_pdb_fix Tools)
 
 
 ########################################
@@ -105,7 +106,7 @@ project_group           (fixproject Tools)
 ########################################
 
 add_custom_target(clean_hotpatch
-    COMMAND fixproject ${CMAKE_CURRENT_BINARY_DIR}/Engine.vcxproj.user ${name}.${POLYGON4_ARCH} ${library_dir}/${name}.${POLYGON4_ARCH}
+    COMMAND fixproject ${CMAKE_CURRENT_BINARY_DIR}/Engine.vcxproj.user ${name}.${POLYGON4_ARCH_FULL} ${library_dir}/${name}.${POLYGON4_ARCH_FULL}
     DEPENDS fixproject
 )
 project_group           (clean_hotpatch Tools)

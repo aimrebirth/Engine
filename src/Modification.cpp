@@ -58,17 +58,17 @@ bool Modification::newGame()
     const auto &path = getSettings().modsDir;
     try
     {
-        auto script_name = getScriptName(to_wstring(path + directory), to_wstring(script_main));
-        auto script = Script::createScript(script_name, to_string(script_language));
+        auto script_name = getScriptName(path + directory, script_main);
+        auto script = Script::createScript(script_name, script_language);
 
-        auto &pmap = player_mechanoid->map->map;
+        auto &pmap = player_mechanoid->map;
         auto i = std::find_if(maps.begin(), maps.end(), [&pmap](const auto &map)
         {
             return map->map == pmap;
         });
         if (i == maps.end())
         {
-            LOG_ERROR(logger, "Cannot find map: " << to_string(pmap->resource));
+            LOG_ERROR(logger, "Cannot find map: " << pmap->resource.toString());
             return false;
         }
 
