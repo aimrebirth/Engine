@@ -16,36 +16,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include <memory>
-#include <string>
-#include <set>
+#include <Polygon4/Mechanoid.h>
 
 #include <Polygon4/DataManager/Types.h>
 
-#include "Map.h"
+#include <tools/Logger.h>
+DECLARE_STATIC_LOGGER(logger, "mechanoid");
 
 namespace polygon4
 {
 
-class DLL_EXPORT Modification : public detail::Modification
+Mechanoid::Mechanoid(const Base &rhs)
+    : Base(rhs)
 {
-    using Base = detail::Modification;
-
-public:
-    Modification(const Base &);
-
-    virtual bool newGame() override final;
-    virtual bool loadGame(const String &filename) override final;
-
-    virtual void spawnMechanoids() override final;
-
-    bool operator<(const Modification &rhs) const;
-
-protected:
-    detail::Map *current_map;
-};
+}
 
 } // namespace polygon4
-

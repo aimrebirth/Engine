@@ -18,18 +18,23 @@
 
 #pragma once
 
-//#include "db/DbTypes.h"
+#include <memory>
+#include <string>
+#include <set>
+
+#include <Polygon4/DataManager/Types.h>
 
 namespace polygon4
 {
 
-/*using engine::Strings;
-using engine::Weapons;
-using engine::Projectiles;
-using engine::Equipments;
-using engine::Goods;
-using engine::Gliders;
-using engine::Configurations;
-using engine::Sectors;*/
+class DLL_EXPORT Mechanoid : public detail::Mechanoid
+{
+    using Base = detail::Mechanoid;
 
-}
+public:
+    Mechanoid(const Base &);
+
+};
+
+} // namespace polygon4
+

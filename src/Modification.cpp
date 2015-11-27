@@ -18,8 +18,6 @@
 
 #include <Polygon4/Modification.h>
 
-#include <boost/filesystem.hpp>
-
 #include <Polygon4/DataManager/Types.h>
 #include <Polygon4/Engine.h>
 #include <Polygon4/Settings.h>
@@ -74,12 +72,16 @@ bool Modification::newGame()
 
         if (!pmap->loadLevel())
             return false;
+        current_map = pmap;
 
         gEngine->HideMainMenu();
-        gEngine->LoadLevelObjects = std::bind(&IMap::loadObjects, *pmap);
+        gEngine->LoadLevelObjects = [this, pmap]()
+        {
+            pmap->loadObjects();
+            spawnMechanoids();
+        };
 
-
-        //spawnMechanoid(data->player_mechanoid);
+        // action will proceed on UE4 side
     }
     catch (std::exception &e)
     {
@@ -99,5 +101,21 @@ bool Modification::operator<(const Modification &rhs) const
     return directory < rhs.directory;
 }
 
-} // namespace polygon4
+void Modification::spawnMechanoids()
+{
+    std::unordered_map<detail::Mechanoid *, detail::Player *> mplayers;
+    for (auto &p : players)
+    {
+        if (p->mechanoid)
+            mplayers[p->mechanoid] = p.second.get();
+        // for now we allow only one local player
+        break;
+    }
+    for (auto &m : mechanoids)
+    {
+        if (m->map == *current_map)
+            m->spawn(mplayers.count(m.second.get()));
+    }
+}
 
+} // namespace polygon4
