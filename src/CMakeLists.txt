@@ -76,8 +76,8 @@ add_custom_command(TARGET Engine POST_BUILD
 
 if (WIN32)
     add_custom_command(TARGET Engine POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:Engine> ${CMAKE_SOURCE_DIR}/../../Binaries/Win${POLYGON4_ARCH}/
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_PDB_FILE:Engine> ${CMAKE_SOURCE_DIR}/../../Binaries/Win${POLYGON4_ARCH}/
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:Engine> ${CMAKE_SOURCE_DIR}/../../Binaries/Win${POLYGON4_ARCH_DIR_NAME}/
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_PDB_FILE:Engine> ${CMAKE_SOURCE_DIR}/../../Binaries/Win${POLYGON4_ARCH_DIR_NAME}/
     )
 endif()
 
