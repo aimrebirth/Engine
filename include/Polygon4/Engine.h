@@ -28,14 +28,19 @@
 namespace polygon4
 {
 
-using Function = std::function<void()>;
+using Function = std::function<void(void)>;
 
 class Modification;
 class Save;
 
+#if defined(WIN32) && !defined(_WIN64)
+#pragma pack(push, 1)
+#endif
+
 class DLL_EXPORT IEngine
 {
 public:
+    IEngine() = default;
     virtual ~IEngine();
 
     virtual void initChildren() = 0;
@@ -47,9 +52,6 @@ public:
         p->initChildren();
         return p;
     }
-
-    virtual bool reloadStorage() = 0;
-    virtual bool reloadMods() = 0;
 
     virtual void ShowMainMenu() = 0;
     virtual void HideMainMenu() = 0;
@@ -64,14 +66,16 @@ protected:
     Engine(const String &modificationsDirectory);
 
 public:
-    virtual ~Engine();
-
-    virtual bool reloadStorage() override;
-    virtual bool reloadMods() override;
+    bool reloadStorage();
+    bool reloadMods();
 
 protected:
 	std::shared_ptr<Storage> storage;
 };
+
+#if defined(WIN32) && !defined(_WIN64)
+#pragma pack(pop)
+#endif
 
 extern IEngine *gEngine;
 

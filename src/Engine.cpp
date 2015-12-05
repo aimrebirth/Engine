@@ -37,23 +37,26 @@ IEngine::~IEngine()
 }
 
 Engine::Engine(const String &modificationsDirectory)
+    : IEngine()
 {
+    LOG_DEBUG(logger, "Initializing engine");
+    LOG_DEBUG(logger, "Modifications Directory: " << modificationsDirectory.toString());
     gEngine = this;
     getSettings().modsDir = modificationsDirectory;
     reloadStorage();
 }
 
-Engine::~Engine()
-{
-}
-
 bool Engine::reloadStorage()
 {
+    LOG_DEBUG(logger, "Reloading storage");
     try
     {
         auto s = initStorage(getSettings().modsDir.toString() + "/" DB_FILENAME);
+        LOG_DEBUG(logger, "Loading data");
         s->load();
         storage = s;
+        LOG_DEBUG(logger, "Storage loaded");
+        LOG_DEBUG(logger, "Storage ptr is: " << storage);
     }
     catch (std::exception &e)
     {
