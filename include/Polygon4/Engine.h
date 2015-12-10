@@ -25,6 +25,12 @@
 #include <Polygon4/DataManager/String.h>
 #include <Polygon4/DataManager/Storage.h>
 
+#define DECLARE_MENU_VIRTUAL(name) \
+public: \
+    virtual void Show ## name ## Menu() = 0; \
+    virtual void Hide ## name ## Menu() = 0; \
+    virtual void Set ## name ## MenuVisibility(bool visibility) = 0
+
 namespace polygon4
 {
 
@@ -53,8 +59,9 @@ public:
         return p;
     }
 
-    virtual void ShowMainMenu() = 0;
-    virtual void HideMainMenu() = 0;
+    DECLARE_MENU_VIRTUAL(Main);
+    DECLARE_MENU_VIRTUAL(Building);
+    DECLARE_MENU_VIRTUAL(Pause);
 
     virtual void OnLevelLoaded() = 0;
     Function LoadLevelObjects;

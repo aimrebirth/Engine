@@ -111,18 +111,4 @@ add_custom_target(clean_hotpatch
 )
 project_group           (clean_hotpatch Tools)
 
-
-########################################
-# EXECUTABLE test
-########################################
-
-add_executable          (testEngine test/main.cpp)
-target_link_libraries   (testEngine Engine)
-set_output_directory    (testEngine ${library_dir})
-
-
-########################################
-# subdirectories
-########################################
-
 ################################################################################
