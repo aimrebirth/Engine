@@ -18,13 +18,7 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
-#include <set>
-
 #include <Polygon4/DataManager/Types.h>
-
-#include "Map.h"
 
 namespace polygon4
 {
@@ -35,16 +29,22 @@ class DLL_EXPORT Modification : public detail::Modification
 
 public:
     Modification(const Base &);
+    ~Modification();
 
     virtual bool newGame() override final;
     virtual bool loadGame(const String &filename) override final;
 
     virtual void spawnMechanoids() override final;
+    void spawnCurrentPlayer();
+
+    virtual ScriptEngine *getScriptEngine() const override final { return scriptEngine.get(); }
 
     bool operator<(const Modification &rhs) const;
 
 protected:
-    detail::Map *current_map;
+    detail::Map *currentMap = nullptr;
+    detail::ModificationPlayer *currentPlayer = nullptr;
+    std::unique_ptr<ScriptEngine> scriptEngine;
 };
 
 } // namespace polygon4

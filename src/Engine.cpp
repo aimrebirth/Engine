@@ -40,6 +40,11 @@ Engine::Engine(const String &modificationsDirectory)
     : IEngine()
 {
     LOG_DEBUG(logger, "Initializing engine");
+
+    // turn on this feature for all engines
+    //  (data managers do not use it)
+    detail::IObjectBase::replaceable = true;
+
     LOG_DEBUG(logger, "Modifications Directory: " << modificationsDirectory.toString());
     gEngine = this;
     getSettings().modsDir = modificationsDirectory;
@@ -72,6 +77,13 @@ bool Engine::reloadMods()
         return false;
     initChildren();
     return true;
+}
+
+void Engine::spawnCurrentPlayer()
+{
+    if (!currentModification)
+        return;
+    currentModification->spawnCurrentPlayer();
 }
 
 } // namespace polygon4

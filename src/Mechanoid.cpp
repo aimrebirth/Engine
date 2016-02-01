@@ -20,6 +20,10 @@
 
 #include <Polygon4/DataManager/Types.h>
 
+#include <Polygon4/Engine.h>
+
+#include "Script.h"
+
 #include <tools/Logger.h>
 DECLARE_STATIC_LOGGER(logger, "mechanoid");
 
@@ -29,6 +33,47 @@ namespace polygon4
 Mechanoid::Mechanoid(const Base &rhs)
     : Base(rhs)
 {
+}
+
+detail::Configuration *Mechanoid::getConfiguration()
+{
+    if (configuration)
+        return configuration;
+    configuration = storage->configurations.createAtEnd(*initial_configuration);
+    return configuration;
+}
+
+void Mechanoid::enterBuilding(detail::MapBuilding *building)
+{
+    if (!building)
+        return;
+    auto mmb = building->getModificationMapBuilding();
+    if (!mmb)
+        return;
+    if (!isPlayer())
+    {
+        // handle bot's building visit
+        return;
+    }
+
+    // player is now officially in building
+    // we need to run scripts, setup texts etc.
+
+    auto se = mmb->map->modification->getScriptEngine();
+    auto s = se->getScript(mmb->map->script_main);
+
+    ScriptData data;
+    data.scriptEngine = se;
+    data.player = player;
+    data.building_name = mmb->text_id;
+    s->OnEnterBuilding(data);
+
+    //mmb->map->;
+    //set menu texts etc.
+
+    // end of function
+    gEngine->SetBuildingMenuCurrentBuilding(mmb);
+    gEngine->ShowBuildingMenu();
 }
 
 } // namespace polygon4

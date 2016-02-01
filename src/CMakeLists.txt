@@ -8,21 +8,6 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 ################################################################################
 
 ########################################
-# CUSTOM BUILD STEP API_lua
-########################################
-
-add_custom_command(OUTPUT API_lua.cpp
-    COMMAND ${SWIG_EXECUTABLE} -c++ -lua -o API_lua.cpp ${CMAKE_CURRENT_SOURCE_DIR}/API.i
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/API.i
-)
-add_custom_target(api_lua
-    DEPENDS API_lua.cpp
-    SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/API.i
-)
-project_group           (api_lua API)
-
-
-########################################
 # LIBRARY hotpatchable
 ########################################
 
@@ -51,18 +36,34 @@ project_group           (logger Tools)
 # SHARED LIBRARY Engine
 ########################################
 
+set(api_name ScriptAPI)
+
+#add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${api_name}_lua.cpp
+#    COMMAND ${SWIG_EXECUTABLE} -c++ -lua -o ${CMAKE_CURRENT_BINARY_DIR}/${api_name}_lua.cpp ${CMAKE_CURRENT_SOURCE_DIR}/${api_name}.i
+#    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${api_name}.i
+#)
+add_custom_target(${api_name}_lua
+    COMMAND ${SWIG_EXECUTABLE} -c++ -lua -o ${CMAKE_CURRENT_BINARY_DIR}/${api_name}_lua.cpp ${CMAKE_CURRENT_SOURCE_DIR}/${api_name}.i
+    COMMENT "Generating ${CMAKE_CURRENT_BINARY_DIR}/${api_name}_lua.cpp"
+)
+set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${api_name}_lua.cpp PROPERTIES
+    HEADER_FILE_ONLY True
+    GENERATED True
+)
+
 file(GLOB_RECURSE engine_inc "${CMAKE_SOURCE_DIR}/include/Polygon4/*")
 file(GLOB engine_src "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
 
 set(engine_src
     ${engine_src}
-    API.i
+    ${api_name}.i
+    ${CMAKE_CURRENT_BINARY_DIR}/${api_name}_lua.cpp
     $<TARGET_OBJECTS:hotpatchable>
 )
 
 add_library             (Engine SHARED ${engine_src} ${engine_inc})
 target_link_libraries   (Engine DataManager logger lua ${Boost_LIBRARIES} dbghelp)
-add_dependencies        (Engine api_lua clean_hotpatch)
+add_dependencies        (Engine clean_hotpatch ${api_name}_lua)
 set_output_directory    (Engine ${library_dir})
 get_target_property     (name Engine NAME)
 set_target_properties   (Engine PROPERTIES OUTPUT_NAME ${name}.${POLYGON4_ARCH_FULL})

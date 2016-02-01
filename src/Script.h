@@ -18,43 +18,54 @@
 
 #pragma once
 
-#include <memory>
 #include <string>
-#include <stdint.h>
+#include <unordered_map>
 
-#include <Polygon4/Common.h>
+#include <boost/filesystem.hpp>
+namespace fs = boost::filesystem;
+using path = fs::path;
+
+#include <Polygon4/DataManager/Types.h>
+
+#include "ScriptAPI.h"
 
 namespace polygon4
 {
 
-enum class ScriptLanguage : uint8_t
-{
-    Unknown,
+using detail::ScriptLanguage;
 
-    Lua,
-};
+class ScriptEngine;
 
 class Script
 {
-    DISALLOW_COPY_CONSTRUCTORS(Script);
-
 public:
-    Script(const std::string &filename);
-    virtual ~Script(){}
+    Script(const path &p, const ScriptEngine *scriptEngine);
+    Script(const Script&) = delete;
+    Script& operator=(const Script&) = delete;
+    virtual ~Script() = default;
 
-    static std::shared_ptr<Script> createScript(const std::string &filename, std::string language);
-
-public: /* API*/
-    //virtual void main(Game *game) = 0;
-
-    //virtual void OnOpenLevel(Game *game, std::string level) = 0;
+public: /* API */
+    virtual void OnEnterBuilding(ScriptData &data) {}
 
 protected:
-    std::string filename;
-    ScriptLanguage language = ScriptLanguage::Unknown;
+    path p;
+    const ScriptEngine *scriptEngine;
 };
 
-std::string getScriptName(std::wstring path, std::wstring scriptName);
+class ScriptEngine
+{
+public:
+    ScriptEngine(const path &p, ScriptLanguage language);
+
+    Script *getScript(const std::string &name);
+    const KeyMap<String> &getObjects() const { return objects; }
+
+private:
+    path root;
+    ScriptLanguage language;
+    std::unordered_map<std::string, std::unique_ptr<Script>> scripts;
+    KeyMap<String> objects;
+};
 
 } // namespace polygon4
 

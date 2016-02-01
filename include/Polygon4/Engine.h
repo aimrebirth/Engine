@@ -51,6 +51,23 @@ public:
 
     virtual void initChildren() = 0;
 
+    virtual Storage* getStorage() const = 0;
+
+    virtual Modification* getCurrentModification() const = 0;
+    virtual void setCurrentModification(Modification *currentModification) = 0;
+
+    virtual void spawnCurrentPlayer() = 0;
+
+    DECLARE_MENU_VIRTUAL(Main);
+    DECLARE_MENU_VIRTUAL(Building);
+    DECLARE_MENU_VIRTUAL(Pause);
+
+    virtual void SetBuildingMenuCurrentBuilding(detail::ModificationMapBuilding *currentBuilding) = 0;
+
+    virtual void OnLevelLoaded() = 0;
+    Function LoadLevelObjects;
+
+public:
     template <class T, class... Args>
     static std::shared_ptr<T> create(Args&&... args)
     {
@@ -58,13 +75,6 @@ public:
         p->initChildren();
         return p;
     }
-
-    DECLARE_MENU_VIRTUAL(Main);
-    DECLARE_MENU_VIRTUAL(Building);
-    DECLARE_MENU_VIRTUAL(Pause);
-
-    virtual void OnLevelLoaded() = 0;
-    Function LoadLevelObjects;
 };
 
 class DLL_EXPORT Engine : public IEngine
@@ -76,8 +86,20 @@ public:
     bool reloadStorage();
     bool reloadMods();
 
+    virtual Storage* getStorage() const override final { return storage.get(); }
+
+    virtual Modification* getCurrentModification() const override final { return currentModification; }
+    virtual void setCurrentModification(Modification *currentModification) override final
+    {
+        this->currentModification = currentModification;
+    }
+
+    virtual void spawnCurrentPlayer() override;
+
 protected:
 	std::shared_ptr<Storage> storage;
+
+    Modification *currentModification = nullptr;
 };
 
 #if defined(WIN32) && !defined(_WIN64)

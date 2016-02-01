@@ -34,6 +34,16 @@ class DLL_EXPORT Mechanoid : public detail::Mechanoid
 public:
     Mechanoid(const Base &);
 
+    virtual detail::ModificationPlayer *getPlayer() const override final { return player; }
+    virtual void setPlayer(detail::ModificationPlayer *in_player) override final { player = in_player; }
+    virtual bool isPlayer() const override final { return !!player; }
+
+    virtual void enterBuilding(detail::MapBuilding *building) override final;
+
+    virtual detail::Configuration *getConfiguration() override final;
+
+protected:
+    detail::ModificationPlayer *player = nullptr;
 };
 
 } // namespace polygon4

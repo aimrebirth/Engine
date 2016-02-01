@@ -18,25 +18,23 @@
 
 #pragma once
 
-#include "Script.h"
-
-struct lua_State;
+#include <Polygon4/DataManager/Types.h>
 
 namespace polygon4
 {
 
-class ScriptLua : public Script
+class DLL_EXPORT MapBuilding : public detail::MapBuilding
 {
+    using Base = detail::MapBuilding;
+
 public:
-    ScriptLua(const path &filename, const ScriptEngine *scriptEngine);
-    virtual ~ScriptLua();
+    MapBuilding(const Base &);
 
-public: /* API */
-    virtual void OnEnterBuilding(ScriptData &data);
+    virtual detail::ModificationMapBuilding *getModificationMapBuilding() const override final { return modificationMapBuilding; };
+    virtual void setModificationMapBuilding(detail::ModificationMapBuilding *b) override final;
 
-private:
-    lua_State *L;
+protected:
+    detail::ModificationMapBuilding *modificationMapBuilding = nullptr;
 };
 
 } // namespace polygon4
-

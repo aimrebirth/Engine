@@ -16,21 +16,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <Polygon4/MapBuilding.h>
 
-#include <memory>
-#include <stdint.h>
+#include <tools/Logger.h>
+DECLARE_STATIC_LOGGER(logger, "map_buildings");
 
-#define DECLARE_GET_SET(type, name) \
-    public: \
-        type get##name() const; \
-    private: \
-        void set##name(type var)
+namespace polygon4
+{
 
-#define DEFINE_GET_SET(class, type, name, var) \
-    type class::get##name() const { return var; } \
-    void class::set##name(type var) { this->var = var; }
+MapBuilding::MapBuilding(const Base &rhs)
+    : Base(rhs)
+{
+}
 
-#define DISALLOW_COPY_CONSTRUCTORS(name) \
-    name(const name &) = delete; \
-    name &operator=(const name &) = delete
+void MapBuilding::setModificationMapBuilding(detail::ModificationMapBuilding *b)
+{
+    modificationMapBuilding = b;
+    if (modificationMapBuilding)
+        initModificationMapBuilding();
+}
+
+} // namespace polygon4

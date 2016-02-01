@@ -18,7 +18,7 @@
 
 #include "Script.h"
 
-#include <boost/filesystem.hpp>
+#include <Polygon4/Engine.h>
 
 #include "ScriptLua.h"
 
@@ -28,31 +28,56 @@ DECLARE_STATIC_LOGGER(logger, "script");
 namespace polygon4
 {
 
-std::string getScriptName(std::wstring path, std::wstring scriptName)
+Script::Script(const path &p, const ScriptEngine *scriptEngine)
+    : p(p), scriptEngine(scriptEngine)
 {
-    boost::filesystem::path p = path;
-    p = p / "Scripts" / scriptName;
-    return boost::filesystem::absolute(p).normalize().string();
 }
 
-std::shared_ptr<Script> Script::createScript(const std::string &filename, std::string language)
+ScriptEngine::ScriptEngine(const path &p, ScriptLanguage language)
+    : root(p / "Scripts"), language(language)
 {
-    std::transform(language.begin(), language.end(), language.begin(), ::tolower);
+#define ADD_OBJECTS(array, type) \
+    do { \
+        auto v = s->array.get_key_map(&polygon4::detail::type::text_id); \
+        objects.insert(v.begin(), v.end()); \
+    } while (0)
 
-    LOG_DEBUG(logger, "Creating " << language << " script executor on file: " << filename);
+    auto s = gEngine->getStorage();
+    ADD_OBJECTS(equipments, Equipment);
+    ADD_OBJECTS(gliders, Glider);
+    ADD_OBJECTS(weapons, Weapon);
+    ADD_OBJECTS(projectiles, Projectile);
+    ADD_OBJECTS(goods, Good);
+    ADD_OBJECTS(modificators, Modificator);
+}
 
-    std::shared_ptr<Script> script;
-    if (language == "lua")
+Script *ScriptEngine::getScript(const std::string &name)
+{
+    auto fn = root / name;
+
+    LOG_TRACE(logger, "Creating '" << str(language).toString() << "' script executor on file: " << fn.string());
+
+    std::unique_ptr<Script> script;
+    try
     {
-        script = std::make_shared<ScriptLua>(filename);
+        switch (language)
+        {
+        case ScriptLanguage::Lua:
+            script = std::make_unique<ScriptLua>(fn, this);
+            break;
+        default:
+            LOG_ERROR(logger, "This language '" << str(language) << "' is not supported!");
+            script = std::make_unique<Script>(fn, this);
+            break;
+        }
     }
-    return script;
-}
-
-Script::Script(const std::string &filename)
-    : filename(filename)
-{
+    catch (const std::exception &e)
+    {
+        LOG_ERROR(logger, "Cannot load script: " << fn.string());
+        script = std::make_unique<Script>(fn, this);
+    }
+    scripts[fn.string()] = std::move(script);
+    return scripts[fn.string()].get();
 }
 
 } // namespace polygon4
-

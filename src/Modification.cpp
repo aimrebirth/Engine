@@ -35,6 +35,10 @@ Modification::Modification(const Base &rhs)
 {
 }
 
+Modification::~Modification()
+{
+}
+
 bool Modification::newGame()
 {
     if (directory.empty())
@@ -42,7 +46,7 @@ bool Modification::newGame()
         LOG_ERROR(logger, "Game directory is not set!");
         return false;
     }
-    if (script_language.empty())
+    if (script_language == ScriptLanguage::None)
     {
         LOG_ERROR(logger, "Script language is not set!");
         return false;
@@ -53,31 +57,49 @@ bool Modification::newGame()
         return false;
     }
 
-    const auto &path = getSettings().modsDir;
     try
     {
-        auto script_name = getScriptName(path + directory, script_main);
-        auto script = Script::createScript(script_name, script_language);
+        const auto &path = getSettings().modsDir;
+        scriptEngine = std::make_unique<ScriptEngine>(path + directory, script_language);
 
-        auto &pmap = player_mechanoid->map;
+        detail::ModificationPlayer *this_player = nullptr;
+        for (auto &p : players)
+        {
+            if (p->player == player)
+            {
+                this_player = p;
+                break;
+            }
+        }
+        if (!this_player)
+        {
+            LOG_ERROR(logger, "Cannot find a local player for this modification");
+            return false;
+        }
+        auto &pmap = this_player->mechanoid->map;
         auto i = std::find_if(maps.begin(), maps.end(), [&pmap](const auto &map)
         {
             return map->map == pmap;
         });
         if (i == maps.end())
         {
-            LOG_ERROR(logger, "Cannot find map: " << pmap->resource.toString());
+            LOG_ERROR(logger, "Cannot find map: " << pmap->map->resource.toString());
             return false;
         }
 
-        if (!pmap->loadLevel())
+        if (!pmap->map->loadLevel())
             return false;
-        current_map = pmap;
+        currentMap = pmap->map;
 
         gEngine->HideMainMenu();
         gEngine->LoadLevelObjects = [this, pmap]()
         {
-            pmap->loadObjects();
+            pmap->map->loadObjects();
+            for (auto &b : pmap->buildings)
+            {
+                if (b->building)
+                    b->building->setModificationMapBuilding(b);
+            }
             spawnMechanoids();
         };
 
@@ -88,6 +110,7 @@ bool Modification::newGame()
         LOG_ERROR(logger, "Cannot start game: " << e.what());
         return false;
     }
+    gEngine->setCurrentModification(this);
     return true;
 }
 
@@ -103,19 +126,33 @@ bool Modification::operator<(const Modification &rhs) const
 
 void Modification::spawnMechanoids()
 {
-    std::unordered_map<detail::Mechanoid *, detail::Player *> mplayers;
+    if (!currentMap)
+        return;
+
+    // add players to mechanoids
     for (auto &p : players)
     {
         if (p->mechanoid)
-            mplayers[p->mechanoid] = p.second.get();
+        {
+            p->mechanoid->setPlayer(p);
+            currentPlayer = p;
+        }
         // for now we allow only one local player
         break;
     }
     for (auto &m : mechanoids)
     {
-        if (m->map == *current_map)
-            m->spawn(mplayers.count(m.second.get()));
+        if (m->map->map == *currentMap)
+            m->spawn();
     }
+}
+
+void Modification::spawnCurrentPlayer()
+{
+    if (!currentPlayer)
+        return;
+    currentPlayer->mechanoid->building.clear();
+    currentPlayer->mechanoid->spawn();
 }
 
 } // namespace polygon4

@@ -18,25 +18,33 @@
 
 #pragma once
 
-#include "Script.h"
-
-struct lua_State;
+#include <Polygon4/DataManager/Types.h>
 
 namespace polygon4
 {
 
-class ScriptLua : public Script
+class ScriptEngine;
+
+namespace script
 {
-public:
-    ScriptLua(const path &filename, const ScriptEngine *scriptEngine);
-    virtual ~ScriptLua();
 
-public: /* API */
-    virtual void OnEnterBuilding(ScriptData &data);
+struct ScriptData
+{
+#ifndef SWIG
+    ScriptEngine *scriptEngine;
+#endif
+    polygon4::detail::ModificationPlayer *player;
+    std::string building_name;
 
-private:
-    lua_State *L;
+    void AddObject(const std::string &o);
+    // add_quest or start_quest
+    // set_target (_mark) or set_pointer
+    // set_event = set quest stage
+    // info = show proper text
 };
 
-} // namespace polygon4
+} // namespace script
 
+using script::ScriptData;
+
+} // namespace polygon4
