@@ -28,6 +28,14 @@ class ScriptEngine;
 namespace script
 {
 
+enum class Rating
+{
+    Normal,
+    Courier,
+    Fight,
+    Trade,
+};
+
 struct ScriptData
 {
 #ifndef SWIG
@@ -37,13 +45,30 @@ struct ScriptData
     std::string building_name;
 
     void AddObject(const std::string &o);
+    void AddMoney(float amount);
+    void AddRating(float amount);
+    void AddRating(Rating type, float amount);
+
     // add_quest or start_quest
     // set_target (_mark) or set_pointer
     // set_event = set quest stage
-    // info = show proper text
+
+    int GetRatingLevel() const;
+    int GetRatingLevel(Rating type) const;
+
+    bool HasMoney(float amount) const;
+    bool HasRating(float amount) const;
+    bool HasRating(Rating type, float amount) const;
+    bool HasRatingLevel(int level) const;
+    bool HasRatingLevel(Rating type, int level) const;
+
+private:
+    int GetRatingLevel(int rating) const;
 };
 
 } // namespace script
+
+void ShowText(const std::string &text_id);
 
 using script::ScriptData;
 

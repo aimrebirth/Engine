@@ -31,8 +31,6 @@ namespace script
 
 void ScriptData::AddObject(const std::string &oname)
 {
-    using polygon4::detail::EObjectType;
-
     LOG_TRACE(logger, "AddObject(" << oname << ")");
 
     auto &objs = scriptEngine->getObjects();
@@ -44,33 +42,136 @@ void ScriptData::AddObject(const std::string &oname)
     }
     auto o = i->second;
     auto conf = player->mechanoid->getConfiguration();
-    // also conf->addObject should be used as grand dispatcher
-    switch (o->getType())
+    conf->addObject(o);
+}
+
+void ScriptData::AddMoney(float amount)
+{
+    LOG_TRACE(logger, "AddMoney(" << amount << ")");
+
+    player->mechanoid->money += amount;
+}
+
+void ScriptData::AddRating(float amount)
+{
+    LOG_TRACE(logger, "AddRating(" << amount << ")");
+
+    player->mechanoid->rating += amount;
+}
+
+void ScriptData::AddRating(Rating type, float amount)
+{
+    LOG_TRACE(logger, "AddRating(" << amount << "), type: " << static_cast<int>(type));
+
+    switch (type)
     {
-    case EObjectType::Equipment:
-        //conf->equipments.push_back((polygon4::detail::Equipment*)o);
-        //conf->addEquipment();
-        /*
-        auto ce = storage->ConfigurationEquipments.createAtEnd()
-        ce -> conf = this;
-        ce -> equ = obj;
-        */
+    case Rating::Normal:
+        AddRating(amount);
         break;
-    case EObjectType::Glider:
+    case Rating::Courier:
+        player->mechanoid->rating_courier += amount;
         break;
-    case EObjectType::Weapon:
+    case Rating::Fight:
+        player->mechanoid->rating_fight += amount;
         break;
-    case EObjectType::Modificator:
+    case Rating::Trade:
+        player->mechanoid->rating_trade += amount;
         break;
-    case EObjectType::Good:
-        break;
-    case EObjectType::Projectile:
-        break;
-    default:
-        return;
     }
 }
 
+int ScriptData::GetRatingLevel() const
+{
+    LOG_TRACE(logger, "GetRatingLevel()");
+
+    return GetRatingLevel(player->mechanoid->rating);
+}
+
+int ScriptData::GetRatingLevel(Rating type) const
+{
+    LOG_TRACE(logger, "GetRatingLevel(), type: " << static_cast<int>(type));
+
+    switch (type)
+    {
+    case Rating::Normal:
+        return GetRatingLevel();
+    case Rating::Courier:
+        return GetRatingLevel(player->mechanoid->rating_courier);
+    case Rating::Fight:
+        return GetRatingLevel(player->mechanoid->rating_fight);
+    case Rating::Trade:
+        return GetRatingLevel(player->mechanoid->rating_trade);
+    }
+    return 0;
+}
+
+int ScriptData::GetRatingLevel(int rating) const
+{
+    if (0);
+    else if (rating <         50) return 1;
+    else if (rating <        200) return 2;
+    else if (rating <        500) return 3;
+    else if (rating <      1'500) return 4;
+    else if (rating <      5'000) return 5;
+    else if (rating <     15'000) return 6;
+    else if (rating <     50'000) return 7;
+    else if (rating <    200'000) return 8;
+    else if (rating <  1'000'000) return 9;
+    //else if (rating < 10'000'000) return 10;
+    return 10;
+}
+
+bool ScriptData::HasMoney(float amount) const
+{
+    LOG_TRACE(logger, "HasMoney(" << amount << ")");
+
+    return player->mechanoid->money >= amount;
+}
+
+bool ScriptData::HasRating(float amount) const
+{
+    LOG_TRACE(logger, "HasRating(" << amount << ")");
+
+    return player->mechanoid->rating >= amount;
+}
+
+bool ScriptData::HasRating(Rating type, float amount) const
+{
+    LOG_TRACE(logger, "HasRating(" << amount << "), type: " << static_cast<int>(type));
+
+    switch (type)
+    {
+    case Rating::Normal:
+        return HasRating(amount);
+    case Rating::Courier:
+        return player->mechanoid->rating_courier >= amount;
+    case Rating::Fight:
+        return player->mechanoid->rating_fight >= amount;
+    case Rating::Trade:
+        return player->mechanoid->rating_trade >= amount;
+    }
+    return false;
+}
+
+bool ScriptData::HasRatingLevel(int level) const
+{
+    LOG_TRACE(logger, "HasRatingLevel(" << level << ")");
+
+    return GetRatingLevel() >= level;
+}
+
+bool ScriptData::HasRatingLevel(Rating type, int level) const
+{
+    LOG_TRACE(logger, "HasRatingLevel(" << level << "), type: " << static_cast<int>(type));
+
+    return GetRatingLevel(type) >= level;
+}
+
 } // namespace script
+
+void ShowText(const std::string &text_id)
+{
+
+}
 
 } // namespace polygon4

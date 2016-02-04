@@ -18,9 +18,8 @@
 
 #include <Polygon4/Mechanoid.h>
 
-#include <Polygon4/DataManager/Types.h>
-
 #include <Polygon4/Engine.h>
+#include <Polygon4/Configuration.h>
 
 #include "Script.h"
 
@@ -37,9 +36,12 @@ Mechanoid::Mechanoid(const Base &rhs)
 
 detail::Configuration *Mechanoid::getConfiguration()
 {
-    if (configuration)
-        return configuration;
-    configuration = storage->configurations.createAtEnd(*initial_configuration);
+    if (!configuration)
+    {
+        configuration = getStorage()->configurations.createAtEnd(*initial_configuration);
+        configuration->deepCopyFrom(*initial_configuration);
+    }
+    replace<Configuration>(configuration.get());
     return configuration;
 }
 
