@@ -62,7 +62,8 @@ void Mechanoid::enterBuilding(detail::MapBuilding *building)
     // we need to run scripts, setup texts etc.
 
     auto se = mmb->map->modification->getScriptEngine();
-    auto s = se->getScript(mmb->map->script_main);
+    path script_file = path("maps") / mmb->map->script_dir.toString() / mmb->script_name.toString();
+    auto s = se->getScript(script_file.string());
 
     ScriptData data;
     data.scriptEngine = se;
@@ -74,8 +75,8 @@ void Mechanoid::enterBuilding(detail::MapBuilding *building)
     //set menu texts etc.
 
     // end of function
-    gEngine->SetBuildingMenuCurrentBuilding(mmb);
-    gEngine->ShowBuildingMenu();
+    getEngine()->SetBuildingMenuCurrentBuilding(mmb);
+    getEngine()->ShowBuildingMenu();
 }
 
 } // namespace polygon4

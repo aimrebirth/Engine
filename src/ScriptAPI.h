@@ -53,6 +53,9 @@ struct ScriptData
     // set_target (_mark) or set_pointer
     // set_event = set quest stage
 
+    float GetRating() const;
+    float GetRating(Rating type) const;
+
     int GetRatingLevel() const;
     int GetRatingLevel(Rating type) const;
 
@@ -62,13 +65,38 @@ struct ScriptData
     bool HasRatingLevel(int level) const;
     bool HasRatingLevel(Rating type, int level) const;
 
+    void SetRatingLevel(int level) const;
+    void SetRatingLevel(Rating type, int level) const;
+
 private:
-    int GetRatingLevel(int rating) const;
+    static int getRatingLevel(float rating);
+    static void setRatingLevel(float &rating, int level);
+    float &getRating(Rating type = Rating::Normal) const;
+    float &getMoney() const;
 };
 
-} // namespace script
+struct ScreenText
+{
+    ScreenText operator+(const std::string &s);
+    ScreenText __concat__(const std::string &s);
 
-void ShowText(const std::string &text_id);
+#ifndef SWIG
+    String *screenText = nullptr;
+#endif
+};
+
+void AddMessage(::polygon4::String &screenText, polygon4::detail::Message *message);
+void AddMessage(const std::string &message_id);
+void AddText(const std::string &text);
+
+void ShowMessage(const std::string &message_id);
+void ShowText(const std::string &text);
+
+void ClearText();
+
+ScreenText GetScreenText();
+
+} // namespace script
 
 using script::ScriptData;
 

@@ -21,12 +21,9 @@
 #include <string>
 #include <unordered_map>
 
-#include <boost/filesystem.hpp>
-namespace fs = boost::filesystem;
-using path = fs::path;
-
 #include <Polygon4/DataManager/Types.h>
 
+#include "Common.h"
 #include "ScriptAPI.h"
 
 namespace polygon4
@@ -44,6 +41,8 @@ public:
     Script& operator=(const Script&) = delete;
     virtual ~Script() = default;
 
+    virtual std::string getScriptExtension() const { return std::string(); }
+
 public: /* API */
     virtual void OnEnterBuilding(ScriptData &data) {}
 
@@ -59,12 +58,14 @@ public:
 
     Script *getScript(const std::string &name);
     const KeyMap<String> &getObjects() const { return objects; }
+    const KeyMap<String> &getMessages() const { return messages; }
 
 private:
     path root;
     ScriptLanguage language;
     std::unordered_map<std::string, std::unique_ptr<Script>> scripts;
     KeyMap<String> objects;
+    KeyMap<String> messages;
 };
 
 } // namespace polygon4

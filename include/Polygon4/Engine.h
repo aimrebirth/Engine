@@ -36,6 +36,7 @@ namespace polygon4
 
 using Function = std::function<void(void)>;
 
+class BuildingMenu;
 class Modification;
 class Save;
 
@@ -57,6 +58,8 @@ public:
     virtual void setCurrentModification(Modification *currentModification) = 0;
 
     virtual void spawnCurrentPlayer() = 0;
+
+    virtual BuildingMenu *getBuildingMenu() = 0;
 
     DECLARE_MENU_VIRTUAL(Main);
     DECLARE_MENU_VIRTUAL(Building);
@@ -106,6 +109,7 @@ protected:
 #pragma pack(pop)
 #endif
 
-extern IEngine *gEngine;
+DLL_EXPORT
+IEngine *getEngine(IEngine *engine = nullptr);
 
 } // namespace polygon4

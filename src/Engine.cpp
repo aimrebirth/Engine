@@ -30,7 +30,13 @@ DECLARE_STATIC_LOGGER(logger, "engine");
 namespace polygon4
 {
 
-IEngine *gEngine;
+IEngine *getEngine(IEngine *engine)
+{
+    static IEngine *gEngine = nullptr;
+    if (engine)
+        gEngine = engine;
+    return gEngine;
+}
 
 IEngine::~IEngine()
 {
@@ -46,7 +52,6 @@ Engine::Engine(const String &modificationsDirectory)
     detail::IObjectBase::replaceable = true;
 
     LOG_DEBUG(logger, "Modifications Directory: " << modificationsDirectory.toString());
-    gEngine = this;
     getSettings().modsDir = modificationsDirectory;
     reloadStorage();
 }

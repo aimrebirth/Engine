@@ -51,11 +51,6 @@ bool Modification::newGame()
         LOG_ERROR(logger, "Script language is not set!");
         return false;
     }
-    if (script_main.empty())
-    {
-        LOG_ERROR(logger, "Main script name is not set!");
-        return false;
-    }
 
     try
     {
@@ -91,8 +86,8 @@ bool Modification::newGame()
             return false;
         currentMap = pmap->map;
 
-        gEngine->HideMainMenu();
-        gEngine->LoadLevelObjects = [this, pmap]()
+        getEngine()->HideMainMenu();
+        getEngine()->LoadLevelObjects = [this, pmap]()
         {
             pmap->map->loadObjects();
             for (auto &b : pmap->buildings)
@@ -110,7 +105,7 @@ bool Modification::newGame()
         LOG_ERROR(logger, "Cannot start game: " << e.what());
         return false;
     }
-    gEngine->setCurrentModification(this);
+    getEngine()->setCurrentModification(this);
     return true;
 }
 

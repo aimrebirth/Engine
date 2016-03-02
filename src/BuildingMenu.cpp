@@ -16,29 +16,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include "Script.h"
-
-struct lua_State;
+#include <Polygon4/BuildingMenu.h>
 
 namespace polygon4
 {
 
-class ScriptLua : public Script
+BuildingMenu::BuildingMenu()
 {
-public:
-    ScriptLua(const path &filename, const ScriptEngine *scriptEngine);
-    virtual ~ScriptLua();
 
-    virtual std::string getScriptExtension() const override { return "lua"; }
+}
 
-public: /* API */
-    virtual void OnEnterBuilding(ScriptData &data);
+BuildingMenu::~BuildingMenu()
+{
 
-private:
-    lua_State *L;
-};
+}
 
 } // namespace polygon4
-

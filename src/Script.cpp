@@ -42,13 +42,16 @@ ScriptEngine::ScriptEngine(const path &p, ScriptLanguage language)
         objects.insert(v.begin(), v.end()); \
     } while (0)
 
-    auto s = gEngine->getStorage();
+    auto s = getEngine()->getStorage();
     ADD_OBJECTS(equipments, Equipment);
     ADD_OBJECTS(gliders, Glider);
     ADD_OBJECTS(weapons, Weapon);
     ADD_OBJECTS(projectiles, Projectile);
     ADD_OBJECTS(goods, Good);
     ADD_OBJECTS(modificators, Modificator);
+
+    auto v = s->messages.get_key_map(&polygon4::detail::Message::text_id);
+    messages.insert(v.begin(), v.end());
 }
 
 Script *ScriptEngine::getScript(const std::string &name)

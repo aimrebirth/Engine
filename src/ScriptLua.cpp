@@ -37,16 +37,21 @@ ScriptLua::ScriptLua(const path &filename, const ScriptEngine *scriptEngine)
     luaopen_base(L);
     luaopen_Polygon4(L);
     // load file
-    if (luaL_loadfile(L, filename.string().c_str()))
+    if (luaL_loadfile(L, p.string().c_str()))
     {
-        LOG_ERROR(logger, "Error: " << lua_tostring(L, -1));
-        throw EXCEPTION("Unable to load lua script: " + filename.string());
+        auto p2 = p;
+        p2 += "." + getScriptExtension();
+        if (luaL_loadfile(L, p2.string().c_str()))
+        {
+            LOG_ERROR(logger, "Error: " << lua_tostring(L, -1));
+            throw EXCEPTION("Unable to load lua script: " + p.string());
+        }
     }
     // execute global statements
     if (lua_pcall(L, 0, 0, 0))
     {
         LOG_ERROR(logger, "Error: " << lua_tostring(L, -1));
-        throw EXCEPTION("Unable to execute lua script: " + filename.string());
+        throw EXCEPTION("Unable to execute lua script: " + p.string());
     }
 }
 

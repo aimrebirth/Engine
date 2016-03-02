@@ -18,27 +18,28 @@
 
 #pragma once
 
-#include "Script.h"
-
-struct lua_State;
+#include <Polygon4/DataManager/String.h>
 
 namespace polygon4
 {
 
-class ScriptLua : public Script
+class DLL_EXPORT BuildingMenu
 {
 public:
-    ScriptLua(const path &filename, const ScriptEngine *scriptEngine);
-    virtual ~ScriptLua();
+    BuildingMenu();
+    virtual ~BuildingMenu();
 
-    virtual std::string getScriptExtension() const override { return "lua"; }
-
-public: /* API */
-    virtual void OnEnterBuilding(ScriptData &data);
+    const String &getText() const
+    {
+        return text;
+    }
+    String &getText()
+    {
+        return text;
+    }
 
 private:
-    lua_State *L;
+    String text;
 };
 
 } // namespace polygon4
-
