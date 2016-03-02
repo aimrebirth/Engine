@@ -52,7 +52,7 @@ else()
     ADD_DEFINITIONS(-DBOOST_ALL_DYN_LINK)
 endif(WIN32)
 
-find_package(Boost 1.54 REQUIRED filesystem log)
+find_package(Boost 1.60 REQUIRED filesystem log)
 find_package(SWIG 3.0 REQUIRED)
 
 ################################################################################
