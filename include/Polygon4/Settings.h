@@ -20,12 +20,28 @@
 
 #include <Polygon4/DataManager/String.h>
 
+#include "Common.h"
+
 namespace polygon4
 {
 
 struct Settings
 {
-    String modsDir;
+    struct Directories
+    {
+        path game;
+        path mods;
+        path saves;
+
+        void setGameDir(const path &p)
+        {
+            game = p;
+            mods = game / "Mods";
+            saves = game / "Saves";
+        }
+    };
+
+    Directories dirs;
 };
 
 DLL_EXPORT
