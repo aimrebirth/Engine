@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <deque>
 #include <functional>
 #include <memory>
 #include <set>
@@ -31,15 +32,20 @@ public: \
     virtual void Hide ## name ## Menu() = 0; \
     virtual void Set ## name ## MenuVisibility(bool visibility) = 0
 
+#define AUTOSAVE_NAME "autosave"
+#define QUICKSAVE_NAME "quicksave"
+
 namespace polygon4
 {
 
 using Function = std::function<void(void)>;
+using SavedGames = std::deque<String>;
 
 class BuildingMenu;
 class Modification;
 class Save;
 
+// 32-bit workaround
 #if defined(WIN32) && !defined(_WIN64)
 #pragma pack(push, 1)
 #endif
@@ -60,11 +66,9 @@ public:
     virtual void spawnCurrentPlayer() = 0;
 
     virtual BuildingMenu *getBuildingMenu() = 0;
-
     DECLARE_MENU_VIRTUAL(Main);
     DECLARE_MENU_VIRTUAL(Building);
     DECLARE_MENU_VIRTUAL(Pause);
-
     virtual void SetBuildingMenuCurrentBuilding(detail::ModificationMapBuilding *currentBuilding) = 0;
 
     virtual void OnLevelLoaded() = 0;
@@ -83,11 +87,12 @@ public:
 class DLL_EXPORT Engine : public IEngine
 {
 protected:
-    Engine(const String &modificationsDirectory);
+    Engine(const String &gameDirectory);
 
 public:
     bool reloadStorage();
     bool reloadMods();
+    SavedGames getSavedGames(bool save = false) const;
 
     virtual Storage* getStorage() const override final { return storage.get(); }
 
@@ -105,6 +110,7 @@ protected:
     Modification *currentModification = nullptr;
 };
 
+// 32-bit workaround
 #if defined(WIN32) && !defined(_WIN64)
 #pragma pack(pop)
 #endif

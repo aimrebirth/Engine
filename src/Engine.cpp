@@ -18,6 +18,8 @@
 
 #include <Polygon4/Engine.h>
 
+#include <boost/range.hpp>
+
 #include <Polygon4/DataManager/Storage.h>
 #include <Polygon4/Modification.h>
 #include <Polygon4/Settings.h>
@@ -42,7 +44,7 @@ IEngine::~IEngine()
 {
 }
 
-Engine::Engine(const String &modificationsDirectory)
+Engine::Engine(const String &gameDirectory)
     : IEngine()
 {
     LOG_DEBUG(logger, "Initializing engine");
@@ -51,8 +53,8 @@ Engine::Engine(const String &modificationsDirectory)
     //  (data managers do not use it)
     detail::IObjectBase::replaceable = true;
 
-    LOG_DEBUG(logger, "Modifications Directory: " << modificationsDirectory.toString());
-    getSettings().modsDir = modificationsDirectory;
+    LOG_DEBUG(logger, "Game Directory: " << gameDirectory.toString());
+    getSettings().dirs.setGameDir(gameDirectory);
     reloadStorage();
 }
 
@@ -61,7 +63,7 @@ bool Engine::reloadStorage()
     LOG_DEBUG(logger, "Reloading storage");
     try
     {
-        auto s = initStorage(getSettings().modsDir.toString() + "/" DB_FILENAME);
+        auto s = initStorage((getSettings().dirs.mods / DB_FILENAME).string());
         LOG_DEBUG(logger, "Loading data");
         s->load();
         storage = s;
@@ -82,6 +84,27 @@ bool Engine::reloadMods()
         return false;
     initChildren();
     return true;
+}
+
+SavedGames Engine::getSavedGames(bool save) const
+{
+    SavedGames games;
+    path p = getSettings().dirs.saves;
+    if (!fs::exists(p))
+        return games;
+    for (auto &f : boost::make_iterator_range(fs::directory_iterator(p), {})) // non recursive
+    {
+        if (!fs::is_regular_file(f)) // filter files only
+            continue;
+        auto fp = f.path();
+        if (fp.extension() != ".sqlite") // filter saves only (sqlite db)
+            continue;
+        auto fn = fp.filename().stem().string();
+        if (save && (fn == AUTOSAVE_NAME || fn == QUICKSAVE_NAME)) // if we want to save game, disallow reserved words
+            continue;
+        games.push_back(fn);
+    }
+    return games;
 }
 
 void Engine::spawnCurrentPlayer()
