@@ -21,6 +21,7 @@
 #include <Polygon4/Engine.h>
 #include <Polygon4/Configuration.h>
 
+#include "Executor.h"
 #include "Script.h"
 
 #include <tools/Logger.h>
@@ -58,7 +59,7 @@ void Mechanoid::enterBuilding(detail::MapBuilding *building)
         return;
     }
 
-    // player is now officially in building
+    // player is now officially in the building
     // we need to run scripts, setup texts etc.
 
     auto se = mmb->map->modification->getScriptEngine();
@@ -77,6 +78,15 @@ void Mechanoid::enterBuilding(detail::MapBuilding *building)
     // end of function
     getEngine()->SetBuildingMenuCurrentBuilding(mmb);
     getEngine()->ShowBuildingMenu();
+
+    // do async save to not freeze the game
+    // the ideal algorithm here is:
+    // 1. freeze the game
+    // 2. async({ save(); unfreeze(); });
+    getTaskExecutor().push([]()
+    {
+        getEngine()->saveAuto();
+    });
 }
 
 } // namespace polygon4

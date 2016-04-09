@@ -24,17 +24,24 @@
 #include <Polygon4/Modification.h>
 #include <Polygon4/Settings.h>
 
+#include "Common.h"
+
 #include "tools/Logger.h"
 DECLARE_STATIC_LOGGER(logger, "engine");
 
-#define DB_FILENAME "db.sqlite"
+#define AUTOSAVE_NAME "autosave"
+#define QUICKSAVE_NAME "quicksave"
+#define DB_EXT ".sqlite"
+#define SAVEGAME_EXT DB_EXT
+
+#define DB_FILENAME "db" DB_EXT
 
 namespace polygon4
 {
 
-IEngine *getEngine(IEngine *engine)
+Engine *getEngine(Engine *engine)
 {
-    static IEngine *gEngine = nullptr;
+    static Engine *gEngine = nullptr;
     if (engine)
         gEngine = engine;
     return gEngine;
@@ -58,31 +65,36 @@ Engine::Engine(const String &gameDirectory)
     reloadStorage();
 }
 
+bool Engine::reloadMods()
+{
+    if (!reloadStorage())
+        return false;
+    initChildren();
+    return true;
+}
+
+std::shared_ptr<Storage> loadStorage(const path &p)
+{
+    auto s = initStorage(p.string());
+    LOG_DEBUG(logger, "Loading data");
+    s->load();
+    LOG_DEBUG(logger, "Storage loaded");
+    LOG_DEBUG(logger, "Storage ptr is: " << s);
+    return s;
+}
+
 bool Engine::reloadStorage()
 {
     LOG_DEBUG(logger, "Reloading storage");
     try
     {
-        auto s = initStorage((getSettings().dirs.mods / DB_FILENAME).string());
-        LOG_DEBUG(logger, "Loading data");
-        s->load();
-        storage = s;
-        LOG_DEBUG(logger, "Storage loaded");
-        LOG_DEBUG(logger, "Storage ptr is: " << storage);
+        storage = loadStorage(getSettings().dirs.mods / DB_FILENAME);
     }
     catch (std::exception &e)
     {
         LOG_ERROR(logger, "Cannot load storage: " << e.what());
         return false;
     }
-    return true;
-}
-
-bool Engine::reloadMods()
-{
-    if (!reloadStorage())
-        return false;
-    initChildren();
     return true;
 }
 
@@ -97,7 +109,7 @@ SavedGames Engine::getSavedGames(bool save) const
         if (!fs::is_regular_file(f)) // filter files only
             continue;
         auto fp = f.path();
-        if (fp.extension() != ".sqlite") // filter saves only (sqlite db)
+        if (fp.extension() != SAVEGAME_EXT) // filter saves only (sqlite db)
             continue;
         auto fn = fp.filename().stem().string();
         if (save && (fn == AUTOSAVE_NAME || fn == QUICKSAVE_NAME)) // if we want to save game, disallow reserved words
@@ -112,6 +124,97 @@ void Engine::spawnCurrentPlayer()
     if (!currentModification)
         return;
     currentModification->spawnCurrentPlayer();
+}
+
+path SaveName2path(const String &fn)
+{
+    path p = getSettings().dirs.saves / (fn + SAVEGAME_EXT);
+    return p;
+}
+
+bool Engine::_save(const String &fn) const
+{
+    if (fn.empty())
+        return false;
+    if (!currentModification)
+        return false;
+    auto p = SaveName2path(fn);
+    if (storage->saveGames.empty())
+    {
+        auto s = storage->addSaveGame();
+        s->modification = currentModification;
+    }
+    else
+    {
+        storage->saveGames[1]->modification = currentModification;
+    }
+    bool e = fs::exists(p);
+    auto old_p = p;
+    if (e)
+        p = SaveName2path(fs::unique_path().string());
+    storage->save(p.string());
+    if (e)
+    {
+        fs::copy_file(p, old_p, fs::copy_option::overwrite_if_exists);
+        fs::remove(p);
+    }
+    return true;
+}
+
+bool Engine::save(const String &fn) const
+{
+    if (fn == AUTOSAVE_NAME || fn == QUICKSAVE_NAME)
+        return false;
+    return _save(fn);
+}
+
+bool Engine::saveAuto() const
+{
+    return _save(AUTOSAVE_NAME);
+}
+
+bool Engine::saveQuick() const
+{
+    return _save(QUICKSAVE_NAME);
+}
+
+bool Engine::load(const String &fn)
+{
+    if (fn.empty())
+        return false;
+    auto p = SaveName2path(fn);
+    LOG_DEBUG(logger, "Loading savegame: " << fn << ", " << p.string());
+    if (!fs::exists(p))
+    {
+        LOG_ERROR(logger, "No such savegame: " << fn << ", " << p.string());
+        return false;
+    }
+    try
+    {
+        storage = loadStorage(p);
+        initChildren();
+        if (storage->saveGames.empty())
+        {
+            LOG_ERROR(logger, "No mod started in this savegame: " << fn << ", " << p.string());
+            return false;
+        }
+        storage->saveGames[1]->modification->newGame();
+    }
+    catch (std::exception &e)
+    {
+        LOG_ERROR(logger, "Cannot load storage: " << e.what());
+        return false;
+    }
+    return true;
+}
+
+void Engine::deleteSaveGame(const String &fn) const
+{
+    if (fn.empty())
+        return;
+    auto p = SaveName2path(fn);
+    if (fs::exists(p))
+        fs::remove(p);
 }
 
 } // namespace polygon4

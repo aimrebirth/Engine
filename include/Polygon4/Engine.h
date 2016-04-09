@@ -32,9 +32,6 @@ public: \
     virtual void Hide ## name ## Menu() = 0; \
     virtual void Set ## name ## MenuVisibility(bool visibility) = 0
 
-#define AUTOSAVE_NAME "autosave"
-#define QUICKSAVE_NAME "quicksave"
-
 namespace polygon4
 {
 
@@ -90,9 +87,15 @@ protected:
     Engine(const String &gameDirectory);
 
 public:
-    bool reloadStorage();
     bool reloadMods();
+    bool reloadStorage();
+
     SavedGames getSavedGames(bool save = false) const;
+    bool save(const String &fn) const;
+    bool saveAuto() const;
+    bool saveQuick() const;
+    bool load(const String &fn);
+    void deleteSaveGame(const String &fn) const;
 
     virtual Storage* getStorage() const override final { return storage.get(); }
 
@@ -108,6 +111,8 @@ protected:
 	std::shared_ptr<Storage> storage;
 
     Modification *currentModification = nullptr;
+
+    bool _save(const String &fn) const;
 };
 
 // 32-bit workaround
@@ -116,6 +121,6 @@ protected:
 #endif
 
 DLL_EXPORT
-IEngine *getEngine(IEngine *engine = nullptr);
+Engine *getEngine(Engine *engine = nullptr);
 
 } // namespace polygon4
