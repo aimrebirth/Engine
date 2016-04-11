@@ -18,8 +18,9 @@
 
 #include <Polygon4/Mechanoid.h>
 
-#include <Polygon4/Engine.h>
+#include <Polygon4/BuildingMenu.h>
 #include <Polygon4/Configuration.h>
+#include <Polygon4/Engine.h>
 
 #include "Executor.h"
 #include "Script.h"
@@ -46,13 +47,14 @@ detail::Configuration *Mechanoid::getConfiguration()
     return configuration;
 }
 
-void Mechanoid::enterBuilding(detail::MapBuilding *building)
+void Mechanoid::enterBuilding(detail::MapBuilding *bld)
 {
-    if (!building)
+    if (!bld)
         return;
-    auto mmb = building->getModificationMapBuilding();
+    auto mmb = bld->getModificationMapBuilding();
     if (!mmb)
         return;
+    building = mmb;
     if (!isPlayer())
     {
         // handle bot's building visit
@@ -76,7 +78,10 @@ void Mechanoid::enterBuilding(detail::MapBuilding *building)
     //set menu texts etc.
 
     // end of function
-    getEngine()->SetBuildingMenuCurrentBuilding(mmb);
+    auto bm = getEngine()->getBuildingMenu();
+    bm->SetCurrentBuilding(mmb);
+    bm->SetCurrentMechanoid(this);
+    bm->refresh();
     getEngine()->ShowBuildingMenu();
 
     // do async save to not freeze the game

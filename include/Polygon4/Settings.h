@@ -20,10 +20,21 @@
 
 #include <Polygon4/DataManager/String.h>
 
+#include <bitset>
+
 #include "Common.h"
 
 namespace polygon4
 {
+
+enum GameFlag
+{
+    gfIronWill,
+
+    gfMaxFlag,
+};
+
+using GameFlags = std::bitset<gfMaxFlag>;
 
 struct Settings
 {
@@ -42,6 +53,7 @@ struct Settings
     };
 
     Directories dirs;
+    GameFlags flags;
 };
 
 DLL_EXPORT

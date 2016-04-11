@@ -21,6 +21,7 @@
 #include <deque>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <set>
 
 #include <Polygon4/DataManager/String.h>
@@ -66,7 +67,6 @@ public:
     DECLARE_MENU_VIRTUAL(Main);
     DECLARE_MENU_VIRTUAL(Building);
     DECLARE_MENU_VIRTUAL(Pause);
-    virtual void SetBuildingMenuCurrentBuilding(detail::ModificationMapBuilding *currentBuilding) = 0;
 
     virtual void OnLevelLoaded() = 0;
     Function LoadLevelObjects;
@@ -109,10 +109,12 @@ public:
 
 protected:
 	std::shared_ptr<Storage> storage;
-
     Modification *currentModification = nullptr;
 
     bool _save(const String &fn) const;
+
+private:
+    mutable std::mutex m_save;
 };
 
 // 32-bit workaround

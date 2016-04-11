@@ -19,6 +19,7 @@
 #pragma once
 
 #include <Polygon4/DataManager/String.h>
+#include <Polygon4/DataManager/Types.h>
 
 namespace polygon4
 {
@@ -37,6 +38,26 @@ public:
     {
         return text;
     }
+
+    void SetCurrentBuilding(detail::ModificationMapBuilding *b)
+    {
+        if (!b)
+            return;
+        currentBuilding = b;
+    }
+
+    void SetCurrentMechanoid(detail::Mechanoid *m)
+    {
+        if (!m)
+            return;
+        mechanoid = m;
+    }
+
+    virtual void refresh() = 0;
+
+protected:
+    detail::ModificationMapBuilding *currentBuilding = nullptr;
+    detail::Mechanoid *mechanoid;
 
 private:
     String text;

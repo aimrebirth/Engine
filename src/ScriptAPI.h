@@ -52,6 +52,7 @@ struct ScriptData
     // add_quest or start_quest
     // set_target (_mark) or set_pointer
     // set_event = set quest stage
+    //void AddJournalRecord();
 
     float GetRating() const;
     float GetRating(Rating type) const;

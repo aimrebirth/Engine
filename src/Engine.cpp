@@ -134,6 +134,7 @@ path SaveName2path(const String &fn)
 
 bool Engine::_save(const String &fn) const
 {
+    std::lock_guard<std::mutex> lock(m_save);
     if (fn.empty())
         return false;
     if (!currentModification)
@@ -175,6 +176,9 @@ bool Engine::saveAuto() const
 
 bool Engine::saveQuick() const
 {
+    std::unique_lock<std::mutex> lock(m_save, std::try_to_lock);
+    if (!lock)
+        return false; // deny multiple quicksaves
     return _save(QUICKSAVE_NAME);
 }
 
@@ -191,13 +195,14 @@ bool Engine::load(const String &fn)
     }
     try
     {
-        storage = loadStorage(p);
-        initChildren();
-        if (storage->saveGames.empty())
+        auto s = loadStorage(p);
+        if (s->saveGames.empty())
         {
             LOG_ERROR(logger, "No mod started in this savegame: " << fn << ", " << p.string());
             return false;
         }
+        storage = s;
+        initChildren();
         storage->saveGames[1]->modification->newGame();
     }
     catch (std::exception &e)
