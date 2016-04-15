@@ -65,6 +65,10 @@ Engine::Engine(const String &gameDirectory)
     reloadStorage();
 }
 
+Engine::~Engine()
+{
+}
+
 bool Engine::reloadMods()
 {
     if (!reloadStorage())
@@ -88,7 +92,7 @@ bool Engine::reloadStorage()
     LOG_DEBUG(logger, "Reloading storage");
     try
     {
-        storage = loadStorage(getSettings().dirs.mods / DB_FILENAME);
+        storage = loadStorage(path(getSettings().dirs.mods) / DB_FILENAME);
     }
     catch (std::exception &e)
     {
@@ -128,27 +132,30 @@ void Engine::spawnCurrentPlayer()
 
 path SaveName2path(const String &fn)
 {
-    path p = getSettings().dirs.saves / (fn + SAVEGAME_EXT);
+    path p = path(getSettings().dirs.saves) / (fn + SAVEGAME_EXT);
     return p;
 }
 
 bool Engine::_save(const String &fn) const
 {
     std::lock_guard<std::mutex> lock(m_save);
+
     if (fn.empty())
         return false;
     if (!currentModification)
         return false;
+
     auto p = SaveName2path(fn);
+
+    IdPtr<detail::SaveGame> s;
     if (storage->saveGames.empty())
-    {
-        auto s = storage->addSaveGame();
-        s->modification = currentModification;
-    }
+        s = storage->addSaveGame();
     else
-    {
-        storage->saveGames[1]->modification = currentModification;
-    }
+        s = storage->saveGames[1];
+
+    s->modification = currentModification;
+    s->playtime = getSettings().playtime;
+
     bool e = fs::exists(p);
     auto old_p = p;
     if (e)
@@ -201,9 +208,13 @@ bool Engine::load(const String &fn)
             LOG_ERROR(logger, "No mod started in this savegame: " << fn << ", " << p.string());
             return false;
         }
+
         storage = s;
         initChildren();
-        storage->saveGames[1]->modification->newGame();
+
+        auto sg = storage->saveGames[1];
+        getSettings().playtime = sg->playtime;
+        sg->modification->newGame();
     }
     catch (std::exception &e)
     {

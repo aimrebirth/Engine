@@ -18,9 +18,12 @@
 
 #include "ScriptAPI.h"
 
+#include <chrono>
+
 #include <Polygon4/BuildingMenu.h>
 #include <Polygon4/Engine.h>
 #include <Polygon4/Modification.h>
+#include <Polygon4/Settings.h>
 
 #include "Script.h"
 
@@ -29,18 +32,6 @@ DECLARE_STATIC_LOGGER(logger, "script_api");
 
 namespace polygon4
 {
-
-const std::vector<float> rating_levels{
-           50,
-          200,
-          500,
-        1'500,
-        5'000,
-       15'000,
-       50'000,
-      200'000,
-    1'000'000,
-};
 
 namespace script
 {
@@ -51,37 +42,17 @@ String &getScreenText()
     return bm->getText();
 }
 
-float &ScriptData::getMoney() const
+polygon4::detail::Message *get_message_by_id(const std::string &message_id)
 {
-    return player->mechanoid->money;
-}
-
-float &ScriptData::getRating(Rating type) const
-{
-    switch (type)
+    auto se = getEngine()->getCurrentModification()->getScriptEngine();
+    auto &v = se->getMessages();
+    auto i = v.find(message_id);
+    if (i == v.end())
     {
-    case Rating::Courier:
-        return player->mechanoid->rating_courier;
-    case Rating::Fight:
-        return player->mechanoid->rating_fight;
-    case Rating::Trade:
-        return player->mechanoid->rating_trade;
+        LOG_ERROR(logger, "Message '" << message_id << "' was not found");
+        return nullptr;
     }
-    return player->mechanoid->rating;
-}
-
-int ScriptData::getRatingLevel(float rating)
-{
-    int i = 0;
-    while (rating > rating_levels[i++] && i < rating_levels.size());
-    return i;
-}
-
-void ScriptData::setRatingLevel(float &rating, int level)
-{
-    if (level > rating_levels.size())
-        rating = rating_levels.size();
-    rating = rating_levels[level - 1];
+    return (polygon4::detail::Message*)i->second;
 }
 
 void ScriptData::AddObject(const std::string &oname)
@@ -104,98 +75,96 @@ void ScriptData::AddMoney(float amount)
 {
     LOG_TRACE(logger, "AddMoney(" << amount << ")");
 
-    getMoney() += amount;
-}
-
-void ScriptData::AddRating(float amount)
-{
-    LOG_TRACE(logger, "AddRating(" << amount << ")");
-
-    getRating() += amount;
-}
-
-void ScriptData::AddRating(Rating type, float amount)
-{
-    LOG_TRACE(logger, "AddRating(" << amount << "), type: " << static_cast<int>(type));
-
-    getRating(type) += amount;
-}
-
-float ScriptData::GetRating() const
-{
-    LOG_TRACE(logger, "GetRating()");
-
-    return getRating();
-}
-
-float ScriptData::GetRating(Rating type) const
-{
-    LOG_TRACE(logger, "GetRating(), type: " << static_cast<int>(type));
-
-    return getRating(type);
-}
-
-int ScriptData::GetRatingLevel() const
-{
-    LOG_TRACE(logger, "GetRatingLevel()");
-
-    return getRatingLevel(getRating());
-}
-
-int ScriptData::GetRatingLevel(Rating type) const
-{
-    LOG_TRACE(logger, "GetRatingLevel(), type: " << static_cast<int>(type));
-
-    return getRatingLevel(getRating(type));
+    SetMoney(GetMoney() + amount);
 }
 
 bool ScriptData::HasMoney(float amount) const
 {
     LOG_TRACE(logger, "HasMoney(" << amount << ")");
 
-    return getMoney() >= amount;
+    return GetMoney() >= amount;
 }
 
-bool ScriptData::HasRating(float amount) const
+float ScriptData::GetMoney() const
 {
-    LOG_TRACE(logger, "HasRating(" << amount << ")");
-
-    return getRating() >= amount;
+    return player->mechanoid->getMoney();
 }
 
-bool ScriptData::HasRating(Rating type, float amount) const
+void ScriptData::SetMoney(float m)
+{
+    return player->mechanoid->setMoney(m);
+}
+
+void ScriptData::AddRating(float amount, RatingType type)
+{
+    LOG_TRACE(logger, "AddRating(" << amount << "), type: " << static_cast<int>(type));
+
+    SetRating(GetRating(type) + amount);
+}
+
+bool ScriptData::HasRating(float amount, RatingType type) const
 {
     LOG_TRACE(logger, "HasRating(" << amount << "), type: " << static_cast<int>(type));
 
-    return getRating(type) >= amount;
+    return GetRating(type) >= amount;
 }
 
-bool ScriptData::HasRatingLevel(int level) const
+float ScriptData::GetRating(RatingType type) const
 {
-    LOG_TRACE(logger, "HasRatingLevel(" << level << ")");
+    LOG_TRACE(logger, "GetRating(), type: " << static_cast<int>(type));
 
-    return GetRatingLevel() >= level;
+    return player->mechanoid->getRating((polygon4::detail::RatingType)type);
 }
 
-bool ScriptData::HasRatingLevel(Rating type, int level) const
+void ScriptData::SetRating(float amount, RatingType type)
+{
+    LOG_TRACE(logger, "SetRating(), type: " << static_cast<int>(type));
+
+    return player->mechanoid->setRating(amount, (polygon4::detail::RatingType)type);
+}
+
+int ScriptData::GetRatingLevel(RatingType type) const
+{
+    LOG_TRACE(logger, "GetRatingLevel(), type: " << static_cast<int>(type));
+
+    return player->mechanoid->getRatingLevel((polygon4::detail::RatingType)type);
+}
+
+bool ScriptData::HasRatingLevel(int level, RatingType type) const
 {
     LOG_TRACE(logger, "HasRatingLevel(" << level << "), type: " << static_cast<int>(type));
 
     return GetRatingLevel(type) >= level;
 }
 
-void ScriptData::SetRatingLevel(int level) const
-{
-    LOG_TRACE(logger, "SetRatingLevel(" << level << ")");
-
-    setRatingLevel(getRating(), level);
-}
-
-void ScriptData::SetRatingLevel(Rating type, int level) const
+void ScriptData::SetRatingLevel(int level, RatingType type) const
 {
     LOG_TRACE(logger, "SetRatingLevel(" << level << "), type: " << static_cast<int>(type));
 
-    setRatingLevel(getRating(type), level);
+    player->mechanoid->setRatingLevel(level, (polygon4::detail::RatingType)type);
+}
+
+void ScriptData::AddJournalRecord(const std::string &message_id, JournalRecord type)
+{
+    LOG_TRACE(logger, "AddJournalRecord(" << message_id << ")");
+
+    auto m = get_message_by_id(message_id);
+    if (!m)
+        return;
+
+    if (player->records.count(message_id) != 0)
+    {
+        auto &r = player->records[message_id];
+        r->type = (detail::JournalRecordType)type;
+        return;
+    }
+
+    auto s = player->getStorage();
+    auto r = s->addJournalRecord(player);
+    r->text_id = m->text_id;
+    r->message = m;
+    r->type = (detail::JournalRecordType)type;
+    r->time = getSettings().playtime;
 }
 
 void AddText(const std::string &text)
@@ -223,45 +192,25 @@ void ClearText()
     t.clear();
 }
 
-void AddMessage(::polygon4::String &t, polygon4::detail::Message *message)
+void AddMessage(const std::string &message_id, bool clear)
 {
-    t += message->title->string;
-    t += "\n";
-    t += message->txt->string;
-    t += "\n";
+    if (clear)
+        ClearText();
+    getEngine()->getBuildingMenu()->addTheme(get_message_by_id(message_id));
 }
 
 void AddMessage(const std::string &message_id)
 {
     LOG_TRACE(logger, "AddMessage(" << message_id << ")");
 
-    auto se = getEngine()->getCurrentModification()->getScriptEngine();
-    auto &v = se->getMessages();
-    auto i = v.find(message_id);
-    if (i == v.end())
-    {
-        LOG_ERROR(logger, "Message '" << message_id << "' was not found");
-        return;
-    }
-    auto &t = getScreenText();
-    AddMessage(t, (polygon4::detail::Message*)i->second);
+    AddMessage(message_id, false);
 }
 
 void ShowMessage(const std::string &message_id)
 {
     LOG_TRACE(logger, "ShowMessage(" << message_id << ")");
 
-    auto se = getEngine()->getCurrentModification()->getScriptEngine();
-    auto &v = se->getMessages();
-    auto i = v.find(message_id);
-    if (i == v.end())
-    {
-        LOG_ERROR(logger, "Message '" << message_id << "' was not found");
-        return;
-    }
-    auto &t = getScreenText();
-    t.clear();
-    AddMessage(t, (polygon4::detail::Message*)i->second);
+    AddMessage(message_id, true);
 }
 
 ScreenText GetScreenText()

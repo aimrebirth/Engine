@@ -54,7 +54,7 @@ bool Modification::newGame()
 
     try
     {
-        scriptEngine = std::make_unique<ScriptEngine>(getSettings().dirs.mods / directory, script_language);
+        scriptEngine = std::make_unique<ScriptEngine>(path(getSettings().dirs.mods) / directory, script_language);
 
         detail::ModificationPlayer *this_player = nullptr;
         for (auto &p : players)

@@ -41,30 +41,6 @@
         *alloc = (void*)&dll_alloc; \
         *free = (void*)&dll_free; \
     }
-
-#include <Windows.h>
-
-extern "C"
-HRESULT WINAPI __HrLoadAllImportsForDll(LPCSTR szDll);
-extern "C"
-BOOL WINAPI __FUnloadDelayLoadedDLL2(LPCSTR szDll);
-
 #else // !WIN32
-
 #define POLYGON4_UNREAL_MEMORY_STUB
-
 #endif
-
-inline void Polygon4InitMm(const char *dll)
-{
-#if WIN32
-    __HrLoadAllImportsForDll(dll);
-#endif
-}
-
-inline void Polygon4ResetMm(const char *dll)
-{
-#if WIN32
-    __FUnloadDelayLoadedDLL2(dll);
-#endif
-}

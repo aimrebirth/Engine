@@ -28,12 +28,18 @@ class ScriptEngine;
 namespace script
 {
 
-enum class Rating
+enum class RatingType
 {
     Normal,
     Courier,
     Fight,
     Trade,
+};
+
+enum class JournalRecord
+{
+    InProgress = 1,
+    Completed = 2,
 };
 
 struct ScriptData
@@ -45,35 +51,25 @@ struct ScriptData
     std::string building_name;
 
     void AddObject(const std::string &o);
+
+    void AddRating(float amount, RatingType type = RatingType::Normal);
+    float GetRating(RatingType type = RatingType::Normal) const;
+    bool HasRating(float amount, RatingType type = RatingType::Normal) const;
+    void SetRating(float amount, RatingType type = RatingType::Normal);
+
+    int GetRatingLevel(RatingType type = RatingType::Normal) const;
+    bool HasRatingLevel(int level, RatingType type = RatingType::Normal) const;
+    void SetRatingLevel(int level, RatingType type = RatingType::Normal) const;
+
     void AddMoney(float amount);
-    void AddRating(float amount);
-    void AddRating(Rating type, float amount);
+    float GetMoney() const;
+    bool HasMoney(float amount) const;
+    void SetMoney(float amount);
 
     // add_quest or start_quest
     // set_target (_mark) or set_pointer
     // set_event = set quest stage
-    //void AddJournalRecord();
-
-    float GetRating() const;
-    float GetRating(Rating type) const;
-
-    int GetRatingLevel() const;
-    int GetRatingLevel(Rating type) const;
-
-    bool HasMoney(float amount) const;
-    bool HasRating(float amount) const;
-    bool HasRating(Rating type, float amount) const;
-    bool HasRatingLevel(int level) const;
-    bool HasRatingLevel(Rating type, int level) const;
-
-    void SetRatingLevel(int level) const;
-    void SetRatingLevel(Rating type, int level) const;
-
-private:
-    static int getRatingLevel(float rating);
-    static void setRatingLevel(float &rating, int level);
-    float &getRating(Rating type = Rating::Normal) const;
-    float &getMoney() const;
+    void AddJournalRecord(const std::string &message_id, JournalRecord type = JournalRecord::InProgress);
 };
 
 struct ScreenText
@@ -86,7 +82,6 @@ struct ScreenText
 #endif
 };
 
-void AddMessage(::polygon4::String &screenText, polygon4::detail::Message *message);
 void AddMessage(const std::string &message_id);
 void AddText(const std::string &text);
 

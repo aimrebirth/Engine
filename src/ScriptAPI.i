@@ -5,7 +5,6 @@
 
 %{
 #include "ScriptAPI.h"
-#include <Polygon4/DataManager/String.h>
 %}
 
 %include "ScriptAPI.h"

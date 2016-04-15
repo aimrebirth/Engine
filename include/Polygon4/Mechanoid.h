@@ -27,6 +27,8 @@
 namespace polygon4
 {
 
+using detail::RatingType;
+
 class DLL_EXPORT Mechanoid : public detail::Mechanoid
 {
     using Base = detail::Mechanoid;
@@ -42,9 +44,28 @@ public:
 
     virtual detail::Configuration *getConfiguration() override final;
 
+    virtual float getMoney() const override final;
+    virtual bool hasMoney(float m) const override final;
+    virtual void setMoney(float m) override final;
+
+    virtual float getRating(RatingType type = RatingType::Normal) const override final;
+    virtual bool hasRating(float rating, RatingType type = RatingType::Normal) const override final;
+    virtual void setRating(float rating, RatingType type = RatingType::Normal) override final;
+
+    virtual int getRatingLevel(RatingType type = RatingType::Normal) const override final;
+    virtual bool hasRatingLevel(int level, RatingType type = RatingType::Normal) const override final;
+    virtual void setRatingLevel(int level, RatingType type = RatingType::Normal) override final;
+
 protected:
     detail::ModificationPlayer *player = nullptr;
+
+private:
+    static int _getRatingLevel(float rating);
+    static float _setRatingLevel(int level);
 };
+
+DLL_EXPORT
+float getRatingLevelCap(int level);
 
 } // namespace polygon4
 

@@ -85,6 +85,7 @@ class DLL_EXPORT Engine : public IEngine
 {
 protected:
     Engine(const String &gameDirectory);
+    virtual ~Engine();
 
 public:
     bool reloadMods();

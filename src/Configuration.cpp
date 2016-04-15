@@ -140,4 +140,17 @@ void Configuration::addWeapon(detail::Weapon *o)
     weapons.push_back(v);
 }
 
+float Configuration::getMass() const
+{
+    float mass = 0.0f;
+
+#define ADD_MASS(m) for (auto &v : m ## s) mass += v->m->weight
+    ADD_MASS(equipment);
+    ADD_MASS(good);
+    ADD_MASS(projectile);
+    ADD_MASS(weapon);
+
+    return mass;
+}
+
 } // namespace polygon4

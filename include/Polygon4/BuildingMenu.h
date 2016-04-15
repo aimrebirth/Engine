@@ -18,11 +18,49 @@
 
 #pragma once
 
+#include <memory>
+#include <vector>
+
 #include <Polygon4/DataManager/String.h>
 #include <Polygon4/DataManager/Types.h>
 
 namespace polygon4
 {
+
+struct DLL_EXPORT InfoTreeItem
+{
+    enum
+    {
+        ThemesId = 0,
+        ThemesMax,
+
+        JournalInProgress = 0,
+        JournalCompleted,
+        JournalFailed,
+        JournalId,
+        JournalMax,
+
+        GliderGeneral = 0,
+        GliderId,
+        GliderArmor,
+        GliderWeapons,
+        GliderEquipment,
+        GliderAmmo,
+        GliderMax,
+
+        HoldId = 0,
+        HoldMax,
+    };
+
+    InfoTreeItem *parent = nullptr;
+    std::vector<std::shared_ptr<InfoTreeItem>> children;
+
+    String text;
+    detail::IObjectBase *object = nullptr;
+    bool expanded = true;
+
+    InfoTreeItem *findChild(detail::IObjectBase *o);
+};
 
 class DLL_EXPORT BuildingMenu
 {
@@ -30,21 +68,10 @@ public:
     BuildingMenu();
     virtual ~BuildingMenu();
 
-    const String &getText() const
-    {
-        return text;
-    }
-    String &getText()
-    {
-        return text;
-    }
+    const String &getText() const { return text; }
+    String &getText() { return text; }
 
-    void SetCurrentBuilding(detail::ModificationMapBuilding *b)
-    {
-        if (!b)
-            return;
-        currentBuilding = b;
-    }
+    void SetCurrentBuilding(detail::ModificationMapBuilding *b);
 
     void SetCurrentMechanoid(detail::Mechanoid *m)
     {
@@ -55,9 +82,21 @@ public:
 
     virtual void refresh() = 0;
 
+    void addTheme(detail::Message *msg);
+    void updateJournal();
+
 protected:
-    detail::ModificationMapBuilding *currentBuilding = nullptr;
+    detail::ModificationMapBuilding *building = nullptr;
     detail::Mechanoid *mechanoid;
+
+    InfoTreeItem themes;
+    InfoTreeItem journal;
+    InfoTreeItem glider;
+    InfoTreeItem hold;
+    InfoTreeItem map;
+    InfoTreeItem glider_store;
+    InfoTreeItem goods_store;
+    InfoTreeItem clans;
 
 private:
     String text;

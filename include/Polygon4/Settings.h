@@ -18,11 +18,9 @@
 
 #pragma once
 
-#include <Polygon4/DataManager/String.h>
-
 #include <bitset>
 
-#include "Common.h"
+#include <Polygon4/DataManager/String.h>
 
 namespace polygon4
 {
@@ -30,6 +28,7 @@ namespace polygon4
 enum GameFlag
 {
     gfIronWill,
+    gfCanTransferMechanoidsBetweenSectors,
 
     gfMaxFlag,
 };
@@ -40,20 +39,21 @@ struct Settings
 {
     struct Directories
     {
-        path game;
-        path mods;
-        path saves;
+        String game;
+        String mods;
+        String saves;
 
-        void setGameDir(const path &p)
+        void setGameDir(const String &p)
         {
             game = p;
-            mods = game / "Mods";
-            saves = game / "Saves";
+            mods = game + "/Mods";
+            saves = game + "/Saves";
         }
     };
 
     Directories dirs;
     GameFlags flags;
+    float playtime = 0.0f;
 };
 
 DLL_EXPORT
