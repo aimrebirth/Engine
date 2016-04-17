@@ -58,14 +58,12 @@ public:
 
     Script *getScript(const std::string &name);
     const KeyMap<String> &getObjects() const { return objects; }
-    const KeyMap<String> &getMessages() const { return messages; }
 
 private:
     path root;
     ScriptLanguage language;
     std::unordered_map<std::string, std::unique_ptr<Script>> scripts;
     KeyMap<String> objects;
-    KeyMap<String> messages;
 };
 
 } // namespace polygon4

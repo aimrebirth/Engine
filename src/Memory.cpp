@@ -85,10 +85,12 @@ bool try_load_mm()
     return false;
 }
 
+// try to set name that will preceed any other symbol
+// during initialization
 static
-struct ______init
+struct ______aaaaa_init
 {
-    ______init()
+    ______aaaaa_init()
     {
         try_load_mm();
     }

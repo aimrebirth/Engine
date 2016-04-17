@@ -49,9 +49,6 @@ ScriptEngine::ScriptEngine(const path &p, ScriptLanguage language)
     ADD_OBJECTS(projectiles, Projectile);
     ADD_OBJECTS(goods, Good);
     ADD_OBJECTS(modificators, Modificator);
-
-    auto v = s->messages.get_key_map(&polygon4::detail::Message::text_id);
-    messages.insert(v.begin(), v.end());
 }
 
 Script *ScriptEngine::getScript(const std::string &name)

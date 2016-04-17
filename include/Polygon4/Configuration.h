@@ -34,14 +34,14 @@ class DLL_EXPORT Configuration : public detail::Configuration
 public:
     Configuration(const Base &);
 
-    virtual void addObject(IObjectBase *) override final;
+    virtual void addObject(IObjectBase *o, int quantity = 1) override final;
 
-    virtual void addEquipment(detail::Equipment *) override final;
-    virtual void addGlider(detail::Glider *) override final;
-    virtual void addGood(detail::Good *) override final;
-    virtual void addModificator(detail::Modificator *) override final;
-    virtual void addProjectile(detail::Projectile *) override final;
-    virtual void addWeapon(detail::Weapon *) override final;
+    virtual void addEquipment(detail::Equipment *e, int quantity = 1) override final;
+    virtual void addGlider(detail::Glider *g) override final;
+    virtual void addGood(detail::Good *g, int quantity = 1) override final;
+    virtual void addModificator(detail::Modificator *m, int quantity = 1) override final;
+    virtual void addProjectile(detail::Projectile *p, int quantity = 1) override final;
+    virtual void addWeapon(detail::Weapon *w, int quantity = 1) override final;
 
     virtual float getMass() const override final;
     virtual float getTotalMass() const override final { return getMass() + glider->weight; }

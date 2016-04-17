@@ -108,6 +108,11 @@ public:
 
     virtual void spawnCurrentPlayer() override;
 
+    const KeyMap<String> &getMessages() const { return messages; }
+    KeyMap<String> &getMessages() { return messages; }
+    const KeyMap<String> &getStrings() const { return strings; }
+    KeyMap<String> &getStrings() { return strings; }
+
 protected:
 	std::shared_ptr<Storage> storage;
     Modification *currentModification = nullptr;
@@ -116,6 +121,9 @@ protected:
 
 private:
     mutable std::mutex m_save;
+
+    KeyMap<String> messages;
+    KeyMap<String> strings;
 };
 
 // 32-bit workaround

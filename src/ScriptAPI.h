@@ -50,7 +50,7 @@ struct ScriptData
     polygon4::detail::ModificationPlayer *player;
     std::string building_name;
 
-    void AddObject(const std::string &o);
+    void AddObject(const std::string &o, int quantity = 1);
 
     void AddRating(float amount, RatingType type = RatingType::Normal);
     float GetRating(RatingType type = RatingType::Normal) const;

@@ -99,6 +99,11 @@ bool Engine::reloadStorage()
         LOG_ERROR(logger, "Cannot load storage: " << e.what());
         return false;
     }
+
+    // get string maps
+    messages = storage->messages.get_key_map(&polygon4::detail::Message::text_id);
+    strings = storage->strings.get_key_map(&polygon4::detail::String::text_id);
+
     return true;
 }
 

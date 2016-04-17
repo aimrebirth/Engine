@@ -45,7 +45,7 @@ String &getScreenText()
 polygon4::detail::Message *get_message_by_id(const std::string &message_id)
 {
     auto se = getEngine()->getCurrentModification()->getScriptEngine();
-    auto &v = se->getMessages();
+    auto &v = getEngine()->getMessages();
     auto i = v.find(message_id);
     if (i == v.end())
     {
@@ -55,7 +55,7 @@ polygon4::detail::Message *get_message_by_id(const std::string &message_id)
     return (polygon4::detail::Message*)i->second;
 }
 
-void ScriptData::AddObject(const std::string &oname)
+void ScriptData::AddObject(const std::string &oname, int quantity)
 {
     LOG_TRACE(logger, "AddObject(" << oname << ")");
 
@@ -68,7 +68,7 @@ void ScriptData::AddObject(const std::string &oname)
     }
     auto o = i->second;
     auto conf = player->mechanoid->getConfiguration();
-    conf->addObject(o);
+    conf->addObject(o, quantity);
 }
 
 void ScriptData::AddMoney(float amount)
@@ -165,6 +165,7 @@ void ScriptData::AddJournalRecord(const std::string &message_id, JournalRecord t
     r->message = m;
     r->type = (detail::JournalRecordType)type;
     r->time = getSettings().playtime;
+    player->records.insert_to_data(r);
 }
 
 void AddText(const std::string &text)

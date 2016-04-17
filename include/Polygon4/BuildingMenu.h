@@ -48,6 +48,12 @@ struct DLL_EXPORT InfoTreeItem
         GliderAmmo,
         GliderMax,
 
+        GliderStoreId = 0,
+        GliderStoreEquipment,
+        GliderStoreWeapons,
+        GliderStoreAmmo,
+        GliderStoreMax,
+
         HoldId = 0,
         HoldMax,
     };
@@ -59,7 +65,14 @@ struct DLL_EXPORT InfoTreeItem
     detail::IObjectBase *object = nullptr;
     bool expanded = true;
 
-    InfoTreeItem *findChild(detail::IObjectBase *o);
+    InfoTreeItem(const detail::IObjectBase *o = nullptr);
+
+    InfoTreeItem *findChild(const detail::IObjectBase *o);
+
+    InfoTreeItem &operator=(const detail::IObjectBase *o);
+
+private:
+    void assign(const detail::IObjectBase *o);
 };
 
 class DLL_EXPORT BuildingMenu
@@ -82,7 +95,14 @@ public:
 
     virtual void refresh() = 0;
 
-    void addTheme(detail::Message *msg);
+    void addMessage(const detail::Message *msg);
+    void showMessage(const detail::Message *msg);
+
+    void addTheme(const detail::Message *msg);
+
+    void update();
+    void updateGlider();
+    void updateGliderStore();
     void updateJournal();
 
 protected:
@@ -100,6 +120,8 @@ protected:
 
 private:
     String text;
+
+    void printMessage(const detail::Message *msg);
 };
 
 } // namespace polygon4

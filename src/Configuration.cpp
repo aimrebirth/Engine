@@ -31,36 +31,36 @@ Configuration::Configuration(const Base &rhs)
 {
 }
 
-void Configuration::addObject(IObjectBase *o)
+void Configuration::addObject(IObjectBase *o, int quantity)
 {
     using polygon4::detail::EObjectType;
 
     switch (o->getType())
     {
     case EObjectType::Equipment:
-        addEquipment((detail::Equipment *)o);
+        addEquipment((detail::Equipment *)o, quantity);
         break;
     case EObjectType::Glider:
         addGlider((detail::Glider *)o);
         break;
     case EObjectType::Weapon:
-        addWeapon((detail::Weapon *)o);
+        addWeapon((detail::Weapon *)o, quantity);
         break;
     case EObjectType::Modificator:
-        addModificator((detail::Modificator *)o);
+        addModificator((detail::Modificator *)o, quantity);
         break;
     case EObjectType::Good:
-        addGood((detail::Good *)o);
+        addGood((detail::Good *)o, quantity);
         break;
     case EObjectType::Projectile:
-        addProjectile((detail::Projectile *)o);
+        addProjectile((detail::Projectile *)o, quantity);
         break;
     default:
         return;
     }
 }
 
-void Configuration::addEquipment(detail::Equipment *o)
+void Configuration::addEquipment(detail::Equipment *o, int quantity)
 {
     auto i = std::find_if(equipments.begin(), equipments.end(),
         [o](const auto &e) { return e->equipment.get() == o; });
@@ -76,6 +76,7 @@ void Configuration::addEquipment(detail::Equipment *o)
     auto v = s->configurationEquipments.createAtEnd();
     v->configuration = this;
     v->equipment = o;
+    v->quantity = quantity;
     equipments.push_back(v);
 }
 
@@ -84,7 +85,7 @@ void Configuration::addGlider(detail::Glider *o)
     glider = o;
 }
 
-void Configuration::addGood(detail::Good *o)
+void Configuration::addGood(detail::Good *o, int quantity)
 {
     auto i = std::find_if(goods.begin(), goods.end(),
         [o](const auto &e) { return e->good.get() == o; });
@@ -100,10 +101,11 @@ void Configuration::addGood(detail::Good *o)
     auto v = s->configurationGoods.createAtEnd();
     v->configuration = this;
     v->good = o;
+    v->quantity = quantity;
     goods.push_back(v);
 }
 
-void Configuration::addModificator(detail::Modificator *o)
+void Configuration::addModificator(detail::Modificator *o, int quantity)
 {
     auto i = std::find_if(modificators.begin(), modificators.end(),
         [o](const auto &e) { return e->modificator.get() == o; });
@@ -119,24 +121,27 @@ void Configuration::addModificator(detail::Modificator *o)
     auto v = s->configurationModificators.createAtEnd();
     v->configuration = this;
     v->modificator = o;
+    v->quantity = quantity;
     modificators.push_back(v);
 }
 
-void Configuration::addProjectile(detail::Projectile *o)
+void Configuration::addProjectile(detail::Projectile *o, int quantity)
 {
     auto s = getStorage();
     auto v = s->configurationProjectiles.createAtEnd();
     v->configuration = this;
     v->projectile = o;
+    v->quantity = quantity;
     projectiles.push_back(v);
 }
 
-void Configuration::addWeapon(detail::Weapon *o)
+void Configuration::addWeapon(detail::Weapon *o, int quantity)
 {
     auto s = getStorage();
     auto v = s->configurationWeapons.createAtEnd();
     v->configuration = this;
     v->weapon = o;
+    v->quantity = quantity;
     weapons.push_back(v);
 }
 
