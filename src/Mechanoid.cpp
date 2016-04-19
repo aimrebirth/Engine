@@ -56,8 +56,14 @@ detail::Configuration *Mechanoid::getConfiguration()
 {
     if (!configuration)
     {
+        // do not create new configuration while in db tool mode
+        if (getSettings().flags[gfDbTool])
+            return initial_configuration;
+
         configuration = getStorage()->configurations.createAtEnd(*initial_configuration);
         configuration->deepCopyFrom(*initial_configuration);
+        // to differ from initial configurations in DB Tool
+        configuration->text_id += L" - " + getName();
     }
     replace<Configuration>(configuration.get());
     return configuration;

@@ -22,7 +22,6 @@
 
 #include <Polygon4/DataManager/Storage.h>
 #include <Polygon4/Modification.h>
-#include <Polygon4/Settings.h>
 
 #include "Common.h"
 
@@ -55,18 +54,33 @@ Engine::Engine(const String &gameDirectory)
     : IEngine()
 {
     LOG_DEBUG(logger, "Initializing engine");
+    LOG_DEBUG(logger, "Game Directory: " << gameDirectory.toString());
 
     // turn on this feature for all engines
     //  (data managers do not use it)
     detail::IObjectBase::replaceable = true;
 
-    LOG_DEBUG(logger, "Game Directory: " << gameDirectory.toString());
-    getSettings().dirs.setGameDir(gameDirectory);
+    getSettings().dirs.setGameDir(gameDirectory); // set to temp
     reloadStorage();
+    getSettings().dirs.setGameDir(gameDirectory); // set to real storage
 }
 
 Engine::~Engine()
 {
+}
+
+Settings &Engine::getSettings()
+{
+    if (!getStorage())
+        return settings;
+    return getStorage()->getSettings();
+}
+
+const Settings &Engine::getSettings() const
+{
+    if (!getStorage())
+        return settings;
+    return getStorage()->getSettings();
 }
 
 bool Engine::reloadMods()
@@ -137,7 +151,7 @@ void Engine::spawnCurrentPlayer()
 
 path SaveName2path(const String &fn)
 {
-    path p = path(getSettings().dirs.saves) / (fn + SAVEGAME_EXT);
+    path p = path(getEngine()->getSettings().dirs.saves) / (fn + SAVEGAME_EXT);
     return p;
 }
 

@@ -98,6 +98,11 @@ public:
     void addMessage(const detail::Message *msg);
     void showMessage(const detail::Message *msg);
 
+    void addText(const String &text);
+    void addText(const String &title, const String &text);
+    void showText(const String &text);
+    void showText(const String &title, const String &text);
+
     void addTheme(const detail::Message *msg);
 
     void update();
@@ -122,6 +127,7 @@ private:
     String text;
 
     void printMessage(const detail::Message *msg);
+    void printText(const String &text);
 };
 
 } // namespace polygon4

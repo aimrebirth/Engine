@@ -27,6 +27,8 @@
 #include <Polygon4/DataManager/String.h>
 #include <Polygon4/DataManager/Storage.h>
 
+#include <Polygon4/DataManager/Settings.h>
+
 #define DECLARE_MENU_VIRTUAL(name) \
 public: \
     virtual void Show ## name ## Menu() = 0; \
@@ -52,6 +54,8 @@ class DLL_EXPORT IEngine
 {
 public:
     IEngine() = default;
+    IEngine(const IEngine &) = delete;
+    IEngine &operator=(const IEngine &) = delete;
     virtual ~IEngine();
 
     virtual void initChildren() = 0;
@@ -91,6 +95,9 @@ public:
     bool reloadMods();
     bool reloadStorage();
 
+    Settings &getSettings();
+    const Settings &getSettings() const;
+
     SavedGames getSavedGames(bool save = false) const;
     bool save(const String &fn) const;
     bool saveAuto() const;
@@ -120,6 +127,9 @@ protected:
     bool _save(const String &fn) const;
 
 private:
+    // temp settings
+    Settings settings;
+
     mutable std::mutex m_save;
 
     KeyMap<String> messages;

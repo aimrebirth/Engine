@@ -23,7 +23,6 @@
 #include <Polygon4/BuildingMenu.h>
 #include <Polygon4/Engine.h>
 #include <Polygon4/Modification.h>
-#include <Polygon4/Settings.h>
 
 #include "Script.h"
 
@@ -164,7 +163,7 @@ void ScriptData::AddJournalRecord(const std::string &message_id, JournalRecord t
     r->text_id = m->text_id;
     r->message = m;
     r->type = (detail::JournalRecordType)type;
-    r->time = getSettings().playtime;
+    r->time = getEngine()->getSettings().playtime;
     player->records.insert_to_data(r);
 }
 

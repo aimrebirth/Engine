@@ -243,11 +243,43 @@ void BuildingMenu::showMessage(const detail::Message *m)
 
 void BuildingMenu::printMessage(const detail::Message *m)
 {
+    printText(m->title->string);
+    printText(m->txt->string);
+}
+
+void BuildingMenu::addText(const String &t)
+{
+    if (!text.empty())
+        text += "\n\n";
+    printText(t);
+}
+
+void BuildingMenu::addText(const String &ti, const String &t)
+{
+    if (!text.empty())
+        text += "\n\n";
+    printText(ti);
+    printText(t);
+}
+
+void BuildingMenu::showText(const String &t)
+{
+    text.clear();
+    printText(t);
+}
+
+void BuildingMenu::showText(const String &ti, const String &t)
+{
+    text.clear();
+    printText(ti);
+    printText(t);
+}
+
+void BuildingMenu::printText(const String &t)
+{
     // TODO: format here!
     // maybe boost format
-    text += m->title->string;
-    text += "\n";
-    text += m->txt->string;
+    text += t;
     text += "\n";
 }
 
