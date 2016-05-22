@@ -84,6 +84,9 @@ bool Modification::newGame()
             return false;
         currentMap = pmap->map;
 
+        // destroy old building menu data before new game starts
+        getEngine()->DestroyBuildingMenu();
+
         getEngine()->HideMainMenu();
         getEngine()->LoadLevelObjects = [this, pmap]()
         {

@@ -68,6 +68,8 @@ public:
     virtual void spawnCurrentPlayer() = 0;
 
     virtual BuildingMenu *getBuildingMenu() = 0;
+    virtual void DestroyBuildingMenu() = 0;
+
     DECLARE_MENU_VIRTUAL(Main);
     DECLARE_MENU_VIRTUAL(Building);
     DECLARE_MENU_VIRTUAL(Pause);
