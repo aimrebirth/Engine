@@ -127,6 +127,14 @@ void Configuration::addModificator(detail::Modificator *o, int quantity)
 
 void Configuration::addProjectile(detail::Projectile *o, int quantity)
 {
+    auto i = std::find_if(projectiles.begin(), projectiles.end(),
+        [o](const auto &e) { return e->projectile.get() == o; });
+    if (i != projectiles.end())
+    {
+        auto e = *i;
+        e->quantity += quantity;
+        return;
+    }
     auto s = getStorage();
     auto v = s->configurationProjectiles.createAtEnd();
     v->configuration = this;
@@ -137,6 +145,7 @@ void Configuration::addProjectile(detail::Projectile *o, int quantity)
 
 void Configuration::addWeapon(detail::Weapon *o, int quantity)
 {
+    // add checks for light, heavy weapons, other configurations
     auto s = getStorage();
     auto v = s->configurationWeapons.createAtEnd();
     v->configuration = this;
