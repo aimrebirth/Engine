@@ -134,6 +134,11 @@ private:
 
     KeyMap<String> messages;
     KeyMap<String> strings;
+
+    void backupSettings();
+    void restoreSettings();
+
+    void postLoadStorage();
 };
 
 // 32-bit workaround

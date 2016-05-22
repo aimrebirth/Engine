@@ -60,9 +60,10 @@ Engine::Engine(const String &gameDirectory)
     //  (data managers do not use it)
     detail::IObjectBase::replaceable = true;
 
-    getSettings().dirs.setGameDir(gameDirectory); // set to temp
+    // initial settings
+    getSettings().dirs.setGameDir(gameDirectory);
+
     reloadStorage();
-    getSettings().dirs.setGameDir(gameDirectory); // set to real storage
 }
 
 Engine::~Engine()
@@ -83,6 +84,16 @@ const Settings &Engine::getSettings() const
     return getStorage()->getSettings();
 }
 
+void Engine::backupSettings()
+{
+    settings = getSettings();
+}
+
+void Engine::restoreSettings()
+{
+    getSettings() = settings;
+}
+
 bool Engine::reloadMods()
 {
     if (!reloadStorage())
@@ -94,16 +105,19 @@ bool Engine::reloadMods()
 std::shared_ptr<Storage> loadStorage(const path &p)
 {
     auto s = initStorage(p.string());
-    LOG_DEBUG(logger, "Loading data");
+    LOG_DEBUG(logger, "Loading data to storage");
     s->load();
-    LOG_DEBUG(logger, "Storage loaded");
-    LOG_DEBUG(logger, "Storage ptr is: " << s);
+    LOG_TRACE(logger, "Loaded data to storage");
+    LOG_TRACE(logger, "Storage ptr is: " << s);
     return s;
 }
 
 bool Engine::reloadStorage()
 {
     LOG_DEBUG(logger, "Reloading storage");
+
+    backupSettings();
+
     try
     {
         storage = loadStorage(path(getSettings().dirs.mods) / DB_FILENAME);
@@ -114,11 +128,17 @@ bool Engine::reloadStorage()
         return false;
     }
 
+    restoreSettings();
+    postLoadStorage();
+
+    return true;
+}
+
+void Engine::postLoadStorage()
+{
     // get string maps
     messages = storage->messages.get_key_map(&polygon4::detail::Message::text_id);
     strings = storage->strings.get_key_map(&polygon4::detail::String::text_id);
-
-    return true;
 }
 
 SavedGames Engine::getSavedGames(bool save) const
@@ -159,12 +179,12 @@ bool Engine::_save(const String &fn) const
 {
     std::lock_guard<std::mutex> lock(m_save);
 
-    if (fn.empty())
-        return false;
-    if (!currentModification)
+    if (fn.empty() || !currentModification)
         return false;
 
     auto p = SaveName2path(fn);
+
+    LOG_DEBUG(logger, "Saving game: " << fn.toString() << ", " << p.string());
 
     IdPtr<detail::SaveGame> s;
     if (storage->saveGames.empty())
@@ -212,11 +232,14 @@ bool Engine::load(const String &fn)
 {
     if (fn.empty())
         return false;
+
     auto p = SaveName2path(fn);
-    LOG_DEBUG(logger, "Loading savegame: " << fn << ", " << p.string());
+
+    LOG_DEBUG(logger, "Loading savegame: " << fn.toString() << ", " << p.string());
+
     if (!fs::exists(p))
     {
-        LOG_ERROR(logger, "No such savegame: " << fn << ", " << p.string());
+        LOG_ERROR(logger, "No such savegame: " << fn.toString() << ", " << p.string());
         return false;
     }
     try
@@ -224,11 +247,17 @@ bool Engine::load(const String &fn)
         auto s = loadStorage(p);
         if (s->saveGames.empty())
         {
-            LOG_ERROR(logger, "No mod started in this savegame: " << fn << ", " << p.string());
+            LOG_ERROR(logger, "No mod started in this savegame: " << fn.toString() << ", " << p.string());
             return false;
         }
 
+        backupSettings();
+
+        // storage is not loaded into the engine
         storage = s;
+
+        restoreSettings();
+        postLoadStorage();
         initChildren();
 
         auto sg = storage->saveGames[1];
