@@ -47,6 +47,15 @@ const std::vector<float> &get_rating_levels()
 namespace polygon4
 {
 
+float getRatingLevelCap(int level)
+{
+    if (level <= 0)
+        return 0;
+    if (level > get_rating_levels().size())
+        return 0;
+    return get_rating_levels()[level - 1];
+}
+
 Mechanoid::Mechanoid(const Base &rhs)
     : Base(rhs)
 {
@@ -66,6 +75,8 @@ detail::Configuration *Mechanoid::getConfiguration()
         configuration->text_id += L" - " + getName();
     }
     replace<Configuration>(configuration.get());
+    auto c = (Configuration *)configuration.get();
+    c->setMechanoid(this);
     return configuration;
 }
 
@@ -186,6 +197,11 @@ void Mechanoid::setRating(float r, RatingType type)
         *pr = 1;
 }
 
+void Mechanoid::addMoney(float m)
+{
+    setMoney(getMoney() + m);
+}
+
 float Mechanoid::getMoney() const
 {
     return money;
@@ -203,13 +219,25 @@ void Mechanoid::setMoney(float m)
         money = 0;
 }
 
-float getRatingLevelCap(int level)
+bool Mechanoid::buy(float money)
 {
-    if (level <= 0)
-        return 0;
-    if (level > get_rating_levels().size())
-        return 0;
-    return get_rating_levels()[level - 1];
+    if (money < 0 || !hasMoney(money))
+        return false;
+    addMoney(-money);
+    return true;
+}
+
+void Mechanoid::sell(float money)
+{
+    addMoney(money);
+}
+
+void Mechanoid::printActionResult(ActionResult result)
+{
+    if (!isPlayer())
+        return;
+
+    getEngine()->getBuildingMenu()->addText(tr(result));
 }
 
 } // namespace polygon4

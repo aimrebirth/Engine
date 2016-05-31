@@ -24,8 +24,12 @@
 
 #include <Polygon4/DataManager/Types.h>
 
+#include "Actions.h"
+
 namespace polygon4
 {
+
+class Mechanoid;
 
 class DLL_EXPORT Configuration : public detail::Configuration
 {
@@ -41,11 +45,16 @@ public:
     virtual void addGood(detail::Good *g, int quantity = 1) override final;
     virtual void addModificator(detail::Modificator *m, int quantity = 1) override final;
     virtual void addProjectile(detail::Projectile *p, int quantity = 1) override final;
-    virtual void addWeapon(detail::Weapon *w, int quantity = 1) override final;
+    virtual void addWeapon(detail::Weapon *w) override final;
 
     virtual float getMass() const override final;
     virtual float getTotalMass() const override final { return getMass() + glider->weight; }
     virtual float getCapacity() const override final { return glider->getCapacity(); }
+
+    void setMechanoid(Mechanoid *mechanoid);
+
+private:
+    Mechanoid *mechanoid = nullptr;
 };
 
 } // namespace polygon4

@@ -18,11 +18,9 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
-#include <set>
-
 #include <Polygon4/DataManager/Types.h>
+
+#include "Actions.h"
 
 namespace polygon4
 {
@@ -44,6 +42,7 @@ public:
 
     virtual detail::Configuration *getConfiguration() override final;
 
+    virtual void addMoney(float m) override final;
     virtual float getMoney() const override final;
     virtual bool hasMoney(float m) const override final;
     virtual void setMoney(float m) override final;
@@ -55,6 +54,11 @@ public:
     virtual int getRatingLevel(RatingType type = RatingType::Normal) const override final;
     virtual bool hasRatingLevel(int level, RatingType type = RatingType::Normal) const override final;
     virtual void setRatingLevel(int level, RatingType type = RatingType::Normal) override final;
+
+    virtual bool buy(float money) override final;
+    virtual void sell(float money) override final;
+
+    void printActionResult(ActionResult result);
 
 protected:
     detail::ModificationPlayer *player = nullptr;

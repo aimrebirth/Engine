@@ -19,6 +19,7 @@
 #include <Polygon4/Configuration.h>
 
 #include <Polygon4/Engine.h>
+#include <Polygon4/Mechanoid.h>
 
 #include <tools/Logger.h>
 DECLARE_STATIC_LOGGER(logger, "configuration");
@@ -29,6 +30,12 @@ namespace polygon4
 Configuration::Configuration(const Base &rhs)
     : Base(rhs)
 {
+}
+
+void Configuration::setMechanoid(Mechanoid *m)
+{
+    if (m)
+        mechanoid = m;
 }
 
 void Configuration::addObject(IObjectBase *o, int quantity)
@@ -44,7 +51,8 @@ void Configuration::addObject(IObjectBase *o, int quantity)
         addGlider((detail::Glider *)o);
         break;
     case EObjectType::Weapon:
-        addWeapon((detail::Weapon *)o, quantity);
+        for (auto i = 0; i < quantity; i++)
+            addWeapon((detail::Weapon *)o);
         break;
     case EObjectType::Modificator:
         addModificator((detail::Modificator *)o, quantity);
@@ -68,7 +76,10 @@ void Configuration::addEquipment(detail::Equipment *o, int quantity)
     {
         auto e = *i;
         if (e->quantity == e->equipment->max_count)
+        {
+            mechanoid->sell(e->equipment->price * quantity);
             return;
+        }
         e->quantity++;
         return;
     }
@@ -82,6 +93,7 @@ void Configuration::addEquipment(detail::Equipment *o, int quantity)
 
 void Configuration::addGlider(detail::Glider *o)
 {
+    mechanoid->sell(glider->price);
     glider = o;
 }
 
@@ -93,7 +105,10 @@ void Configuration::addGood(detail::Good *o, int quantity)
     {
         auto e = *i;
         if (e->quantity == e->good->max_count)
+        {
+            mechanoid->sell(e->good->price * quantity);
             return;
+        }
         e->quantity++;
         return;
     }
@@ -113,7 +128,10 @@ void Configuration::addModificator(detail::Modificator *o, int quantity)
     {
         auto e = *i;
         if (e->quantity == e->modificator->max_count)
+        {
+            mechanoid->sell(e->modificator->price * quantity);
             return;
+        }
         e->quantity++;
         return;
     }
@@ -143,14 +161,152 @@ void Configuration::addProjectile(detail::Projectile *o, int quantity)
     projectiles.push_back(v);
 }
 
-void Configuration::addWeapon(detail::Weapon *o, int quantity)
+void Configuration::addWeapon(detail::Weapon *w)
 {
-    // add checks for light, heavy weapons, other configurations
+    // glider cannot take such weapon type)
+    if (glider->standard < w->standard)
+    {
+        // found, so selling
+        mechanoid->sell(w->price);
+        mechanoid->printActionResult(ActionResult::Error);
+        return;
+    }
+
+    // we do not allow to transport weapons in the hold atm
+    switch (glider->special_type)
+    {
+    case detail::GliderSpecialType::Normal:
+    {
+        // find same weapon
+        auto i = std::find_if(weapons.begin(), weapons.end(),
+            [w](const auto &e) { return e->weapon.get() == w; });
+        if (i != weapons.end())
+        {
+            // found, so selling
+            mechanoid->sell(w->price);
+            return;
+        }
+
+        // find same weapon type
+        i = std::find_if(weapons.begin(), weapons.end(),
+            [w](const auto &e) { return e->weapon.get()->type == w->type; });
+        if (i != weapons.end())
+        {
+            // found, so replacing
+            auto e = *i;
+            mechanoid->sell(e->weapon->price);
+            e->weapon = w;
+            return;
+        }
+
+        // not found, creating below...
+    }
+        break;
+    case detail::GliderSpecialType::TwoLightWeapons:
+    {
+        // wrong type
+        if (w->type == detail::WeaponType::Heavy)
+        {
+            // found, so selling
+            mechanoid->sell(w->price);
+            return;
+        }
+
+        // one pylon is empty, creating below...
+        if (weapons.size() < 2)
+            break;
+
+        // find same weapon
+        if (weapons[0]->weapon.get() == w)
+        {
+            if (weapons[1]->weapon.get() == w)
+            {
+                // both found, so selling
+                mechanoid->sell(w->price);
+                return;
+            }
+            // 1 found, so replacing
+            mechanoid->sell(weapons[1]->weapon->price);
+            weapons[1]->weapon = w;
+            return;
+        }
+        else if (weapons[1]->weapon.get() == w)
+        {
+            if (weapons[0]->weapon.get() == w)
+            {
+                // both found, so selling
+                mechanoid->sell(w->price);
+                return;
+            }
+            // 1 found, so replacing
+            mechanoid->sell(weapons[0]->weapon->price);
+            weapons[0]->weapon = w;
+            return;
+        }
+
+        // not found, creating below...
+        // by default at first pos atm
+        weapons.assign(weapons.begin() + 1, weapons.end());
+    }
+        break;
+    case detail::GliderSpecialType::TwoHeavyWeapons:
+    {
+        // wrong type
+        if (w->type == detail::WeaponType::Light)
+        {
+            // found, so selling
+            mechanoid->sell(w->price);
+            return;
+        }
+
+        // one pylon is empty, creating below...
+        if (weapons.size() < 2)
+            break;
+
+        // find same weapon
+        if (weapons[0]->weapon.get() == w)
+        {
+            if (weapons[1]->weapon.get() == w)
+            {
+                // both found, so selling
+                mechanoid->sell(w->price);
+                return;
+            }
+            // 1 found, so replacing
+            mechanoid->sell(weapons[1]->weapon->price);
+            weapons[1]->weapon = w;
+            return;
+        }
+        else if (weapons[1]->weapon.get() == w)
+        {
+            if (weapons[0]->weapon.get() == w)
+            {
+                // both found, so selling
+                mechanoid->sell(w->price);
+                return;
+            }
+            // 1 found, so replacing
+            mechanoid->sell(weapons[0]->weapon->price);
+            weapons[0]->weapon = w;
+            return;
+        }
+
+        // not found, creating below...
+        // by default at first pos atm
+        weapons.assign(weapons.begin() + 1, weapons.end());
+    }
+        break;
+    case detail::GliderSpecialType::NoWeapons:
+    {
+        mechanoid->sell(w->price);
+        return;
+    }
+        break;
+    }
     auto s = getStorage();
     auto v = s->configurationWeapons.createAtEnd();
     v->configuration = this;
-    v->weapon = o;
-    v->quantity = quantity;
+    v->weapon = w;
     weapons.push_back(v);
 }
 
