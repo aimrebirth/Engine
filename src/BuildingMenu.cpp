@@ -226,6 +226,7 @@ void BuildingMenu::addTheme(const detail::Message *m)
     if (c)
         return;
     themes.children[InfoTreeItem::ThemesId]->children.push_back(std::make_shared<InfoTreeItem>(m));
+    addMessage(m);
 }
 
 void BuildingMenu::addMessage(const detail::Message *m)
@@ -273,6 +274,11 @@ void BuildingMenu::showText(const String &ti, const String &t)
     text.clear();
     printText(ti);
     printText(t);
+}
+
+void BuildingMenu::clearText()
+{
+    text.clear();
 }
 
 void BuildingMenu::printText(const String &t)

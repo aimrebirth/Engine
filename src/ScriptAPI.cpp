@@ -20,8 +20,10 @@
 
 #include <chrono>
 
+#include <Polygon4/Actions.h>
 #include <Polygon4/BuildingMenu.h>
 #include <Polygon4/Engine.h>
+#include <Polygon4/Mechanoid.h>
 #include <Polygon4/Modification.h>
 
 #include "Script.h"
@@ -165,6 +167,8 @@ void ScriptData::AddJournalRecord(const std::string &message_id, JournalRecord t
     r->type = (detail::JournalRecordType)type;
     r->time = getEngine()->getSettings().playtime;
     player->records.insert_to_data(r);
+
+    ((Mechanoid*)player->mechanoid.get())->printActionResult(ActionResult::JournalRecordAdded);
 }
 
 void AddText(const std::string &text)

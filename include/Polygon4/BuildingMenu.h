@@ -102,6 +102,7 @@ public:
     void addText(const String &title, const String &text);
     void showText(const String &text);
     void showText(const String &title, const String &text);
+    void clearText();
 
     void addTheme(const detail::Message *msg);
 

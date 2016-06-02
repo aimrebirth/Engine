@@ -30,6 +30,8 @@ const detail::EnumTextTable<ActionResult> &table_ActionResult()
         { ActionResult::Unspecified, "Unspecified" },
         { ActionResult::Ok, "Ok" },
         { ActionResult::Error, "Error" },
+        { ActionResult::JournalRecordAdded, "JournalRecordAdded" },
+        { ActionResult::ItemAdded, "ItemAdded" },
     };
     return table_ActionResult;
 }

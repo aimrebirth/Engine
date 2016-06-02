@@ -101,6 +101,7 @@ void Mechanoid::enterBuilding(detail::MapBuilding *bld)
     auto bm = getEngine()->getBuildingMenu();
     bm->SetCurrentBuilding(mmb);
     bm->SetCurrentMechanoid(this);
+    bm->clearText();
 
     // now run scripts
     auto se = mmb->map->modification->getScriptEngine();

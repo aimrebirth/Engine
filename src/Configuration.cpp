@@ -89,6 +89,7 @@ void Configuration::addEquipment(detail::Equipment *o, int quantity)
     v->equipment = o;
     v->quantity = quantity;
     equipments.push_back(v);
+    mechanoid->printActionResult(ActionResult::ItemAdded);
 }
 
 void Configuration::addGlider(detail::Glider *o)
