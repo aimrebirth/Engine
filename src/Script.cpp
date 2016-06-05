@@ -36,19 +36,6 @@ Script::Script(const path &p, const ScriptEngine *scriptEngine)
 ScriptEngine::ScriptEngine(const path &p, ScriptLanguage language)
     : root(p / "Scripts"), language(language)
 {
-#define ADD_OBJECTS(array, type) \
-    do { \
-        auto v = s->array.get_key_map(&polygon4::detail::type::text_id); \
-        objects.insert(v.begin(), v.end()); \
-    } while (0)
-
-    auto s = getEngine()->getStorage();
-    ADD_OBJECTS(equipments, Equipment);
-    ADD_OBJECTS(gliders, Glider);
-    ADD_OBJECTS(weapons, Weapon);
-    ADD_OBJECTS(projectiles, Projectile);
-    ADD_OBJECTS(goods, Good);
-    ADD_OBJECTS(modificators, Modificator);
 }
 
 Script *ScriptEngine::getScript(const std::string &name)

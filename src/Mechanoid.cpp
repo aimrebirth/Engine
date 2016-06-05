@@ -233,12 +233,4 @@ void Mechanoid::sell(float money)
     addMoney(money);
 }
 
-void Mechanoid::printActionResult(ActionResult result)
-{
-    if (!isPlayer())
-        return;
-
-    getEngine()->getBuildingMenu()->addText(tr(result));
-}
-
 } // namespace polygon4

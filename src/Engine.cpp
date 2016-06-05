@@ -139,6 +139,21 @@ void Engine::postLoadStorage()
     // get string maps
     messages = storage->messages.get_key_map(&polygon4::detail::Message::text_id);
     strings = storage->strings.get_key_map(&polygon4::detail::String::text_id);
+    buildings = storage->buildings.get_key_map(&polygon4::detail::Building::text_id);
+
+#define ADD_OBJECTS(array, type) \
+    do { \
+        auto v = storage->array.get_key_map(&polygon4::detail::type::text_id); \
+        objects.insert(v.begin(), v.end()); \
+    } while (0)
+
+    objects.clear();
+    ADD_OBJECTS(equipments, Equipment);
+    ADD_OBJECTS(gliders, Glider);
+    ADD_OBJECTS(weapons, Weapon);
+    ADD_OBJECTS(projectiles, Projectile);
+    ADD_OBJECTS(goods, Good);
+    ADD_OBJECTS(modificators, Modificator);
 }
 
 SavedGames Engine::getSavedGames(bool save) const

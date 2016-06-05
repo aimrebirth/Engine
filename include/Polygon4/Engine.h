@@ -117,11 +117,6 @@ public:
 
     virtual void spawnCurrentPlayer() override;
 
-    const KeyMap<String> &getMessages() const { return messages; }
-    KeyMap<String> &getMessages() { return messages; }
-    const KeyMap<String> &getStrings() const { return strings; }
-    KeyMap<String> &getStrings() { return strings; }
-
 protected:
 	std::shared_ptr<Storage> storage;
     Modification *currentModification = nullptr;
@@ -134,13 +129,22 @@ private:
 
     mutable std::mutex m_save;
 
-    KeyMap<String> messages;
-    KeyMap<String> strings;
-
     void backupSettings();
     void restoreSettings();
 
     void postLoadStorage();
+
+#define GET_KEY_MAP(mf, m) \
+public: \
+    const KeyMap<String> &get ## mf() const { return m; } \
+    KeyMap<String> &get ## mf() { return m; } \
+private: \
+    KeyMap<String> m
+
+    GET_KEY_MAP(Messages, messages);
+    GET_KEY_MAP(Strings, strings);
+    GET_KEY_MAP(Objects, objects);
+    GET_KEY_MAP(Buildings, buildings);
 };
 
 // 32-bit workaround
@@ -150,5 +154,13 @@ private:
 
 DLL_EXPORT
 Engine *getEngine(Engine *engine = nullptr);
+
+// useful macros used across the engine
+#define GET_BUILDING_MENU() getEngine()->getBuildingMenu()
+#define GET_MESSAGE(m) ((::polygon4::detail::Message *)getEngine()->getMessages()[(m)])
+#define GET_MESSAGE_TEXT(m) (GET_MESSAGE(m)->txt->string.str())
+#define GET_MESSAGE_TEXT_LOC(m, l) (GET_MESSAGE(m)->txt->string.str(l))
+#define BM_TEXT_ADD_ITEM(o, q) GET_BUILDING_MENU()->ItemAdded(o, q)
+#define BM_TEXT_ADD_MONEY(m) GET_BUILDING_MENU()->MoneyAdded((int)(m))
 
 } // namespace polygon4

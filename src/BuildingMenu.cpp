@@ -20,7 +20,15 @@
 
 #include <algorithm>
 
+#include <boost/algorithm/string.hpp>
+
 #include <Polygon4/Engine.h>
+
+#define SMALL_DELIMETER "\n"
+#define BIG_DELIMETER SMALL_DELIMETER SMALL_DELIMETER
+
+#define SMALL_SPACE "  "
+#define BIG_SPACE SMALL_SPACE SMALL_SPACE
 
 namespace polygon4
 {
@@ -137,6 +145,11 @@ void BuildingMenu::updateJournal()
         c->object = r;
         journal.children[InfoTreeItem::JournalId]->children.push_back(c);
     }
+
+
+    // highlight categories
+    for (auto i = (int)InfoTreeItem::JournalInProgress; i < (int)InfoTreeItem::JournalMax; i++)
+        journal.children[i]->highlight = true;
 }
 
 void BuildingMenu::updateGlider()
@@ -184,6 +197,10 @@ void BuildingMenu::updateGlider()
     // weapons: light, heavy
     // equ: ?
     // ammo: ?
+
+    // highlight categories
+    for (auto i = (int)InfoTreeItem::GliderId; i < (int)InfoTreeItem::GliderMax; i++)
+        glider.children[i]->highlight = true;
 }
 
 void BuildingMenu::updateGliderStore()
@@ -218,6 +235,10 @@ void BuildingMenu::updateGliderStore()
     // weapons: light, heavy
     // equ: ?
     // ammo: ?
+
+    // highlight categories
+    for (auto i = (int)InfoTreeItem::GliderStoreId; i < (int)InfoTreeItem::GliderStoreMax; i++)
+        glider_store.children[i]->highlight = true;
 }
 
 void BuildingMenu::addTheme(const detail::Message *m)
@@ -232,7 +253,7 @@ void BuildingMenu::addTheme(const detail::Message *m)
 void BuildingMenu::addMessage(const detail::Message *m)
 {
     if (!text.empty())
-        text += "\n\n";
+        text += SMALL_DELIMETER;
     printMessage(m);
 }
 
@@ -244,22 +265,22 @@ void BuildingMenu::showMessage(const detail::Message *m)
 
 void BuildingMenu::printMessage(const detail::Message *m)
 {
-    printText(m->title->string);
+    printTitle(m->title->string);
     printText(m->txt->string);
 }
 
 void BuildingMenu::addText(const String &t)
 {
     if (!text.empty())
-        text += "\n\n";
+        text += SMALL_DELIMETER;
     printText(t);
 }
 
 void BuildingMenu::addText(const String &ti, const String &t)
 {
     if (!text.empty())
-        text += "\n\n";
-    printText(ti);
+        text += SMALL_DELIMETER;
+    printTitle(ti);
     printText(t);
 }
 
@@ -272,8 +293,16 @@ void BuildingMenu::showText(const String &t)
 void BuildingMenu::showText(const String &ti, const String &t)
 {
     text.clear();
-    printText(ti);
+    printTitle(ti);
     printText(t);
+}
+
+void BuildingMenu::printTitle(const String &t)
+{
+    if (t.empty())
+        return;
+    auto title = String(BIG_SPACE) + L"<span color=\"yellow\">" + t + L"</>";
+    printText(title);
 }
 
 void BuildingMenu::clearText()
@@ -281,12 +310,48 @@ void BuildingMenu::clearText()
     text.clear();
 }
 
-void BuildingMenu::printText(const String &t)
+void BuildingMenu::printText(String t)
 {
+    if (t.empty())
+        return;
+
     // TODO: format here!
     // maybe boost format
+
+    boost::algorithm::trim_right(t);
+    boost::algorithm::replace_all(t, L"<p>", SMALL_DELIMETER BIG_SPACE);
+
     text += t;
-    text += "\n";
+    text += SMALL_DELIMETER;
+}
+
+void BuildingMenu::JournalRecordAdded()
+{
+    printMessage(GET_MESSAGE("INT_JOURNAL_UPDATED"));
+}
+
+void BuildingMenu::ItemAdded(detail::IObjectBase *item, int quantity)
+{
+    if (quantity == 0)
+        return;
+    std::string s = "INT_PLAYER_GOT_OBJECT";
+    if (quantity != 1)
+        s += "_MULTY";
+    auto t = GET_MESSAGE_TEXT(s);
+    auto name = item->getName();
+    auto text_id = item->getTextId();
+    boost::algorithm::ireplace_all(t, "%OBJECTID", text_id);
+    boost::algorithm::ireplace_all(t, "%OBJECTNAME", name);
+    if (quantity != 1)
+        boost::algorithm::ireplace_all(t, "%OBJECTCOUNT", std::to_wstring(quantity));
+    printText(t);
+}
+
+void BuildingMenu::MoneyAdded(int amount)
+{
+    auto t = GET_MESSAGE_TEXT("INT_PLAYER_ADD_BALANCE");
+    boost::algorithm::ireplace_all(t, "%COUNT", std::to_wstring(amount));
+    printText(t);
 }
 
 } // namespace polygon4

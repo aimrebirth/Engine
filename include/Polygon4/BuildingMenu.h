@@ -64,6 +64,7 @@ struct DLL_EXPORT InfoTreeItem
     String text;
     detail::IObjectBase *object = nullptr;
     bool expanded = true;
+    bool highlight = false;
 
     InfoTreeItem(const detail::IObjectBase *o = nullptr);
 
@@ -111,6 +112,11 @@ public:
     void updateGliderStore();
     void updateJournal();
 
+    // information
+    void JournalRecordAdded();
+    void ItemAdded(detail::IObjectBase *item, int quantity);
+    void MoneyAdded(int amount);
+
 protected:
     detail::ModificationMapBuilding *building = nullptr;
     detail::Mechanoid *mechanoid;
@@ -128,7 +134,8 @@ private:
     String text;
 
     void printMessage(const detail::Message *msg);
-    void printText(const String &text);
+    void printText(String text);
+    void printTitle(const String &t);
 };
 
 } // namespace polygon4

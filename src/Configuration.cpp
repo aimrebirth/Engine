@@ -89,7 +89,6 @@ void Configuration::addEquipment(detail::Equipment *o, int quantity)
     v->equipment = o;
     v->quantity = quantity;
     equipments.push_back(v);
-    mechanoid->printActionResult(ActionResult::ItemAdded);
 }
 
 void Configuration::addGlider(detail::Glider *o)
@@ -169,7 +168,6 @@ void Configuration::addWeapon(detail::Weapon *w)
     {
         // found, so selling
         mechanoid->sell(w->price);
-        mechanoid->printActionResult(ActionResult::Error);
         return;
     }
 

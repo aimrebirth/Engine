@@ -58,8 +58,6 @@ public:
     virtual bool buy(float money) override final;
     virtual void sell(float money) override final;
 
-    void printActionResult(ActionResult result);
-
 protected:
     detail::ModificationPlayer *player = nullptr;
 

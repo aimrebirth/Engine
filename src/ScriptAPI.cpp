@@ -60,7 +60,7 @@ void ScriptData::AddObject(const std::string &oname, int quantity)
 {
     LOG_TRACE(logger, "AddObject(" << oname << ")");
 
-    auto &objs = scriptEngine->getObjects();
+    auto &objs = getEngine()->getObjects();
     auto i = objs.find(oname);
     if (i == objs.end())
     {
@@ -70,6 +70,7 @@ void ScriptData::AddObject(const std::string &oname, int quantity)
     auto o = i->second;
     auto conf = player->mechanoid->getConfiguration();
     conf->addObject(o, quantity);
+    BM_TEXT_ADD_ITEM(o, quantity);
 }
 
 void ScriptData::AddMoney(float amount)
@@ -77,6 +78,7 @@ void ScriptData::AddMoney(float amount)
     LOG_TRACE(logger, "AddMoney(" << amount << ")");
 
     SetMoney(GetMoney() + amount);
+    BM_TEXT_ADD_MONEY(amount);
 }
 
 bool ScriptData::HasMoney(float amount) const
@@ -168,7 +170,7 @@ void ScriptData::AddJournalRecord(const std::string &message_id, JournalRecord t
     r->time = getEngine()->getSettings().playtime;
     player->records.insert_to_data(r);
 
-    ((Mechanoid*)player->mechanoid.get())->printActionResult(ActionResult::JournalRecordAdded);
+    getEngine()->getBuildingMenu()->JournalRecordAdded();
 }
 
 void AddText(const std::string &text)
