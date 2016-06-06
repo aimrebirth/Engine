@@ -99,6 +99,20 @@ BuildingMenu::BuildingMenu()
     SET_CHILD(glider_store, GliderStoreEquipment, INT_BASE_EQUIPMENT);
     SET_CHILD(glider_store, GliderStoreWeapons, INT_BASE_WEAPONS);
     SET_CHILD(glider_store, GliderStoreAmmo, INT_BASE_AMMO);
+
+    for (auto i = 0; i < InfoTreeItem::HoldStoreMax; i++)
+        hold_store.children.emplace_back(std::make_shared<InfoTreeItem>());
+    SET_CHILD(hold_store, HoldStoreGoods, INT_HOLD_GOODS);
+
+    /*for (auto i = 0; i < InfoTreeItem::HoldMax; i++)
+        hold.children.emplace_back(std::make_shared<InfoTreeItem>());
+    SET_CHILD(hold, HoldItems, INT_HOLD_ITEMS);
+    SET_CHILD(hold, HoldGoods, INT_HOLD_GOODS);*/
+
+    for (auto i = 0; i < InfoTreeItem::StoreMax; i++)
+        goods_store.children.emplace_back(std::make_shared<InfoTreeItem>());
+    SET_CHILD(goods_store, StoreHas, INT_BASE_SELL);
+    SET_CHILD(goods_store, StoreWants, INT_BASE_BUY);
 }
 
 BuildingMenu::~BuildingMenu()
@@ -115,9 +129,19 @@ void BuildingMenu::SetCurrentBuilding(detail::ModificationMapBuilding *b)
 
 void BuildingMenu::update()
 {
+    updateThemes();
     updateJournal();
     updateGlider();
     updateGliderStore();
+    updateHoldStore();
+    updateGoodsStore();
+}
+
+void BuildingMenu::updateThemes()
+{
+    // highlight categories
+    for (auto i = 0; i < InfoTreeItem::ThemesMax; i++)
+        themes.children[i]->highlight = true;
 }
 
 void BuildingMenu::updateJournal()
@@ -146,9 +170,8 @@ void BuildingMenu::updateJournal()
         journal.children[InfoTreeItem::JournalId]->children.push_back(c);
     }
 
-
     // highlight categories
-    for (auto i = (int)InfoTreeItem::JournalInProgress; i < (int)InfoTreeItem::JournalMax; i++)
+    for (auto i = 0; i < InfoTreeItem::JournalMax; i++)
         journal.children[i]->highlight = true;
 }
 
@@ -199,7 +222,7 @@ void BuildingMenu::updateGlider()
     // ammo: ?
 
     // highlight categories
-    for (auto i = (int)InfoTreeItem::GliderId; i < (int)InfoTreeItem::GliderMax; i++)
+    for (auto i = (int)InfoTreeItem::GliderId; i < InfoTreeItem::GliderMax; i++)
         glider.children[i]->highlight = true;
 }
 
@@ -237,17 +260,82 @@ void BuildingMenu::updateGliderStore()
     // ammo: ?
 
     // highlight categories
-    for (auto i = (int)InfoTreeItem::GliderStoreId; i < (int)InfoTreeItem::GliderStoreMax; i++)
+    for (auto i = 0; i < InfoTreeItem::GliderStoreMax; i++)
         glider_store.children[i]->highlight = true;
+}
+
+void BuildingMenu::updateHoldStore()
+{
+    auto c = mechanoid->configuration;
+
+    hold_store.children[InfoTreeItem::HoldStoreGoods]->children.clear();
+    for (auto &g : c->goods)
+    {
+        hold_store.children[InfoTreeItem::HoldStoreGoods]->children.push_back(std::make_shared<InfoTreeItem>(g));
+    }
+
+    // highlight categories
+    for (auto i = 0; i < InfoTreeItem::HoldStoreMax; i++)
+        hold_store.children[i]->highlight = true;
+}
+
+void BuildingMenu::updateGoodsStore()
+{
+    goods_store.children[InfoTreeItem::StoreHas]->children.clear();
+    goods_store.children[InfoTreeItem::StoreWants]->children.clear();
+    for (auto &g : building->goods)
+    {
+        goods_store.children[g->sell ? InfoTreeItem::StoreHas : InfoTreeItem::StoreWants]
+            ->children.push_back(std::make_shared<InfoTreeItem>(g));
+    }
+
+    // sort by name
+    auto sort = [](auto &v)
+    {
+        std::sort(v->children.begin(), v->children.end(), [](const auto &c1, const auto &c2)
+        {
+            return c1->object->getName() < c2->object->getName();
+        });
+    };
+    sort(goods_store.children[InfoTreeItem::StoreHas]);
+    sort(goods_store.children[InfoTreeItem::StoreWants]);
+
+    // highlight categories
+    for (auto i = 0; i < InfoTreeItem::StoreMax; i++)
+        goods_store.children[i]->highlight = true;
+}
+
+bool BuildingMenu::checkAndAddThemeObject(const detail::IObjectBase *o)
+{
+    auto c = themes.children[InfoTreeItem::ThemesId]->findChild(o);
+    if (c)
+        return false;
+    themes.children[InfoTreeItem::ThemesId]->children.push_back(std::make_shared<InfoTreeItem>(o));
+    return true;
 }
 
 void BuildingMenu::addTheme(const detail::Message *m)
 {
-    auto c = themes.findChild(m);
-    if (c)
-        return;
-    themes.children[InfoTreeItem::ThemesId]->children.push_back(std::make_shared<InfoTreeItem>(m));
-    addMessage(m);
+    if (checkAndAddThemeObject(m))
+        addMessage(m);
+}
+
+void BuildingMenu::addTheme(const detail::IObjectBase *o)
+{
+    if (checkAndAddThemeObject(o))
+        addText(o->getName(), o->getDescription());
+}
+
+void BuildingMenu::addThemeBuilding(const String &bld)
+{
+    auto o = getEngine()->getBuildings()[bld];
+    addTheme(o);
+}
+
+void BuildingMenu::addThemeObject(const String &obj)
+{
+    auto o = getEngine()->getObjects()[obj];
+    addTheme(o);
 }
 
 void BuildingMenu::addMessage(const detail::Message *m)
@@ -265,7 +353,8 @@ void BuildingMenu::showMessage(const detail::Message *m)
 
 void BuildingMenu::printMessage(const detail::Message *m)
 {
-    printTitle(m->title->string);
+    if (m->type != detail::MessageType::Text)
+        printTitle(m->title->string);
     printText(m->txt->string);
 }
 

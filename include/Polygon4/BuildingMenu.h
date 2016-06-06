@@ -54,8 +54,16 @@ struct DLL_EXPORT InfoTreeItem
         GliderStoreAmmo,
         GliderStoreMax,
 
-        HoldId = 0,
+        HoldItems = 0,
+        HoldGoods,
         HoldMax,
+
+        HoldStoreGoods = 0,
+        HoldStoreMax,
+
+        StoreHas = 0,
+        StoreWants,
+        StoreMax,
     };
 
     InfoTreeItem *parent = nullptr;
@@ -106,11 +114,18 @@ public:
     void clearText();
 
     void addTheme(const detail::Message *msg);
+    void addTheme(const detail::IObjectBase *o);
+    void addThemeBuilding(const String &bld);
+    void addThemeObject(const String &obj);
+    bool checkAndAddThemeObject(const detail::IObjectBase *o);
 
     void update();
+    void updateThemes();
     void updateGlider();
     void updateGliderStore();
     void updateJournal();
+    void updateHoldStore();
+    void updateGoodsStore();
 
     // information
     void JournalRecordAdded();
@@ -124,7 +139,7 @@ protected:
     InfoTreeItem themes;
     InfoTreeItem journal;
     InfoTreeItem glider;
-    InfoTreeItem hold;
+    InfoTreeItem hold_store;
     InfoTreeItem map;
     InfoTreeItem glider_store;
     InfoTreeItem goods_store;
