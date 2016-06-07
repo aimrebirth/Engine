@@ -38,7 +38,7 @@ void Configuration::setMechanoid(Mechanoid *m)
         mechanoid = m;
 }
 
-void Configuration::addObject(IObjectBase *o, int quantity)
+void Configuration::addItem(IObjectBase *o, int quantity)
 {
     using polygon4::detail::EObjectType;
 

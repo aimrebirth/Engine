@@ -28,9 +28,25 @@ DECLARE_STATIC_LOGGER(logger, "script");
 namespace polygon4
 {
 
-Script::Script(const path &p, const ScriptEngine *scriptEngine)
-    : p(p), scriptEngine(scriptEngine)
+Script::Script()
 {
+}
+
+void Script::loadFile(const path &p)
+{
+    LOG_TRACE(logger, "Trying to load '" << getScriptExtension() << "' script file: " << p.string());
+
+    if (loadScriptFile(p))
+        return;
+
+    // try with extension
+    auto p2 = p;
+    p2 += "." + getScriptExtension();
+
+    LOG_TRACE(logger, "Trying to load '" << getScriptExtension() << "' script file: " << p2.string());
+
+    if (!loadScriptFile(p2))
+        throw EXCEPTION("Unable to load '" + getScriptExtension() + "' script: " + p.string());
 }
 
 ScriptEngine::ScriptEngine(const path &p, ScriptLanguage language)
@@ -50,19 +66,24 @@ Script *ScriptEngine::getScript(const std::string &name)
         switch (language)
         {
         case ScriptLanguage::Lua:
-            script = std::make_unique<ScriptLua>(fn, this);
+            script = std::make_unique<ScriptLua>();
             break;
         default:
-            LOG_ERROR(logger, "This language '" << str(language) << "' is not supported!");
-            script = std::make_unique<Script>(fn, this);
+            LOG_FATAL(logger, "This language '" << str(language) << "' is not supported!");
+            script = std::make_unique<Script>();
             break;
         }
     }
     catch (const std::exception &e)
     {
         LOG_ERROR(logger, "Cannot load script: " << fn.string());
-        script = std::make_unique<Script>(fn, this);
+        script = std::make_unique<Script>();
     }
+
+    // load common file, then load concrete file
+    script->loadFile(root / "common");
+    script->loadFile(fn);
+
     scripts[fn.string()] = std::move(script);
     return scripts[fn.string()].get();
 }

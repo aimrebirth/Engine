@@ -57,12 +57,18 @@ void InfoTreeItem::assign(const detail::IObjectBase *o)
 {
     if (!o)
         return;
-    text = o->getName();
     object = (detail::IObjectBase *)o;
-    switch (o->getType())
+    text = object->getName();
+    switch (object->getType())
     {
     case detail::EObjectType::Message:
-        text = ((detail::Message*)o)->title->string;
+    {
+        auto m = ((detail::Message*)object);
+        if (m->title)
+            text = m->title->string;
+        else
+            text.clear();
+    }
         break;
     }
 }
@@ -119,12 +125,24 @@ BuildingMenu::~BuildingMenu()
 {
 }
 
-void BuildingMenu::SetCurrentBuilding(detail::ModificationMapBuilding *b)
+void BuildingMenu::setCurrentBuilding(detail::ModificationMapBuilding *b)
 {
     if (!b)
         return;
     building = b;
-    themes.children[InfoTreeItem::ThemesId]->children.clear();
+    clearThemes();
+}
+
+void BuildingMenu::setCurrentMechanoid(detail::Mechanoid *m)
+{
+    if (!m)
+        return;
+    mechanoid = m;
+}
+
+void BuildingMenu::setCurrentScriptCallback(std::function<void(const std::string &)> sc)
+{
+    scriptCallback = sc;
 }
 
 void BuildingMenu::update()
@@ -332,16 +350,21 @@ void BuildingMenu::addThemeBuilding(const String &bld)
     addTheme(o);
 }
 
-void BuildingMenu::addThemeObject(const String &obj)
+void BuildingMenu::addThemeItem(const String &obj)
 {
-    auto o = getEngine()->getObjects()[obj];
+    auto o = getEngine()->getItems()[obj];
     addTheme(o);
+}
+
+void BuildingMenu::addThemeMessage(const String &obj)
+{
+    addTheme(GET_MESSAGE(obj));
 }
 
 void BuildingMenu::addMessage(const detail::Message *m)
 {
-    if (!text.empty())
-        text += SMALL_DELIMETER;
+    //if (!text.empty())
+    //    text += SMALL_DELIMETER;
     printMessage(m);
 }
 
@@ -353,22 +376,22 @@ void BuildingMenu::showMessage(const detail::Message *m)
 
 void BuildingMenu::printMessage(const detail::Message *m)
 {
-    if (m->type != detail::MessageType::Text)
+    if (m->type != detail::MessageType::Text && m->title)
         printTitle(m->title->string);
     printText(m->txt->string);
 }
 
 void BuildingMenu::addText(const String &t)
 {
-    if (!text.empty())
-        text += SMALL_DELIMETER;
+    //if (!text.empty())
+    //    text += SMALL_DELIMETER;
     printText(t);
 }
 
 void BuildingMenu::addText(const String &ti, const String &t)
 {
-    if (!text.empty())
-        text += SMALL_DELIMETER;
+    //if (!text.empty())
+    //    text += SMALL_DELIMETER;
     printTitle(ti);
     printText(t);
 }
@@ -399,16 +422,22 @@ void BuildingMenu::clearText()
     text.clear();
 }
 
+void BuildingMenu::clearThemes()
+{
+    themes.children[InfoTreeItem::ThemesId]->children.clear();
+}
+
 void BuildingMenu::printText(String t)
 {
     if (t.empty())
         return;
 
-    // TODO: format here!
-    // maybe boost format
+    // format here!
 
     boost::algorithm::trim_right(t);
     boost::algorithm::replace_all(t, L"<p>", SMALL_DELIMETER BIG_SPACE);
+    if (mechanoid->name)
+        boost::algorithm::replace_all(t, L"%NAME", mechanoid->name->string.str().toString());
 
     text += t;
     text += SMALL_DELIMETER;
@@ -441,6 +470,19 @@ void BuildingMenu::MoneyAdded(int amount)
     auto t = GET_MESSAGE_TEXT("INT_PLAYER_ADD_BALANCE");
     boost::algorithm::ireplace_all(t, "%COUNT", std::to_wstring(amount));
     printText(t);
+}
+
+void BuildingMenu::saveScreenText()
+{
+    if (!mainScreenText.empty())
+        return;
+    mainScreenText = text;
+}
+
+void BuildingMenu::loadScreenText()
+{
+    text = mainScreenText;
+    mainScreenText.clear();
 }
 
 } // namespace polygon4

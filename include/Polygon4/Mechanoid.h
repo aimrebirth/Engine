@@ -58,6 +58,8 @@ public:
     virtual bool buy(float money) override final;
     virtual void sell(float money) override final;
 
+    virtual bool setName(const String &name) override final;
+
 protected:
     detail::ModificationPlayer *player = nullptr;
 

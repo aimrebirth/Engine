@@ -143,7 +143,7 @@ private: \
 
     GET_KEY_MAP(Messages, messages);
     GET_KEY_MAP(Strings, strings);
-    GET_KEY_MAP(Objects, objects);
+    GET_KEY_MAP(Items, items);
     GET_KEY_MAP(Buildings, buildings);
 };
 
@@ -156,6 +156,8 @@ DLL_EXPORT
 Engine *getEngine(Engine *engine = nullptr);
 
 // useful macros used across the engine
+#define GET_STORAGE() getEngine()->getStorage()
+
 #define GET_BUILDING_MENU() getEngine()->getBuildingMenu()
 
 #define GET_MESSAGE(m) ((::polygon4::detail::Message *)getEngine()->getMessages()[(m)])

@@ -38,7 +38,7 @@ class DLL_EXPORT Configuration : public detail::Configuration
 public:
     Configuration(const Base &);
 
-    virtual void addObject(IObjectBase *o, int quantity = 1) override final;
+    virtual void addItem(IObjectBase *o, int quantity = 1) override final;
 
     virtual void addEquipment(detail::Equipment *e, int quantity = 1) override final;
     virtual void addGlider(detail::Glider *g) override final;

@@ -30,29 +30,11 @@ DECLARE_STATIC_LOGGER(logger, "script_lua");
 namespace polygon4
 {
 
-ScriptLua::ScriptLua(const path &filename, const ScriptEngine *scriptEngine)
-    : Script(filename, scriptEngine)
+ScriptLua::ScriptLua()
 {
     L = luaL_newstate();
     luaopen_base(L);
     luaopen_Polygon4(L);
-    // load file
-    if (luaL_loadfile(L, p.string().c_str()))
-    {
-        auto p2 = p;
-        p2 += "." + getScriptExtension();
-        if (luaL_loadfile(L, p2.string().c_str()))
-        {
-            LOG_ERROR(logger, "Error: " << lua_tostring(L, -1));
-            throw EXCEPTION("Unable to load lua script: " + p.string());
-        }
-    }
-    // execute global statements
-    if (lua_pcall(L, 0, 0, 0))
-    {
-        LOG_ERROR(logger, "Error: " << lua_tostring(L, -1));
-        throw EXCEPTION("Unable to execute lua script: " + p.string());
-    }
 }
 
 ScriptLua::~ScriptLua()
@@ -60,16 +42,35 @@ ScriptLua::~ScriptLua()
     lua_close(L);
 }
 
-void ScriptLua::OnEnterBuilding(ScriptData &data)
+bool ScriptLua::loadScriptFile(const path &p)
 {
-    LOG_TRACE(logger, "OnEnterBuilding(" << data.building_name << ")");
+    // load file
+    if (luaL_loadfile(L, p.string().c_str()))
+        return false;
+    // execute global statements
+    if (lua_pcall(L, 0, 0, 0))
+    {
+        LOG_ERROR(logger, "Error: " << lua_tostring(L, -1));
+        return false;
+    }
+    return true;
+}
 
-    lua_getglobal(L, "OnEnterBuilding");
+void ScriptLua::call(const std::string &fn, ScriptData &data)
+{
+    LOG_TRACE(logger, "call(fn = " << fn << ")");
+
+    lua_getglobal(L, fn.c_str());
     SWIG_NewPointerObj(L, &data, SWIGTYPE_p_polygon4__script__ScriptData, 0);
     if (lua_pcall(L, 1, 0, 0))
     {
         LOG_ERROR(logger, "Error: " << lua_tostring(L, -1));
     }
+}
+
+void ScriptLua::OnEnterBuilding(ScriptData &data)
+{
+    call("OnEnterBuilding", data);
 }
 
 } // namespace polygon4

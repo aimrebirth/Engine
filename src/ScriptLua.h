@@ -28,13 +28,18 @@ namespace polygon4
 class ScriptLua : public Script
 {
 public:
-    ScriptLua(const path &filename, const ScriptEngine *scriptEngine);
+    ScriptLua();
     virtual ~ScriptLua();
 
     virtual std::string getScriptExtension() const override { return "lua"; }
 
+private:
+    virtual bool loadScriptFile(const path &p) override;
+
 public: /* API */
-    virtual void OnEnterBuilding(ScriptData &data);
+    virtual void call(const std::string &fn, ScriptData &data) override;
+
+    virtual void OnEnterBuilding(ScriptData &data) override;
 
 private:
     lua_State *L;

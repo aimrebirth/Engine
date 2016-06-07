@@ -93,14 +93,9 @@ public:
     const String &getText() const { return text; }
     String &getText() { return text; }
 
-    void SetCurrentBuilding(detail::ModificationMapBuilding *b);
-
-    void SetCurrentMechanoid(detail::Mechanoid *m)
-    {
-        if (!m)
-            return;
-        mechanoid = m;
-    }
+    void setCurrentBuilding(detail::ModificationMapBuilding *b);
+    void setCurrentMechanoid(detail::Mechanoid *m);
+    void setCurrentScriptCallback(std::function<void(const std::string &)> sc);
 
     virtual void refresh() = 0;
 
@@ -112,11 +107,13 @@ public:
     void showText(const String &text);
     void showText(const String &title, const String &text);
     void clearText();
+    void clearThemes();
 
     void addTheme(const detail::Message *msg);
     void addTheme(const detail::IObjectBase *o);
     void addThemeBuilding(const String &bld);
-    void addThemeObject(const String &obj);
+    void addThemeItem(const String &obj);
+    void addThemeMessage(const String &obj);
     bool checkAndAddThemeObject(const detail::IObjectBase *o);
 
     void update();
@@ -132,9 +129,13 @@ public:
     void ItemAdded(detail::IObjectBase *item, int quantity);
     void MoneyAdded(int amount);
 
+    void saveScreenText();
+    void loadScreenText();
+
 protected:
     detail::ModificationMapBuilding *building = nullptr;
-    detail::Mechanoid *mechanoid;
+    detail::Mechanoid *mechanoid = nullptr;
+    std::function<void(const std::string &)> scriptCallback;
 
     InfoTreeItem themes;
     InfoTreeItem journal;
@@ -147,6 +148,7 @@ protected:
 
 private:
     String text;
+    String mainScreenText;
 
     void printMessage(const detail::Message *msg);
     void printText(String text);

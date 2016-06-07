@@ -18,6 +18,8 @@
 
 #include <Polygon4/Mechanoid.h>
 
+#include <regex>
+
 #include <Polygon4/BuildingMenu.h>
 #include <Polygon4/Configuration.h>
 #include <Polygon4/Engine.h>
@@ -96,11 +98,12 @@ void Mechanoid::enterBuilding(detail::MapBuilding *bld)
 
     // player is now officially in the building
     // we need to run scripts, setup texts etc.
+    auto e = getEngine();
 
     // set building, mechanoid
-    auto bm = getEngine()->getBuildingMenu();
-    bm->SetCurrentBuilding(mmb);
-    bm->SetCurrentMechanoid(this);
+    auto bm = e->getBuildingMenu();
+    bm->setCurrentBuilding(mmb);
+    bm->setCurrentMechanoid(this);
     bm->clearText();
 
     // now run scripts
@@ -108,23 +111,43 @@ void Mechanoid::enterBuilding(detail::MapBuilding *bld)
     path script_file = path("maps") / mmb->map->script_dir.toString() / mmb->script_name.toString();
     auto s = se->getScript(script_file.string());
 
+    // set player visit
+    auto iter = player->visited_buildings.find_if([mmb](const auto &vb)
+    {
+        return vb->building.get() == mmb;
+    });
+    if (iter == player->visited_buildings.end())
+    {
+        auto vb = e->getStorage()->visitedBuildings.createAtEnd();
+        vb->player = player;
+        vb->building = mmb;
+        player->visited_buildings.insert(vb);
+    }
+
+    // set script data
     ScriptData data;
     data.scriptEngine = se;
     data.player = player;
-    data.building_name = mmb->text_id;
+    data.building = mmb;
+
+    // set script callback
+    // copy script ptr and data object, because it can be called outside of this function
+    bm->setCurrentScriptCallback([s, data](const auto &fn) mutable { s->call(fn, data); });
+
+    // main script call
     s->OnEnterBuilding(data);
 
     // update building menu
     bm->refresh();
-    getEngine()->ShowBuildingMenu();
+    e->ShowBuildingMenu();
 
     // do async save to not freeze the game
     // the ideal algorithm here is:
     // 1. freeze the game
     // 2. async({ save(); unfreeze(); });
-    getTaskExecutor().push([]()
+    getTaskExecutor().push([e]()
     {
-        getEngine()->saveAuto();
+        e->saveAuto();
     });
 }
 
@@ -231,6 +254,21 @@ bool Mechanoid::buy(float money)
 void Mechanoid::sell(float money)
 {
     addMoney(money);
+}
+
+bool Mechanoid::setName(const String &n)
+{
+    static std::wregex r_name(LR"([\w\d][\w\d-_]+)");
+    if (!std::regex_match(n, r_name))
+        return false;
+    if (!name)
+    {
+        auto s = GET_STORAGE()->strings.createAtEnd();
+        s->object = detail::EObjectType::Mechanoid;
+        name = s;
+    }
+    name->string = n;
+    return true;
 }
 
 } // namespace polygon4

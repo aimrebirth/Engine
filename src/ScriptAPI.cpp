@@ -45,7 +45,6 @@ String &getScreenText()
 
 polygon4::detail::Message *get_message_by_id(const std::string &message_id)
 {
-    auto se = getEngine()->getCurrentModification()->getScriptEngine();
     auto &v = getEngine()->getMessages();
     auto i = v.find(message_id);
     if (i == v.end())
@@ -56,20 +55,20 @@ polygon4::detail::Message *get_message_by_id(const std::string &message_id)
     return (polygon4::detail::Message*)i->second;
 }
 
-void ScriptData::AddObject(const std::string &oname, int quantity)
+void ScriptData::AddItem(const std::string &oname, int quantity)
 {
-    LOG_TRACE(logger, "AddObject(" << oname << ")");
+    LOG_TRACE(logger, "AddItem(" << oname << ")");
 
-    auto &objs = getEngine()->getObjects();
+    auto &objs = getEngine()->getItems();
     auto i = objs.find(oname);
     if (i == objs.end())
     {
-        LOG_ERROR(logger, "Object '" << oname << "' was not found");
+        LOG_ERROR(logger, "Item '" << oname << "' was not found");
         return;
     }
     auto o = i->second;
     auto conf = player->mechanoid->getConfiguration();
-    conf->addObject(o, quantity);
+    conf->addItem(o, quantity);
     BM_TEXT_ADD_ITEM(o, quantity);
 }
 
@@ -170,7 +169,144 @@ void ScriptData::AddJournalRecord(const std::string &message_id, JournalRecord t
     r->time = getEngine()->getSettings().playtime;
     player->records.insert_to_data(r);
 
-    getEngine()->getBuildingMenu()->JournalRecordAdded();
+    GET_BUILDING_MENU()->JournalRecordAdded();
+}
+
+void ScriptData::SetJournalRecordCompleted(const std::string &message_id)
+{
+    LOG_TRACE(logger, "SetJournalRecordCompleted(" << message_id << ")");
+
+    auto m = get_message_by_id(message_id);
+    if (!m)
+        return;
+
+    if (player->records.count(message_id) != 0)
+    {
+        auto &r = player->records[message_id];
+        r->type = detail::JournalRecordType::Completed;
+        return;
+    }
+
+    auto s = player->getStorage();
+    auto r = s->addJournalRecord(player);
+    r->text_id = m->text_id;
+    r->message = m;
+    r->type = detail::JournalRecordType::Completed;
+    r->time = getEngine()->getSettings().playtime;
+    player->records.insert_to_data(r);
+}
+
+int ScriptData::GetVar(const std::string &var)
+{
+    LOG_TRACE(logger, "GetVar(" << var << ")");
+
+    auto v = std::find_if(player->variables.begin(), player->variables.end(), [&var](const auto &v)
+    {
+        return v->key == var;
+    });
+    if (v != player->variables.end())
+    {
+        LOG_TRACE(logger, "GetVar(val = " << (*v)->value_int << ")");
+        return (*v)->value_int;
+    }
+    LOG_TRACE(logger, "GetVar(val = " << 0 << ")");
+    return 0;
+}
+
+void ScriptData::SetVar(const std::string &var, int i)
+{
+    LOG_TRACE(logger, "SetVar(" << var << ", val = " << i << ")");
+
+    auto v = std::find_if(player->variables.begin(), player->variables.end(), [&var](const auto &v)
+    {
+        return v->key == var;
+    });
+    if (v != player->variables.end())
+    {
+        (*v)->value_int = i;
+        return;
+    }
+
+    auto sv = GET_STORAGE()->scriptVariables.createAtEnd();
+    sv->player = player;
+    sv->key = var;
+    sv->value_int = i;
+    player->variables.insert(sv);
+}
+
+void ScriptData::SetVar(const std::string &var, const std::string &val)
+{
+    LOG_TRACE(logger, "SetVar(" << var << ", val = " << val << ")");
+
+    auto v = std::find_if(player->variables.begin(), player->variables.end(), [&var](const auto &v)
+    {
+        return v->key == var;
+    });
+    if (v != player->variables.end())
+    {
+        (*v)->value_text = val;
+        return;
+    }
+
+    auto sv = GET_STORAGE()->scriptVariables.createAtEnd();
+    sv->player = player;
+    sv->key = var;
+    sv->value_text = val;
+    player->variables.insert(sv);
+}
+
+void ScriptData::UnsetVar(const std::string &var)
+{
+    LOG_TRACE(logger, "UnsetVar(" << var << ")");
+
+    auto v = std::find_if(player->variables.begin(), player->variables.end(), [&var](const auto &v)
+    {
+        return v->key == var;
+    });
+    if (v == player->variables.end())
+        return;
+    player->variables.erase(v);
+}
+
+bool ScriptData::CheckVar(const std::string &var)
+{
+    LOG_TRACE(logger, "CheckVar(" << var << ")");
+
+    auto v = std::find_if(player->variables.begin(), player->variables.end(), [&var](const auto &v)
+    {
+        return v->key == var;
+    });
+    if (v != player->variables.end())
+    {
+        LOG_TRACE(logger, "CheckVar(true)");
+        return true;
+    }
+    LOG_TRACE(logger, "CheckVar(false)");
+    return false;
+}
+
+bool ScriptData::RunOnce(const std::string &var)
+{
+    LOG_TRACE(logger, "RunOnce(" << var << ")");
+
+    if (!CheckVar(var))
+    {
+        SetVar(var);
+        return true;
+    }
+    return false;
+}
+
+std::string ScriptData::GetName() const
+{
+    if (player->mechanoid->name)
+        return player->mechanoid->name->string.str().toString();
+    return "";
+}
+
+void ScriptData::SetName(const std::string &name) const
+{
+    player->mechanoid->setName(name);
 }
 
 void AddText(const std::string &text)
@@ -198,18 +334,40 @@ void ClearText()
     t.clear();
 }
 
-void AddMessage(const std::string &message_id, bool clear)
+void ClearThemes()
+{
+    LOG_TRACE(logger, "ClearThemes()");
+
+    GET_BUILDING_MENU()->clearThemes();
+}
+
+void Clear()
+{
+    LOG_TRACE(logger, "Clear()");
+
+    ClearText();
+    ClearThemes();
+}
+
+static void AddMessage(const std::string &message_id, bool clear)
 {
     if (clear)
         ClearText();
-    getEngine()->getBuildingMenu()->addTheme(get_message_by_id(message_id));
+    GET_BUILDING_MENU()->addTheme(get_message_by_id(message_id));
+}
+
+void AddTheme(const std::string &message_id)
+{
+    LOG_TRACE(logger, "AddTheme(" << message_id << ")");
+
+    AddMessage(message_id, false);
 }
 
 void AddMessage(const std::string &message_id)
 {
     LOG_TRACE(logger, "AddMessage(" << message_id << ")");
 
-    AddMessage(message_id, false);
+    GET_BUILDING_MENU()->addMessage(get_message_by_id(message_id));
 }
 
 void ShowMessage(const std::string &message_id)
@@ -240,6 +398,11 @@ ScreenText ScreenText::operator+(const std::string &s)
 ScreenText ScreenText::__concat__(const std::string &s)
 {
     return ScreenText::operator+(s);
+}
+
+void Log(const std::string &text)
+{
+    LOG_DEBUG("script_log", text);
 }
 
 } // namespace script

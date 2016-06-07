@@ -48,9 +48,12 @@ struct ScriptData
     ScriptEngine *scriptEngine;
 #endif
     polygon4::detail::ModificationPlayer *player;
-    std::string building_name;
+    polygon4::detail::ModificationMapBuilding *building;
 
-    void AddObject(const std::string &o, int quantity = 1);
+    // service
+
+    // main
+    void AddItem(const std::string &o, int quantity = 1);
 
     void AddRating(float amount, RatingType type = RatingType::Normal);
     float GetRating(RatingType type = RatingType::Normal) const;
@@ -70,6 +73,19 @@ struct ScriptData
     // set_target (_mark) or set_pointer
     // set_event = set quest stage
     void AddJournalRecord(const std::string &message_id, JournalRecord type = JournalRecord::InProgress);
+    void SetJournalRecordCompleted(const std::string &message_id);
+
+    // variable methods
+    int GetVar(const std::string &var);
+    void SetVar(const std::string &var, int i = 1);
+    void SetVar(const std::string &var, const std::string &val);
+    void UnsetVar(const std::string &var);
+    bool CheckVar(const std::string &var);
+    bool RunOnce(const std::string &var);
+
+    // name
+    std::string GetName() const;
+    void SetName(const std::string &name) const;
 };
 
 struct ScreenText
@@ -83,14 +99,19 @@ struct ScreenText
 };
 
 void AddMessage(const std::string &message_id);
+void AddTheme(const std::string &message_id);
 void AddText(const std::string &text);
 
 void ShowMessage(const std::string &message_id);
 void ShowText(const std::string &text);
 
 void ClearText();
+void ClearThemes();
+void Clear();
 
 ScreenText GetScreenText();
+
+void Log(const std::string &text);
 
 } // namespace script
 

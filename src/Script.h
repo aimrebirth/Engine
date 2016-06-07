@@ -36,19 +36,22 @@ class ScriptEngine;
 class Script
 {
 public:
-    Script(const path &p, const ScriptEngine *scriptEngine);
+    Script();
     Script(const Script&) = delete;
     Script& operator=(const Script&) = delete;
     virtual ~Script() = default;
 
     virtual std::string getScriptExtension() const { return std::string(); }
 
-public: /* API */
-    virtual void OnEnterBuilding(ScriptData &data) {}
+    virtual void loadFile(const path &p);
 
-protected:
-    path p;
-    const ScriptEngine *scriptEngine;
+private:
+    virtual bool loadScriptFile(const path &p) { return false; }
+
+public: /* API */
+    virtual void call(const std::string &fn, ScriptData &data) {}
+
+    virtual void OnEnterBuilding(ScriptData &data) {}
 };
 
 class ScriptEngine
