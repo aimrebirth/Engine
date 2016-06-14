@@ -39,8 +39,6 @@ private:
 public: /* API */
     virtual void call(const std::string &fn, ScriptData &data) override;
 
-    virtual void OnEnterBuilding(ScriptData &data) override;
-
 private:
     lua_State *L;
 };

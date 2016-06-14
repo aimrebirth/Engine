@@ -111,6 +111,7 @@ public:
 
     void addTheme(const detail::Message *msg);
     void addTheme(const detail::IObjectBase *o);
+    void addTheme(const String &obj);
     void addThemeBuilding(const String &bld);
     void addThemeItem(const String &obj);
     void addThemeMessage(const String &obj);

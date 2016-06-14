@@ -45,16 +45,18 @@ enum class JournalRecord
 struct ScriptData
 {
 #ifndef SWIG
-    ScriptEngine *scriptEngine;
+    // script won't see any data
+    ScriptEngine *scriptEngine = nullptr; // remove?
+    polygon4::detail::ModificationPlayer *player = nullptr;
+    polygon4::detail::ModificationMapBuilding *building = nullptr;
+    polygon4::detail::Message *next_quest = nullptr;
 #endif
-    polygon4::detail::ModificationPlayer *player;
-    polygon4::detail::ModificationMapBuilding *building;
-
-    // service
 
     // main
     void AddItem(const std::string &o, int quantity = 1);
+    bool HasItem(const std::string &o, int quantity = 1);
 
+    // rating
     void AddRating(float amount, RatingType type = RatingType::Normal);
     float GetRating(RatingType type = RatingType::Normal) const;
     bool HasRating(float amount, RatingType type = RatingType::Normal) const;
@@ -64,14 +66,13 @@ struct ScriptData
     bool HasRatingLevel(int level, RatingType type = RatingType::Normal) const;
     void SetRatingLevel(int level, RatingType type = RatingType::Normal) const;
 
+    // money
     void AddMoney(float amount);
     float GetMoney() const;
     bool HasMoney(float amount) const;
     void SetMoney(float amount);
 
-    // add_quest or start_quest
-    // set_target (_mark) or set_pointer
-    // set_event = set quest stage
+    // journal
     void AddJournalRecord(const std::string &message_id, JournalRecord type = JournalRecord::InProgress);
     void SetJournalRecordCompleted(const std::string &message_id);
 
@@ -86,6 +87,20 @@ struct ScriptData
     // name
     std::string GetName() const;
     void SetName(const std::string &name) const;
+
+    // map
+    void SetPointer(const std::string &bld);
+
+    // state
+    bool IsDamaged(float percent = 0.0f) const; // is damaged <= %
+    bool IsDamagedHigh() const;
+    bool IsDamagedLow() const;
+
+    // quest
+    // add_quest or start_quest
+    // set_event = set quest stage
+    void RegisterQuest(const std::string &name);
+    bool IsQuestAvailable() const;
 };
 
 struct ScreenText
@@ -101,6 +116,7 @@ struct ScreenText
 void AddMessage(const std::string &message_id);
 void AddTheme(const std::string &message_id);
 void AddText(const std::string &text);
+void AddTextOnce(const std::string &text);
 
 void ShowMessage(const std::string &message_id);
 void ShowText(const std::string &text);

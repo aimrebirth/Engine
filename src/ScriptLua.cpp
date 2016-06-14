@@ -46,11 +46,14 @@ bool ScriptLua::loadScriptFile(const path &p)
 {
     // load file
     if (luaL_loadfile(L, p.string().c_str()))
+    {
+        LOG_ERROR(logger, "Error during load file: " << lua_tostring(L, -1));
         return false;
+    }
     // execute global statements
     if (lua_pcall(L, 0, 0, 0))
     {
-        LOG_ERROR(logger, "Error: " << lua_tostring(L, -1));
+        LOG_ERROR(logger, "Error during load file: " << lua_tostring(L, -1));
         return false;
     }
     return true;
@@ -64,13 +67,8 @@ void ScriptLua::call(const std::string &fn, ScriptData &data)
     SWIG_NewPointerObj(L, &data, SWIGTYPE_p_polygon4__script__ScriptData, 0);
     if (lua_pcall(L, 1, 0, 0))
     {
-        LOG_ERROR(logger, "Error: " << lua_tostring(L, -1));
+        LOG_ERROR(logger, "Error during call to '" << fn << "': " << lua_tostring(L, -1));
     }
-}
-
-void ScriptLua::OnEnterBuilding(ScriptData &data)
-{
-    call("OnEnterBuilding", data);
 }
 
 } // namespace polygon4

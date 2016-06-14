@@ -45,13 +45,14 @@ public:
 
     virtual void loadFile(const path &p);
 
-private:
-    virtual bool loadScriptFile(const path &p) { return false; }
-
 public: /* API */
     virtual void call(const std::string &fn, ScriptData &data) {}
 
-    virtual void OnEnterBuilding(ScriptData &data) {}
+    void OnEnterBuilding(ScriptData &data);
+    void RegisterQuests(ScriptData &data);
+
+private:
+    virtual bool loadScriptFile(const path &p) { return false; }
 };
 
 class ScriptEngine

@@ -42,6 +42,7 @@ const std::vector<float> &get_rating_levels()
         50'000,
         200'000,
         1'000'000,
+        10'000'000,
     };
     return rating_levels;
 }
@@ -112,30 +113,40 @@ void Mechanoid::enterBuilding(detail::MapBuilding *bld)
     auto s = se->getScript(script_file.string());
 
     // set player visit
-    auto iter = player->visited_buildings.find_if([mmb](const auto &vb)
+    auto iter = player->buildings.find_if([mmb](const auto &vb)
     {
         return vb->building.get() == mmb;
     });
-    if (iter == player->visited_buildings.end())
+    if (iter == player->buildings.end())
     {
-        auto vb = e->getStorage()->visitedBuildings.createAtEnd();
+        auto vb = e->getStorage()->modificationPlayerBuildings.createAtEnd();
         vb->player = player;
         vb->building = mmb;
-        player->visited_buildings.insert(vb);
+        vb->know_location = true;
+        vb->visited = true;
+        player->buildings.insert(vb);
+    }
+    else
+    {
+        (*iter)->know_location = true;
+        (*iter)->visited = true;
     }
 
     // set script data
-    ScriptData data;
-    data.scriptEngine = se;
-    data.player = player;
-    data.building = mmb;
+    auto data = std::make_shared<ScriptData>();
+    data->scriptEngine = se;
+    data->player = player;
+    data->building = mmb;
 
     // set script callback
-    // copy script ptr and data object, because it can be called outside of this function
-    bm->setCurrentScriptCallback([s, data](const auto &fn) mutable { s->call(fn, data); });
+    // pass script ptr and data object, because it can be called outside of this function
+    bm->setCurrentScriptCallback([s, data](const auto &fn) mutable { s->call(fn, *data); });
+
+    // register available building quests
+    s->RegisterQuests(*data);
 
     // main script call
-    s->OnEnterBuilding(data);
+    s->OnEnterBuilding(*data);
 
     // update building menu
     bm->refresh();
@@ -221,6 +232,15 @@ void Mechanoid::setRating(float r, RatingType type)
         *pr = 1;
 }
 
+String Mechanoid::getRatingLevelName(RatingType type) const
+{
+    auto level = getRatingLevel(type);
+    auto m = (detail::Message*)getEngine()->getObjects()[L"RATING." + std::to_wstring(level)];
+    if (m->txt)
+        return m->txt->string;
+    return m->getName();
+}
+
 void Mechanoid::addMoney(float m)
 {
     setMoney(getMoney() + m);
@@ -258,8 +278,9 @@ void Mechanoid::sell(float money)
 
 bool Mechanoid::setName(const String &n)
 {
+    // name: min 2, max 30 symbols
     static std::wregex r_name(LR"([\w\d][\w\d-_]+)");
-    if (!std::regex_match(n, r_name))
+    if (!std::regex_match(n, r_name) || n.size() > 30)
         return false;
     if (!name)
     {

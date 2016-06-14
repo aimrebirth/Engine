@@ -145,6 +145,7 @@ private: \
     GET_KEY_MAP(Strings, strings);
     GET_KEY_MAP(Items, items);
     GET_KEY_MAP(Buildings, buildings);
+    GET_KEY_MAP(Objects, objects);
 };
 
 // 32-bit workaround
@@ -153,6 +154,9 @@ private: \
 #endif
 
 DLL_EXPORT
+#ifdef _MSC_VER
+__declspec(noinline)
+#endif
 Engine *getEngine(Engine *engine = nullptr);
 
 // useful macros used across the engine

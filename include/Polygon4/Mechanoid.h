@@ -54,6 +54,7 @@ public:
     virtual int getRatingLevel(RatingType type = RatingType::Normal) const override final;
     virtual bool hasRatingLevel(int level, RatingType type = RatingType::Normal) const override final;
     virtual void setRatingLevel(int level, RatingType type = RatingType::Normal) override final;
+    virtual String getRatingLevelName(RatingType type = RatingType::Normal) const override final;
 
     virtual bool buy(float money) override final;
     virtual void sell(float money) override final;

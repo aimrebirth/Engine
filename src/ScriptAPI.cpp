@@ -39,8 +39,7 @@ namespace script
 
 String &getScreenText()
 {
-    auto bm = getEngine()->getBuildingMenu();
-    return bm->getText();
+    return GET_BUILDING_MENU()->getText();
 }
 
 polygon4::detail::Message *get_message_by_id(const std::string &message_id)
@@ -57,7 +56,7 @@ polygon4::detail::Message *get_message_by_id(const std::string &message_id)
 
 void ScriptData::AddItem(const std::string &oname, int quantity)
 {
-    LOG_TRACE(logger, "AddItem(" << oname << ")");
+    LOG_TRACE(logger, "AddItem(" << oname << ", n = " << quantity << ")");
 
     auto &objs = getEngine()->getItems();
     auto i = objs.find(oname);
@@ -70,6 +69,22 @@ void ScriptData::AddItem(const std::string &oname, int quantity)
     auto conf = player->mechanoid->getConfiguration();
     conf->addItem(o, quantity);
     BM_TEXT_ADD_ITEM(o, quantity);
+}
+
+bool ScriptData::HasItem(const std::string &oname, int quantity)
+{
+    LOG_TRACE(logger, "HasItem(" << oname << ", n = " << quantity << ")");
+
+    auto &objs = getEngine()->getItems();
+    auto i = objs.find(oname);
+    if (i == objs.end())
+    {
+        LOG_ERROR(logger, "Item '" << oname << "' was not found");
+        return false;
+    }
+    auto o = i->second;
+    auto conf = player->mechanoid->getConfiguration();
+    return conf->hasItem(o, quantity);
 }
 
 void ScriptData::AddMoney(float amount)
@@ -299,6 +314,8 @@ bool ScriptData::RunOnce(const std::string &var)
 
 std::string ScriptData::GetName() const
 {
+    LOG_TRACE(logger, "GetName()");
+
     if (player->mechanoid->name)
         return player->mechanoid->name->string.str().toString();
     return "";
@@ -306,7 +323,82 @@ std::string ScriptData::GetName() const
 
 void ScriptData::SetName(const std::string &name) const
 {
+    LOG_TRACE(logger, "SetName(" << name << ")");
+
     player->mechanoid->setName(name);
+}
+
+void ScriptData::SetPointer(const std::string &bld)
+{
+    LOG_TRACE(logger, "SetPointer(" << bld << ")");
+
+    // mark building as known
+    auto iter = player->buildings.find_if([bld](const auto &vb)
+    {
+        return vb->building->text_id == bld;
+    });
+    if (iter == player->buildings.end())
+    {
+        auto vb = GET_STORAGE()->modificationPlayerBuildings.createAtEnd();
+        vb->player = player;
+        vb->building = building;
+        vb->know_location = true;
+        player->buildings.insert(vb);
+    }
+    else
+    {
+        (*iter)->know_location = true;
+    }
+}
+
+bool ScriptData::IsDamaged(float percent) const
+{
+    LOG_TRACE(logger, "IsDamaged(" << percent << "%)");
+
+    percent /= 50.0f;
+    auto c = player->mechanoid->getConfiguration();
+    auto p = 1.0f - c->getArmor() / c->getMaxArmor();
+    if (percent == 0.0f && p == 0.0f)
+        return false;
+    return p >= percent;
+}
+
+bool ScriptData::IsDamagedHigh() const
+{
+    LOG_TRACE(logger, "IsDamagedHigh()");
+
+    return IsDamaged(50);
+}
+
+bool ScriptData::IsDamagedLow() const
+{
+    LOG_TRACE(logger, "IsDamagedLow()");
+
+    return !IsDamagedHigh() && IsDamaged();
+}
+
+void ScriptData::RegisterQuest(const std::string &name)
+{
+    LOG_TRACE(logger, "RegisterQuest(" << name << ")");
+
+    if (next_quest || CheckVar(name + ".COMPLETED"))
+        return; // already completed
+
+    auto o = getEngine()->getObjects()[name];
+    if (!o)
+    {
+        LOG_ERROR(logger, "Quest '" << name << "' not found");
+        return; // no such quest
+    }
+
+    next_quest = (polygon4::detail::Message*)o;
+}
+
+bool ScriptData::IsQuestAvailable() const
+{
+    LOG_TRACE(logger, "IsQuestAvailable()");
+
+    return !!next_quest;
 }
 
 void AddText(const std::string &text)
@@ -315,6 +407,17 @@ void AddText(const std::string &text)
 
     auto &t = getScreenText();
     t += String(text);
+}
+
+void AddTextOnce(const std::string &text)
+{
+    LOG_TRACE(logger, "AddTextOnce(" << text << ")");
+
+    auto &t = getScreenText();
+    auto s = String(text);
+    auto pos = t.rfind(s);
+    if (pos == t.npos || pos + s.size() != t.size())
+        AddText(text);
 }
 
 void ShowText(const std::string &text)

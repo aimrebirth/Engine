@@ -45,8 +45,11 @@ void Script::loadFile(const path &p)
 
     LOG_TRACE(logger, "Trying to load '" << getScriptExtension() << "' script file: " << p2.string());
 
-    if (!loadScriptFile(p2))
-        throw EXCEPTION("Unable to load '" + getScriptExtension() + "' script: " + p.string());
+    // if file could not be loaded, do nothing
+    if (loadScriptFile(p2))
+        return;
+
+    LOG_ERROR(logger, "Cannot load '" << getScriptExtension() << "' script file: " << p.string());
 }
 
 ScriptEngine::ScriptEngine(const path &p, ScriptLanguage language)
@@ -86,6 +89,16 @@ Script *ScriptEngine::getScript(const std::string &name)
 
     scripts[fn.string()] = std::move(script);
     return scripts[fn.string()].get();
+}
+
+void Script::OnEnterBuilding(ScriptData &data)
+{
+    call("OnEnterBuilding", data);
+}
+
+void Script::RegisterQuests(ScriptData & data)
+{
+    call("RegisterQuests", data);
 }
 
 } // namespace polygon4

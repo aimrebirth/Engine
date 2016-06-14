@@ -38,7 +38,10 @@ class DLL_EXPORT Configuration : public detail::Configuration
 public:
     Configuration(const Base &);
 
+    void setMechanoid(Mechanoid *mechanoid);
+
     virtual void addItem(IObjectBase *o, int quantity = 1) override final;
+    virtual bool hasItem(const IObjectBase *o, int quantity = 1) const override final;
 
     virtual void addEquipment(detail::Equipment *e, int quantity = 1) override final;
     virtual void addGlider(detail::Glider *g) override final;
@@ -48,10 +51,11 @@ public:
     virtual void addWeapon(detail::Weapon *w) override final;
 
     virtual float getMass() const override final;
-    virtual float getTotalMass() const override final { return getMass() + glider->weight; }
-    virtual float getCapacity() const override final { return glider->getCapacity(); }
+    virtual float getTotalMass() const override final;
+    virtual float getCapacity() const override final;
 
-    void setMechanoid(Mechanoid *mechanoid);
+    virtual float getArmor() const override final;
+    virtual float getMaxArmor() const override final;
 
 private:
     Mechanoid *mechanoid = nullptr;

@@ -309,6 +309,34 @@ void Configuration::addWeapon(detail::Weapon *w)
     weapons.push_back(v);
 }
 
+bool Configuration::hasItem(const IObjectBase *o, int quantity) const
+{
+    if (glider.get() == o)
+        return true;
+
+#define CHECK_ITEMS(v)                                                         \
+    do                                                                         \
+    {                                                                          \
+        auto i = std::find_if(v##s.begin(), v##s.end(),                        \
+                              [o](const auto &e) { return e->v.get() == o; }); \
+        if (i != v##s.end())                                                   \
+        {                                                                      \
+            auto e = *i;                                                       \
+            if (e->quantity >= quantity)                                       \
+                return true;                                                   \
+            return false;                                                      \
+        }                                                                      \
+    } while (0)
+
+    CHECK_ITEMS(equipment);
+    CHECK_ITEMS(good);
+    CHECK_ITEMS(modificator);
+    CHECK_ITEMS(projectile);
+    CHECK_ITEMS(weapon);
+
+    return false;
+}
+
 float Configuration::getMass() const
 {
     float mass = 0.0f;
@@ -320,6 +348,34 @@ float Configuration::getMass() const
     ADD_MASS(weapon);
 
     return mass;
+}
+
+float Configuration::getTotalMass() const
+{
+    return getMass() + glider->weight;
+}
+
+float Configuration::getCapacity() const
+{
+    return glider->getCapacity();
+}
+
+float Configuration::getArmor() const
+{
+    float armor = 0.0f;
+
+    for (auto &v : equipments)
+    {
+        if (v->equipment->type == detail::EquipmentType::Armor)
+            armor += v->equipment->value1;
+    }
+
+    return armor;
+}
+
+float Configuration::getMaxArmor() const
+{
+    return getArmor() + glider->weight; // FIXME: weight??? weight -> armor
 }
 
 } // namespace polygon4

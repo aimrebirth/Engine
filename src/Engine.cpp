@@ -141,6 +141,7 @@ void Engine::postLoadStorage()
     strings = storage->strings.get_key_map(&polygon4::detail::String::text_id);
     buildings = storage->buildings.get_key_map(&polygon4::detail::Building::text_id);
 
+    // items
 #define ADD_ITEMS(array, type) \
     do { \
         auto v = storage->array.get_key_map(&polygon4::detail::type::text_id); \
@@ -154,6 +155,15 @@ void Engine::postLoadStorage()
     ADD_ITEMS(projectiles, Projectile);
     ADD_ITEMS(goods, Good);
     ADD_ITEMS(modificators, Modificator);
+
+    // general container for gettings descriptions
+#define MERGE_OBJECTS(a) objects.insert(a.begin(), a.end())
+
+    objects.clear();
+    MERGE_OBJECTS(messages);
+    MERGE_OBJECTS(strings);
+    MERGE_OBJECTS(buildings);
+    MERGE_OBJECTS(items);
 }
 
 SavedGames Engine::getSavedGames(bool save) const

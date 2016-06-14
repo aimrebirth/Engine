@@ -334,37 +334,61 @@ bool BuildingMenu::checkAndAddThemeObject(const detail::IObjectBase *o)
 
 void BuildingMenu::addTheme(const detail::Message *m)
 {
+    if (!m)
+        return;
     if (checkAndAddThemeObject(m))
         addMessage(m);
 }
 
 void BuildingMenu::addTheme(const detail::IObjectBase *o)
 {
+    if (!o)
+        return;
+    if (o->getType() == detail::EObjectType::Message)
+        return addTheme((detail::Message*)o);
+
     if (checkAndAddThemeObject(o))
         addText(o->getName(), o->getDescription());
 }
 
-void BuildingMenu::addThemeBuilding(const String &bld)
+void BuildingMenu::addTheme(const String &obj)
 {
-    auto o = getEngine()->getBuildings()[bld];
-    addTheme(o);
+    auto o = getEngine()->getObjects()[obj];
+    if (o)
+        addTheme(o);
+    else
+        addText(obj + L" reference was not found");
+}
+
+void BuildingMenu::addThemeBuilding(const String &obj)
+{
+    auto o = getEngine()->getBuildings()[obj];
+    if (o)
+        addTheme(o);
+    else
+        addText(obj + L" reference was not found");
 }
 
 void BuildingMenu::addThemeItem(const String &obj)
 {
     auto o = getEngine()->getItems()[obj];
-    addTheme(o);
+    if (o)
+        addTheme(o);
+    else
+        addText(obj + L" reference was not found");
 }
 
 void BuildingMenu::addThemeMessage(const String &obj)
 {
-    addTheme(GET_MESSAGE(obj));
+    auto o = GET_MESSAGE(obj);
+    if (o)
+        addTheme(o);
+    else
+        addText(obj + L" reference was not found");
 }
 
 void BuildingMenu::addMessage(const detail::Message *m)
 {
-    //if (!text.empty())
-    //    text += SMALL_DELIMETER;
     printMessage(m);
 }
 
@@ -383,15 +407,11 @@ void BuildingMenu::printMessage(const detail::Message *m)
 
 void BuildingMenu::addText(const String &t)
 {
-    //if (!text.empty())
-    //    text += SMALL_DELIMETER;
     printText(t);
 }
 
 void BuildingMenu::addText(const String &ti, const String &t)
 {
-    //if (!text.empty())
-    //    text += SMALL_DELIMETER;
     printTitle(ti);
     printText(t);
 }
@@ -435,9 +455,17 @@ void BuildingMenu::printText(String t)
     // format here!
 
     boost::algorithm::trim_right(t);
+    boost::algorithm::replace_all(t, L"<icon:POINT>", BIG_SPACE);
     boost::algorithm::replace_all(t, L"<p>", SMALL_DELIMETER BIG_SPACE);
     if (mechanoid->name)
-        boost::algorithm::replace_all(t, L"%NAME", mechanoid->name->string.str().toString());
+        boost::algorithm::replace_all(t, L"%NAME", mechanoid->name->string.str());
+    else
+        boost::algorithm::replace_all(t, L"%NAME", L"Unnamed");
+    boost::algorithm::replace_all(t, L"%BUILDINGNAME", building->getName());
+    boost::algorithm::replace_all(t, L"%BUILDINGREF", building->building->building->getTextId());
+    boost::algorithm::replace_all(t, L"%RATINGNAME", mechanoid->getRatingLevelName());
+    if (mechanoid->clan && mechanoid->clan->member_name)
+        boost::algorithm::replace_all(t, L"%ORGMEMBER", mechanoid->clan->member_name->string.str());
 
     text += t;
     text += SMALL_DELIMETER;
