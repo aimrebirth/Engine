@@ -24,8 +24,6 @@
 
 #include <Polygon4/DataManager/Types.h>
 
-#include "Actions.h"
-
 namespace polygon4
 {
 
@@ -54,7 +52,13 @@ public:
     virtual float getTotalMass() const override final;
     virtual float getCapacity() const override final;
 
-    virtual float getArmor() const override final;
+    virtual float getCurrentEnergy() const override final;
+    virtual float getMaxEnergy() const override final;
+
+    virtual float getCurrentEnergyShield() const override final;
+    virtual float getMaxEnergyShield() const override final;
+
+    virtual float getCurrentArmor() const override final;
     virtual float getMaxArmor() const override final;
 
 private:

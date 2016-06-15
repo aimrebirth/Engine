@@ -18,24 +18,27 @@
 
 #pragma once
 
+#include <memory>
+#include <string>
+#include <set>
+
 #include <Polygon4/DataManager/Types.h>
 
 namespace polygon4
 {
 
-enum class ActionResult
+class DLL_EXPORT ConfigurationWeapon : public detail::ConfigurationWeapon
 {
-    Unspecified = -1,
-    Ok = 0,
-    Error = 1,
+    using Base = detail::ConfigurationWeapon;
 
-    JournalRecordAdded,
-    ItemAdded,
+public:
+    ConfigurationWeapon(const Base &);
 
+    virtual void addTime(float tick) override final;
+    virtual bool shoot() override final;
+
+private:
 };
-
-String tr(ActionResult e);
-String str(ActionResult e);
 
 } // namespace polygon4
 

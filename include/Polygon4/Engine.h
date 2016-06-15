@@ -160,11 +160,12 @@ __declspec(noinline)
 Engine *getEngine(Engine *engine = nullptr);
 
 // useful macros used across the engine
-#define GET_STORAGE() getEngine()->getStorage()
+#define GET_STORAGE() ::polygon4::getEngine()->getStorage()
+#define GET_SETTINGS() ::polygon4::getEngine()->getSettings()
 
-#define GET_BUILDING_MENU() getEngine()->getBuildingMenu()
+#define GET_BUILDING_MENU() ::polygon4::getEngine()->getBuildingMenu()
 
-#define GET_MESSAGE(m) ((::polygon4::detail::Message *)getEngine()->getMessages()[(m)])
+#define GET_MESSAGE(m) ((::polygon4::detail::Message *)::polygon4::getEngine()->getMessages()[(m)])
 #define GET_MESSAGE_TEXT(m) (GET_MESSAGE(m)->txt->string.str())
 #define GET_MESSAGE_TEXT_LOC(m, l) (GET_MESSAGE(m)->txt->string.str(l))
 

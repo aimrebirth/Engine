@@ -203,6 +203,8 @@ void BuildingMenu::updateGlider()
     glider.children[InfoTreeItem::GliderWeapons]->children.clear();
     for (auto &w : c->weapons)
     {
+        if (w->weapon->hidden_in_menu)
+            continue;
         glider.children[InfoTreeItem::GliderWeapons]->children.push_back(std::make_shared<InfoTreeItem>(w));
     }
 

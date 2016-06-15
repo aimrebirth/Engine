@@ -18,6 +18,7 @@
 
 #include <Polygon4/Configuration.h>
 
+#include <Polygon4/ConfigurationWeapon.h>
 #include <Polygon4/Engine.h>
 #include <Polygon4/Mechanoid.h>
 
@@ -304,6 +305,7 @@ void Configuration::addWeapon(detail::Weapon *w)
     }
     auto s = getStorage();
     auto v = s->configurationWeapons.createAtEnd();
+    replace<ConfigurationWeapon>(v);
     v->configuration = this;
     v->weapon = w;
     weapons.push_back(v);
@@ -328,11 +330,20 @@ bool Configuration::hasItem(const IObjectBase *o, int quantity) const
         }                                                                      \
     } while (0)
 
+#define CHECK_ITEMS_NO_QUANTITY(v)                                             \
+    do                                                                         \
+    {                                                                          \
+        auto i = std::find_if(v##s.begin(), v##s.end(),                        \
+                              [o](const auto &e) { return e->v.get() == o; }); \
+        if (i != v##s.end())                                                   \
+            return true;                                                       \
+    } while (0)
+
     CHECK_ITEMS(equipment);
     CHECK_ITEMS(good);
     CHECK_ITEMS(modificator);
     CHECK_ITEMS(projectile);
-    CHECK_ITEMS(weapon);
+    CHECK_ITEMS_NO_QUANTITY(weapon);
 
     return false;
 }
@@ -360,22 +371,61 @@ float Configuration::getCapacity() const
     return glider->getCapacity();
 }
 
-float Configuration::getArmor() const
+float Configuration::getCurrentEnergy() const
 {
-    float armor = 0.0f;
+    return energy;
+}
 
+float Configuration::getMaxEnergy() const
+{
+    float max_energy = 0.0f;
+
+    // additions from equipment
     for (auto &v : equipments)
     {
-        if (v->equipment->type == detail::EquipmentType::Armor)
-            armor += v->equipment->value1;
+        if (v->equipment->type == detail::EquipmentType::Reactor)
+            max_energy += v->equipment->value1 * 3 * 10;
     }
 
+    return max_energy;
+}
+
+float Configuration::getCurrentEnergyShield() const
+{
+    return energy_shield;
+}
+
+float Configuration::getMaxEnergyShield() const
+{
+    float max_energy_shield = 0.0f;
+
+    // additions from equipment
+    for (auto &v : equipments)
+    {
+        if (v->equipment->type == detail::EquipmentType::Shield)
+            max_energy_shield += v->equipment->value1;
+    }
+
+    return max_energy_shield;
+}
+
+float Configuration::getCurrentArmor() const
+{
     return armor;
 }
 
 float Configuration::getMaxArmor() const
 {
-    return getArmor() + glider->weight; // FIXME: weight??? weight -> armor
+    float max_armor = glider->armor;
+
+    // additions from equipment
+    /*for (auto &v : equipments)
+    {
+    if (v->equipment->type == detail::EquipmentType::Armor)
+    armor += v->equipment->value1;
+    }*/
+
+    return max_armor;
 }
 
 } // namespace polygon4

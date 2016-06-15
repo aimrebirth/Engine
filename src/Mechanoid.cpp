@@ -66,6 +66,7 @@ Mechanoid::Mechanoid(const Base &rhs)
 
 detail::Configuration *Mechanoid::getConfiguration()
 {
+    bool created = false;
     if (!configuration)
     {
         // do not create new configuration while in db tool mode
@@ -74,12 +75,20 @@ detail::Configuration *Mechanoid::getConfiguration()
 
         configuration = getStorage()->configurations.createAtEnd(*initial_configuration);
         configuration->deepCopyFrom(*initial_configuration);
+
         // to differ from initial configurations in DB Tool
         configuration->text_id += L" - " + getName();
+
+        created = true;
     }
-    replace<Configuration>(configuration.get());
-    auto c = (Configuration *)configuration.get();
-    c->setMechanoid(this);
+
+    auto c = replace<Configuration>(configuration.get());
+
+    if (created)
+    {
+        c->setMechanoid(this);
+        c->armor = c->getMaxArmor();
+    }
     return configuration;
 }
 

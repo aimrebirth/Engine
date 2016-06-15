@@ -20,7 +20,6 @@
 
 #include <chrono>
 
-#include <Polygon4/Actions.h>
 #include <Polygon4/BuildingMenu.h>
 #include <Polygon4/Engine.h>
 #include <Polygon4/Mechanoid.h>
@@ -357,7 +356,7 @@ bool ScriptData::IsDamaged(float percent) const
 
     percent /= 50.0f;
     auto c = player->mechanoid->getConfiguration();
-    auto p = 1.0f - c->getArmor() / c->getMaxArmor();
+    auto p = 1.0f - c->getCurrentArmor() / c->getMaxArmor();
     if (percent == 0.0f && p == 0.0f)
         return false;
     return p >= percent;
