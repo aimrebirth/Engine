@@ -428,4 +428,92 @@ float Configuration::getMaxArmor() const
     return max_armor;
 }
 
+bool Configuration::isDead() const
+{
+    return getCurrentArmor() <= 0;
+}
+
+void Configuration::hit(detail::Projectile *projectile)
+{
+    if (!projectile)
+        return;
+
+    auto damage = projectile->damage;
+
+    // additions from equipment
+    bool has_shield = false;
+    for (auto &v : equipments)
+    {
+        if (v->equipment->type == detail::EquipmentType::Shield)
+        {
+            has_shield = true;
+            if (damage <= v->equipment->value2)
+            {
+                // full absorb
+                energy_shield -= damage;
+                if (energy_shield < 0)
+                {
+                    // pass to armor
+                    armor -= -energy_shield;
+                    energy_shield = 0;
+                }
+            }
+            else
+            {
+                // partial absorb
+                energy_shield -= v->equipment->value2;
+                damage -= v->equipment->value2;
+                if (energy_shield < 0)
+                {
+                    // pass to armor
+                    armor -= -energy_shield;
+                    energy_shield = 0;
+                }
+                armor -= damage;
+            }
+            // handle only one shield atm
+            break;
+        }
+    }
+    if (!has_shield)
+    {
+        armor -= damage;
+    }
+    if (armor < 0)
+        armor = 0;
+}
+
+void Configuration::tick(float delta_seconds)
+{
+    // TODO: fix calculations
+
+    // shield restore
+    for (auto &v : equipments)
+    {
+        if (v->equipment->type == detail::EquipmentType::Shield)
+        {
+            energy_shield += v->equipment->value3 * delta_seconds;
+            auto max = getMaxEnergyShield();
+            if (energy_shield > max)
+                energy_shield = max;
+            // handle only one shield atm
+            break;
+        }
+    }
+
+    // energy restore
+    for (auto &v : equipments)
+    {
+        if (v->equipment->type == detail::EquipmentType::Generator)
+        {
+            energy += v->equipment->value3 * delta_seconds;
+            auto max = getMaxEnergy();
+            if (energy > max)
+                energy = max;
+            // handle only one generator atm
+            break;
+        }
+    }
+}
+
 } // namespace polygon4

@@ -61,6 +61,11 @@ public:
     virtual float getCurrentArmor() const override final;
     virtual float getMaxArmor() const override final;
 
+    virtual bool isDead() const override final;
+    virtual void hit(detail::Projectile *projectile) override final;
+
+    virtual void tick(float delta_seconds) override final;
+
 private:
     Mechanoid *mechanoid = nullptr;
 };

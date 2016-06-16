@@ -22,6 +22,7 @@
 
 #include <Polygon4/BuildingMenu.h>
 #include <Polygon4/Configuration.h>
+#include <Polygon4/ConfigurationWeapon.h>
 #include <Polygon4/Engine.h>
 
 #include "Executor.h"
@@ -66,29 +67,30 @@ Mechanoid::Mechanoid(const Base &rhs)
 
 detail::Configuration *Mechanoid::getConfiguration()
 {
-    bool created = false;
-    if (!configuration)
-    {
-        // do not create new configuration while in db tool mode
-        if (getSettings().flags[gfDbTool])
-            return initial_configuration;
+    if (configuration)
+        return configuration;
 
-        configuration = getStorage()->configurations.createAtEnd(*initial_configuration);
-        configuration->deepCopyFrom(*initial_configuration);
+    // create new working configuration from the initial one
 
-        // to differ from initial configurations in DB Tool
-        configuration->text_id += L" - " + getName();
+    // do not create new configuration while in db tool mode
+    if (getSettings().flags[gfDbTool])
+        return initial_configuration;
 
-        created = true;
-    }
+    configuration = getStorage()->configurations.createAtEnd(*initial_configuration);
+    configuration->deepCopyFrom(*initial_configuration);
 
+    // to differ from initial configurations in DB Tool
+    configuration->text_id += L" - " + getName();
+
+    // replace pointers
     auto c = replace<Configuration>(configuration.get());
+    for (auto &w : c->weapons)
+        replace<ConfigurationWeapon>(w);
 
-    if (created)
-    {
-        c->setMechanoid(this);
-        c->armor = c->getMaxArmor();
-    }
+    // setup
+    c->setMechanoid(this);
+    c->armor = c->getMaxArmor();
+
     return configuration;
 }
 
