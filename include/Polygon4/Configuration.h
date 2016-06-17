@@ -40,6 +40,7 @@ public:
 
     virtual void addItem(IObjectBase *o, int quantity = 1) override final;
     virtual bool hasItem(const IObjectBase *o, int quantity = 1) const override final;
+    virtual bool removeItem(IObjectBase *o, int quantity = 1) override final;
 
     virtual void addEquipment(detail::Equipment *e, int quantity = 1) override final;
     virtual void addGlider(detail::Glider *g) override final;

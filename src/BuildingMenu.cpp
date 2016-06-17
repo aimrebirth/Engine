@@ -89,6 +89,7 @@ BuildingMenu::BuildingMenu()
     SET_CHILD(journal, JournalCompleted, INT_QUESTS_COMPLETED);
     SET_CHILD(journal, JournalFailed, INT_QUESTS_FAILED);
     SET_CHILD(journal, JournalId, INT_JOURNAL);
+    SET_CHILD(journal, JournalThemes, INT_THEMES);
 
     for (auto i = 0; i < InfoTreeItem::GliderMax; i++)
         glider.children.emplace_back(std::make_shared<InfoTreeItem>());
@@ -140,7 +141,7 @@ void BuildingMenu::setCurrentMechanoid(detail::Mechanoid *m)
     mechanoid = m;
 }
 
-void BuildingMenu::setCurrentScriptCallback(std::function<void(const std::string &)> sc)
+void BuildingMenu::setCurrentScriptCallback(ScriptCallback sc)
 {
     scriptCallback = sc;
 }
@@ -171,11 +172,11 @@ void BuildingMenu::updateJournal()
     std::sort(p->records.begin(), p->records.end(),
         [](const auto &r1, const auto &r2)
     {
-        if (r1->type == detail::JournalRecordType::InProgress &&
-            r2->type == detail::JournalRecordType::Completed)
+        if (r1->type == detail::QuestRecordType::InProgress &&
+            r2->type == detail::QuestRecordType::Completed)
             return true;
-        if (r2->type == detail::JournalRecordType::InProgress &&
-            r1->type == detail::JournalRecordType::Completed)
+        if (r2->type == detail::QuestRecordType::InProgress &&
+            r1->type == detail::QuestRecordType::Completed)
             return false;
         return r1->time > r2->time;
     });
@@ -187,6 +188,9 @@ void BuildingMenu::updateJournal()
         c->object = r;
         journal.children[InfoTreeItem::JournalId]->children.push_back(c);
     }
+
+    journal.children[InfoTreeItem::JournalThemes]->children.clear();
+    journal.children[InfoTreeItem::JournalThemes]->hidden_if_empty = true;
 
     // highlight categories
     for (auto i = 0; i < InfoTreeItem::JournalMax; i++)
@@ -215,7 +219,7 @@ void BuildingMenu::updateGlider()
         switch (e->equipment->type)
         {
         case detail::EquipmentType::Armor:
-        case detail::EquipmentType::Generator:
+        case detail::EquipmentType::EnergyShield:
             glider.children[InfoTreeItem::GliderArmor]->children.push_back(std::make_shared<InfoTreeItem>(e));
             break;
         case detail::EquipmentType::Reactor:
@@ -325,6 +329,21 @@ void BuildingMenu::updateGoodsStore()
         goods_store.children[i]->highlight = true;
 }
 
+void BuildingMenu::refreshText()
+{
+    themes.children[InfoTreeItem::ThemesId]->children.clear();
+    auto old = showedObjects;
+    clearText();
+    for (auto &o : old)
+        addTheme(o);
+}
+
+void BuildingMenu::removeMessage(const detail::IObjectBase *obj)
+{
+    showedObjects.erase(std::remove(showedObjects.begin(), showedObjects.end(), obj));
+    refreshText();
+}
+
 bool BuildingMenu::checkAndAddThemeObject(const detail::IObjectBase *o)
 {
     auto c = themes.children[InfoTreeItem::ThemesId]->findChild(o);
@@ -350,7 +369,10 @@ void BuildingMenu::addTheme(const detail::IObjectBase *o)
         return addTheme((detail::Message*)o);
 
     if (checkAndAddThemeObject(o))
+    {
         addText(o->getName(), o->getDescription());
+        showedObjects.push_back(o);
+    }
 }
 
 void BuildingMenu::addTheme(const String &obj)
@@ -392,12 +414,21 @@ void BuildingMenu::addThemeMessage(const String &obj)
 void BuildingMenu::addMessage(const detail::Message *m)
 {
     printMessage(m);
+    showedObjects.push_back(m);
 }
 
 void BuildingMenu::showMessage(const detail::Message *m)
 {
-    text.clear();
+    clearText();
     printMessage(m);
+}
+
+void BuildingMenu::addQuestMessage(const detail::Message *m)
+{
+    if (!m)
+        return;
+    addMessage(m);
+    currentQuest = m->getTextId();
 }
 
 void BuildingMenu::printMessage(const detail::Message *m)
@@ -420,13 +451,13 @@ void BuildingMenu::addText(const String &ti, const String &t)
 
 void BuildingMenu::showText(const String &t)
 {
-    text.clear();
+    clearText();
     printText(t);
 }
 
 void BuildingMenu::showText(const String &ti, const String &t)
 {
-    text.clear();
+    clearText();
     printTitle(ti);
     printText(t);
 }
@@ -442,6 +473,7 @@ void BuildingMenu::printTitle(const String &t)
 void BuildingMenu::clearText()
 {
     text.clear();
+    showedObjects.clear();
 }
 
 void BuildingMenu::clearThemes()
@@ -468,6 +500,7 @@ void BuildingMenu::printText(String t)
     boost::algorithm::replace_all(t, L"%RATINGNAME", mechanoid->getRatingLevelName());
     if (mechanoid->clan && mechanoid->clan->member_name)
         boost::algorithm::replace_all(t, L"%ORGMEMBER", mechanoid->clan->member_name->string.str());
+    boost::algorithm::replace_all(t, L"%QUEST", currentQuest);
 
     text += t;
     text += SMALL_DELIMETER;

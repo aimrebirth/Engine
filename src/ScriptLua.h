@@ -37,7 +37,7 @@ private:
     virtual bool loadScriptFile(const path &p) override;
 
 public: /* API */
-    virtual void call(const std::string &fn, ScriptData &data) override;
+    virtual void call(const FunctionName &fn, const ScriptParameters &params = ScriptParameters()) override;
 
 private:
     lua_State *L;

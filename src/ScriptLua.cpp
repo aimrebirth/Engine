@@ -59,15 +59,28 @@ bool ScriptLua::loadScriptFile(const path &p)
     return true;
 }
 
-void ScriptLua::call(const std::string &fn, ScriptData &data)
+void ScriptLua::call(const FunctionName &fn, const ScriptParameters &params)
 {
-    LOG_TRACE(logger, "call(fn = " << fn << ")");
+    LOG_TRACE(logger, "call(fn = " << fn.toString() << ")");
 
-    lua_getglobal(L, fn.c_str());
+    // find function
+    lua_getglobal(L, fn.toString().c_str());
+
+    // push script data
     SWIG_NewPointerObj(L, &data, SWIGTYPE_p_polygon4__script__ScriptData, 0);
-    if (lua_pcall(L, 1, 0, 0))
+
+    // push other args (string only for now)
+    std::vector<std::string> params_store;
+    params_store.reserve(params.size());
+    for (auto &p : params)
     {
-        LOG_ERROR(logger, "Error during call to '" << fn << "': " << lua_tostring(L, -1));
+        params_store.emplace_back(p.toString());
+        lua_pushstring(L, params_store.back().c_str());
+    }
+
+    if (lua_pcall(L, params.size() + 1, 0, 0))
+    {
+        LOG_ERROR(logger, "Error during call to '" << fn.toString() << "': " << lua_tostring(L, -1));
     }
 }
 

@@ -90,6 +90,8 @@ detail::Configuration *Mechanoid::getConfiguration()
     // setup
     c->setMechanoid(this);
     c->armor = c->getMaxArmor();
+    c->energy = c->getMaxEnergy();
+    c->energy_shield = c->getMaxEnergyShield();
 
     return configuration;
 }
@@ -144,20 +146,18 @@ void Mechanoid::enterBuilding(detail::MapBuilding *bld)
     }
 
     // set script data
-    auto data = std::make_shared<ScriptData>();
-    data->scriptEngine = se;
-    data->player = player;
-    data->building = mmb;
+    s->data.script = s;
+    s->data.player = player;
+    s->data.building = mmb;
 
-    // set script callback
-    // pass script ptr and data object, because it can be called outside of this function
-    bm->setCurrentScriptCallback([s, data](const auto &fn) mutable { s->call(fn, *data); });
+    // set script for possible callbacks from building menu
+    bm->setCurrentScriptCallback([s](const auto &fn, const auto &params) mutable { s->call(fn, params); });
 
     // register available building quests
-    s->RegisterQuests(*data);
+    s->RegisterQuests();
 
     // main script call
-    s->OnEnterBuilding(*data);
+    s->OnEnterBuilding();
 
     // update building menu
     bm->refresh();

@@ -27,6 +27,10 @@
 namespace polygon4
 {
 
+using FunctionName = String;
+using ScriptParameters = std::vector<String>;
+using ScriptCallback = std::function<void(const FunctionName &, const ScriptParameters &)>;
+
 struct DLL_EXPORT InfoTreeItem
 {
     enum
@@ -38,6 +42,7 @@ struct DLL_EXPORT InfoTreeItem
         JournalCompleted,
         JournalFailed,
         JournalId,
+        JournalThemes,
         JournalMax,
 
         GliderGeneral = 0,
@@ -73,6 +78,7 @@ struct DLL_EXPORT InfoTreeItem
     detail::IObjectBase *object = nullptr;
     bool expanded = true;
     bool highlight = false;
+    bool hidden_if_empty = false;
 
     InfoTreeItem(const detail::IObjectBase *o = nullptr);
 
@@ -95,12 +101,16 @@ public:
 
     void setCurrentBuilding(detail::ModificationMapBuilding *b);
     void setCurrentMechanoid(detail::Mechanoid *m);
-    void setCurrentScriptCallback(std::function<void(const std::string &)> sc);
+    void setCurrentScriptCallback(ScriptCallback sc);
 
     virtual void refresh() = 0;
+    void refreshText();
 
-    void addMessage(const detail::Message *msg);
-    void showMessage(const detail::Message *msg);
+    void addMessage(const detail::Message *m);
+    void showMessage(const detail::Message *m);
+    void removeMessage(const detail::IObjectBase *o);
+
+    void addQuestMessage(const detail::Message *m);
 
     void addText(const String &text);
     void addText(const String &title, const String &text);
@@ -136,7 +146,7 @@ public:
 protected:
     detail::ModificationMapBuilding *building = nullptr;
     detail::Mechanoid *mechanoid = nullptr;
-    std::function<void(const std::string &)> scriptCallback;
+    ScriptCallback scriptCallback;
 
     InfoTreeItem themes;
     InfoTreeItem journal;
@@ -150,6 +160,11 @@ protected:
 private:
     String text;
     String mainScreenText;
+
+    String currentQuest;
+
+    // remove and rely on themes?
+    std::vector<const detail::IObjectBase *> showedObjects;
 
     void printMessage(const detail::Message *msg);
     void printText(String text);

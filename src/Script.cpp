@@ -91,14 +91,14 @@ Script *ScriptEngine::getScript(const std::string &name)
     return scripts[fn.string()].get();
 }
 
-void Script::OnEnterBuilding(ScriptData &data)
+void Script::OnEnterBuilding()
 {
-    call("OnEnterBuilding", data);
+    call("OnEnterBuilding");
 }
 
-void Script::RegisterQuests(ScriptData & data)
+void Script::RegisterQuests()
 {
-    call("RegisterQuests", data);
+    call("RegisterQuests");
 }
 
 } // namespace polygon4

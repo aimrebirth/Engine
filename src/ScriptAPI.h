@@ -23,7 +23,7 @@
 namespace polygon4
 {
 
-class ScriptEngine;
+class Script;
 
 namespace script
 {
@@ -36,7 +36,7 @@ enum class RatingType
     Trade,
 };
 
-enum class JournalRecord
+enum class QuestRecord
 {
     InProgress = 1,
     Completed = 2,
@@ -46,7 +46,7 @@ struct ScriptData
 {
 #ifndef SWIG
     // script won't see any data
-    ScriptEngine *scriptEngine = nullptr; // remove?
+    Script *script = nullptr;
     polygon4::detail::ModificationPlayer *player = nullptr;
     polygon4::detail::ModificationMapBuilding *building = nullptr;
     polygon4::detail::Message *next_quest = nullptr;
@@ -55,6 +55,7 @@ struct ScriptData
     // main
     void AddItem(const std::string &o, int quantity = 1);
     bool HasItem(const std::string &o, int quantity = 1);
+    bool RemoveItem(const std::string &o, int quantity = 1);
 
     // rating
     void AddRating(float amount, RatingType type = RatingType::Normal);
@@ -73,8 +74,9 @@ struct ScriptData
     void SetMoney(float amount);
 
     // journal
-    void AddJournalRecord(const std::string &message_id, JournalRecord type = JournalRecord::InProgress);
-    void SetJournalRecordCompleted(const std::string &message_id);
+    void AddJournalRecord(const std::string &message_id, QuestRecord type = QuestRecord::InProgress);
+    void MarkJournalRecord(const std::string &message_id, QuestRecord type);
+    void MarkJournalRecordCompleted(const std::string &message_id);
 
     // variable methods
     int GetVar(const std::string &var);
@@ -101,6 +103,17 @@ struct ScriptData
     // set_event = set quest stage
     void RegisterQuest(const std::string &name);
     bool IsQuestAvailable() const;
+    void ListAvailableQuests() const;
+    void AcceptQuest(const std::string &name);
+    void AddQuestRecord(const std::string &message_id, QuestRecord type = QuestRecord::InProgress);
+    void MarkQuestRecord(const std::string &message_id, QuestRecord type);
+    void MarkQuestRecordCompleted(const std::string &message_id);
+
+    // timer
+    void StartTimer(const std::string &name, int seconds);
+    void StartTimerMs(const std::string &name, int ms);
+    void StartTimerMin(const std::string &name, int min);
+    bool IsTimerExpired(const std::string &name);
 };
 
 struct ScreenText

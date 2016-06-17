@@ -20,6 +20,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include <Polygon4/DataManager/Types.h>
 
@@ -31,10 +32,16 @@ namespace polygon4
 
 using detail::ScriptLanguage;
 
+using FunctionName = String;
+using ScriptParameters = std::vector<String>;
+
 class ScriptEngine;
 
 class Script
 {
+public:
+    ScriptData data;
+
 public:
     Script();
     Script(const Script&) = delete;
@@ -46,10 +53,10 @@ public:
     virtual void loadFile(const path &p);
 
 public: /* API */
-    virtual void call(const std::string &fn, ScriptData &data) {}
+    virtual void call(const FunctionName &fn, const ScriptParameters &params = ScriptParameters()) {}
 
-    void OnEnterBuilding(ScriptData &data);
-    void RegisterQuests(ScriptData &data);
+    void OnEnterBuilding();
+    void RegisterQuests();
 
 private:
     virtual bool loadScriptFile(const path &p) { return false; }

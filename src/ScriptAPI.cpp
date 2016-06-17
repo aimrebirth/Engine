@@ -86,6 +86,22 @@ bool ScriptData::HasItem(const std::string &oname, int quantity)
     return conf->hasItem(o, quantity);
 }
 
+bool ScriptData::RemoveItem(const std::string &oname, int quantity)
+{
+    LOG_TRACE(logger, "RemoveItem(" << oname << ", n = " << quantity << ")");
+
+    auto &objs = getEngine()->getItems();
+    auto i = objs.find(oname);
+    if (i == objs.end())
+    {
+        LOG_ERROR(logger, "Item '" << oname << "' was not found");
+        return false;
+    }
+    auto o = i->second;
+    auto conf = player->mechanoid->getConfiguration();
+    return conf->removeItem(o, quantity);
+}
+
 void ScriptData::AddMoney(float amount)
 {
     LOG_TRACE(logger, "AddMoney(" << amount << ")");
@@ -160,35 +176,18 @@ void ScriptData::SetRatingLevel(int level, RatingType type) const
     player->mechanoid->setRatingLevel(level, (polygon4::detail::RatingType)type);
 }
 
-void ScriptData::AddJournalRecord(const std::string &message_id, JournalRecord type)
+void ScriptData::AddJournalRecord(const std::string &message_id, QuestRecord type)
 {
     LOG_TRACE(logger, "AddJournalRecord(" << message_id << ")");
 
-    auto m = get_message_by_id(message_id);
-    if (!m)
-        return;
-
-    if (player->records.count(message_id) != 0)
-    {
-        auto &r = player->records[message_id];
-        r->type = (detail::JournalRecordType)type;
-        return;
-    }
-
-    auto s = player->getStorage();
-    auto r = s->addJournalRecord(player);
-    r->text_id = m->text_id;
-    r->message = m;
-    r->type = (detail::JournalRecordType)type;
-    r->time = getEngine()->getSettings().playtime;
-    player->records.insert_to_data(r);
+    MarkJournalRecord(message_id, type);
 
     GET_BUILDING_MENU()->JournalRecordAdded();
 }
 
-void ScriptData::SetJournalRecordCompleted(const std::string &message_id)
+void ScriptData::MarkJournalRecord(const std::string &message_id, QuestRecord type)
 {
-    LOG_TRACE(logger, "SetJournalRecordCompleted(" << message_id << ")");
+    LOG_TRACE(logger, "MarkJournalRecord(" << message_id << ", type = " << (int)type << ")");
 
     auto m = get_message_by_id(message_id);
     if (!m)
@@ -197,7 +196,7 @@ void ScriptData::SetJournalRecordCompleted(const std::string &message_id)
     if (player->records.count(message_id) != 0)
     {
         auto &r = player->records[message_id];
-        r->type = detail::JournalRecordType::Completed;
+        r->type = (detail::QuestRecordType)type;
         return;
     }
 
@@ -205,9 +204,16 @@ void ScriptData::SetJournalRecordCompleted(const std::string &message_id)
     auto r = s->addJournalRecord(player);
     r->text_id = m->text_id;
     r->message = m;
-    r->type = detail::JournalRecordType::Completed;
+    r->type = (detail::QuestRecordType)type;
     r->time = getEngine()->getSettings().playtime;
     player->records.insert_to_data(r);
+}
+
+void ScriptData::MarkJournalRecordCompleted(const std::string &message_id)
+{
+    LOG_TRACE(logger, "MarkJournalRecordCompleted(" << message_id << ")");
+
+    MarkJournalRecord(message_id, QuestRecord::Completed);
 }
 
 int ScriptData::GetVar(const std::string &var)
@@ -400,6 +406,76 @@ bool ScriptData::IsQuestAvailable() const
     return !!next_quest;
 }
 
+void ScriptData::ListAvailableQuests() const
+{
+    LOG_TRACE(logger, "ListAvailableQuests()");
+
+    if (!next_quest)
+        return;
+
+    auto bm = GET_BUILDING_MENU();
+    bm->addQuestMessage(next_quest);
+    AddMessage("S_ACCEPT_QUEST");
+    bm->removeMessage(get_message_by_id("S_TASK"));
+}
+
+void ScriptData::AcceptQuest(const std::string &name)
+{
+    LOG_ERROR(logger, "AcceptQuest(" << name << ")");
+
+    auto bm = GET_BUILDING_MENU();
+    bm->removeMessage(get_message_by_id(name));
+    bm->removeMessage(get_message_by_id("S_ACCEPT_QUEST"));
+    //AddMessage(name + "_GET");
+    script->call(name); // call script function
+}
+
+void ScriptData::AddQuestRecord(const std::string &message_id, QuestRecord type)
+{
+    LOG_TRACE(logger, "AddQuestRecord(" << message_id << ")");
+}
+
+void ScriptData::MarkQuestRecord(const std::string &message_id, QuestRecord type)
+{
+    LOG_TRACE(logger, "MarkQuestRecord(" << message_id << ", type = " << (int)type << ")");
+}
+
+void ScriptData::MarkQuestRecordCompleted(const std::string &message_id)
+{
+    LOG_TRACE(logger, "MarkQuestRecordCompleted(" << message_id << ")");
+}
+
+void ScriptData::StartTimer(const std::string &name, int seconds)
+{
+    LOG_ERROR(logger, "StartTimer(" << name << ", sec = " << seconds << ")");
+
+    StartTimerMs(name, seconds * 1000);
+}
+
+void ScriptData::StartTimerMs(const std::string &name, int ms)
+{
+    LOG_ERROR(logger, "StartTimerMs(" << name << ", ms = " << ms << ")");
+
+    SetVar(name, GET_SETTINGS().playtime + ms);
+}
+
+void ScriptData::StartTimerMin(const std::string &name, int min)
+{
+    LOG_ERROR(logger, "StartTimerMin(" << name << ", min = " << min << ")");
+
+    StartTimer(name, min * 60);
+}
+
+bool ScriptData::IsTimerExpired(const std::string &name)
+{
+    LOG_ERROR(logger, "IsTimerExpired(" << name << ")");
+
+    auto v = GetVar(name);
+    if (v == 0)
+        return false;
+    return v < GET_SETTINGS().playtime;
+}
+
 void AddText(const std::string &text)
 {
     LOG_TRACE(logger, "AddText(" << text << ")");
@@ -432,8 +508,7 @@ void ClearText()
 {
     LOG_TRACE(logger, "ClearText()");
 
-    auto &t = getScreenText();
-    t.clear();
+    GET_BUILDING_MENU()->clearText();
 }
 
 void ClearThemes()

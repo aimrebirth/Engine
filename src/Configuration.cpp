@@ -25,6 +25,35 @@
 #include <tools/Logger.h>
 DECLARE_STATIC_LOGGER(logger, "configuration");
 
+#define FIND_ITEMS(v)                                                          \
+    do                                                                         \
+    {                                                                          \
+        auto i = std::find_if(v##s.begin(), v##s.end(),                        \
+                              [o](const auto &e) { return e->v.get() == o; }); \
+        if (i != v##s.end())                                                   \
+        {                                                                      \
+            auto e = *i;                                                       \
+            if (e->quantity >= quantity)                                       \
+            {                                                                  \
+                REMOVE_ACTION_QUANTITY(v);                                     \
+                return true;                                                   \
+            }                                                                  \
+            return false;                                                      \
+        }                                                                      \
+    } while (0)
+
+#define FIND_ITEMS_NO_QUANTITY(v)                                              \
+    do                                                                         \
+    {                                                                          \
+        auto i = std::find_if(v##s.begin(), v##s.end(),                        \
+                              [o](const auto &e) { return e->v.get() == o; }); \
+        if (i != v##s.end())                                                   \
+        {                                                                      \
+            REMOVE_ACTION(v);                                                  \
+            return true;                                                       \
+        }                                                                      \
+    } while (0)
+
 namespace polygon4
 {
 
@@ -316,34 +345,54 @@ bool Configuration::hasItem(const IObjectBase *o, int quantity) const
     if (glider.get() == o)
         return true;
 
-#define CHECK_ITEMS(v)                                                         \
-    do                                                                         \
-    {                                                                          \
-        auto i = std::find_if(v##s.begin(), v##s.end(),                        \
-                              [o](const auto &e) { return e->v.get() == o; }); \
-        if (i != v##s.end())                                                   \
-        {                                                                      \
-            auto e = *i;                                                       \
-            if (e->quantity >= quantity)                                       \
-                return true;                                                   \
-            return false;                                                      \
-        }                                                                      \
+#define REMOVE_ACTION(v)
+#define REMOVE_ACTION_QUANTITY(v)
+
+    FIND_ITEMS(equipment);
+    FIND_ITEMS(good);
+    FIND_ITEMS(modificator);
+    FIND_ITEMS(projectile);
+    FIND_ITEMS_NO_QUANTITY(weapon);
+
+#undef REMOVE_ACTION_QUANTITY
+#undef REMOVE_ACTION
+
+    return false;
+}
+
+bool Configuration::removeItem(IObjectBase *o, int quantity)
+{
+    if (glider.get() == o)
+    {
+        glider.reset();
+        return true;
+    }
+
+#define REMOVE_ACTION(v)                                                            \
+    do                                                                              \
+    {                                                                               \
+        v##s.erase(std::remove_if(v##s.begin(), v##s.end(),                         \
+                                  [o](const auto &e) { return e->v.get() == o; })); \
     } while (0)
 
-#define CHECK_ITEMS_NO_QUANTITY(v)                                             \
-    do                                                                         \
-    {                                                                          \
-        auto i = std::find_if(v##s.begin(), v##s.end(),                        \
-                              [o](const auto &e) { return e->v.get() == o; }); \
-        if (i != v##s.end())                                                   \
-            return true;                                                       \
+#define REMOVE_ACTION_QUANTITY(v) \
+    do                            \
+    {                             \
+        e->quantity -= quantity;  \
+        if (e->quantity == 0)     \
+        {                         \
+            REMOVE_ACTION(v);     \
+        }                         \
     } while (0)
 
-    CHECK_ITEMS(equipment);
-    CHECK_ITEMS(good);
-    CHECK_ITEMS(modificator);
-    CHECK_ITEMS(projectile);
-    CHECK_ITEMS_NO_QUANTITY(weapon);
+    FIND_ITEMS(equipment);
+    FIND_ITEMS(good);
+    FIND_ITEMS(modificator);
+    FIND_ITEMS(projectile);
+    FIND_ITEMS_NO_QUANTITY(weapon);
+
+#undef REMOVE_ACTION_QUANTITY
+#undef REMOVE_ACTION
 
     return false;
 }
@@ -402,7 +451,7 @@ float Configuration::getMaxEnergyShield() const
     // additions from equipment
     for (auto &v : equipments)
     {
-        if (v->equipment->type == detail::EquipmentType::Shield)
+        if (v->equipment->type == detail::EquipmentType::EnergyShield)
             max_energy_shield += v->equipment->value1;
     }
 
@@ -444,7 +493,7 @@ void Configuration::hit(detail::Projectile *projectile)
     bool has_shield = false;
     for (auto &v : equipments)
     {
-        if (v->equipment->type == detail::EquipmentType::Shield)
+        if (v->equipment->type == detail::EquipmentType::EnergyShield)
         {
             has_shield = true;
             if (damage <= v->equipment->value2)
@@ -479,6 +528,7 @@ void Configuration::hit(detail::Projectile *projectile)
     {
         armor -= damage;
     }
+
     if (armor < 0)
         armor = 0;
 }
@@ -487,15 +537,23 @@ void Configuration::tick(float delta_seconds)
 {
     // TODO: fix calculations
 
-    // shield restore
+    // shield energy consumption & restore
     for (auto &v : equipments)
     {
-        if (v->equipment->type == detail::EquipmentType::Shield)
+        if (v->equipment->type == detail::EquipmentType::EnergyShield)
         {
-            energy_shield += v->equipment->value3 * delta_seconds;
+            // consumption
+            energy -= v->equipment->power * delta_seconds;
+
             auto max = getMaxEnergyShield();
-            if (energy_shield > max)
-                energy_shield = max;
+            if (energy > 0 && energy_shield < max)
+            {
+                // restore
+                energy_shield += v->equipment->value3 * delta_seconds;
+                if (energy_shield > max)
+                    energy_shield = max;
+            }
+
             // handle only one shield atm
             break;
         }
@@ -504,9 +562,9 @@ void Configuration::tick(float delta_seconds)
     // energy restore
     for (auto &v : equipments)
     {
-        if (v->equipment->type == detail::EquipmentType::Generator)
+        if (v->equipment->type == detail::EquipmentType::Reactor)
         {
-            energy += v->equipment->value3 * delta_seconds;
+            energy += v->equipment->value1 * delta_seconds;
             auto max = getMaxEnergy();
             if (energy > max)
                 energy = max;
@@ -514,6 +572,14 @@ void Configuration::tick(float delta_seconds)
             break;
         }
     }
+
+    // should be after restore
+    if (energy < 0)
+        energy = 0;
+
+    // weapon timers
+    for (auto &w : weapons)
+        w->addTime(delta_seconds);
 }
 
 } // namespace polygon4

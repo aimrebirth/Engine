@@ -45,12 +45,15 @@ void ConfigurationWeapon::addTime(float tick)
 
 bool ConfigurationWeapon::shoot()
 {
-    if (ready)
-    {
-        ready = false;
-        return true;
-    }
-    return false;
+    if (configuration->energy < weapon->power)
+        return false;
+    if (!ready)
+        return false;
+
+    configuration->energy -= weapon->power;
+
+    ready = false;
+    return true;
 }
 
 } // namespace polygon4
