@@ -368,11 +368,12 @@ bool Configuration::removeItem(IObjectBase *o, int quantity)
         return true;
     }
 
-#define REMOVE_ACTION(v)                                                            \
-    do                                                                              \
-    {                                                                               \
-        v##s.erase(std::remove_if(v##s.begin(), v##s.end(),                         \
-                                  [o](const auto &e) { return e->v.get() == o; })); \
+#define REMOVE_ACTION(v)                                                           \
+    do                                                                             \
+    {                                                                              \
+        v##s.erase(std::remove_if(v##s.begin(), v##s.end(),                        \
+                                  [o](const auto &e) { return e->v.get() == o; }), \
+                   v##s.end());                                                    \
     } while (0)
 
 #define REMOVE_ACTION_QUANTITY(v) \

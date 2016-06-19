@@ -340,7 +340,11 @@ void BuildingMenu::refreshText()
 
 void BuildingMenu::removeMessage(const detail::IObjectBase *obj)
 {
-    showedObjects.erase(std::remove(showedObjects.begin(), showedObjects.end(), obj));
+    if (!obj)
+        return;
+    showedObjects.erase(
+        std::remove(showedObjects.begin(), showedObjects.end(), obj),
+        showedObjects.end());
     refreshText();
 }
 
