@@ -532,6 +532,12 @@ void Configuration::hit(detail::Projectile *projectile)
 
     if (armor < 0)
         armor = 0;
+
+    if (armor == 0)
+    {
+        energy = 0;
+        energy_shield = 0;
+    }
 }
 
 void Configuration::tick(float delta_seconds)
