@@ -110,9 +110,9 @@ public:
     virtual Storage* getStorage() const override final { return storage.get(); }
 
     virtual Modification* getCurrentModification() const override final { return currentModification; }
-    virtual void setCurrentModification(Modification *currentModification) override final
+    virtual void setCurrentModification(Modification *currentModificationIn) override final
     {
-        this->currentModification = currentModification;
+        currentModification = currentModificationIn;
     }
 
     virtual void spawnCurrentPlayer() override;
