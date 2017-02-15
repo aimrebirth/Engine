@@ -50,7 +50,7 @@ class Save;
 #pragma pack(push, 1)
 #endif
 
-class DLL_EXPORT IEngine
+class P4_ENGINE_API IEngine
 {
 public:
     IEngine() = default;
@@ -87,7 +87,7 @@ public:
     }
 };
 
-class DLL_EXPORT Engine : public IEngine
+class P4_ENGINE_API Engine : public IEngine
 {
 protected:
     Engine(const String &gameDirectory);
@@ -134,11 +134,12 @@ private:
 
     void postLoadStorage();
 
-#define GET_KEY_MAP(mf, m) \
-public: \
-    const KeyMap<String> &get ## mf() const { return m; } \
-    KeyMap<String> &get ## mf() { return m; } \
-private: \
+#define GET_KEY_MAP(mf, m)                              \
+public:                                                 \
+    const KeyMap<String> &get##mf() const { return m; } \
+    KeyMap<String> &get##mf() { return m; }             \
+                                                        \
+private:                                                \
     KeyMap<String> m
 
     GET_KEY_MAP(Messages, messages);
@@ -153,7 +154,7 @@ private: \
 #pragma pack(pop)
 #endif
 
-DLL_EXPORT
+P4_ENGINE_API
 #ifdef _MSC_VER
 __declspec(noinline)
 #endif

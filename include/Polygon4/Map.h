@@ -23,7 +23,7 @@
 namespace polygon4
 {
 
-class DLL_EXPORT Map : public detail::Map
+class P4_ENGINE_API Map : public detail::Map
 {
     using Base = detail::Map;
 

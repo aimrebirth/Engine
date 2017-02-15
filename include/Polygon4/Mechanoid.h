@@ -25,7 +25,7 @@ namespace polygon4
 
 using detail::RatingType;
 
-class DLL_EXPORT Mechanoid : public detail::Mechanoid
+class P4_ENGINE_API Mechanoid : public detail::Mechanoid
 {
     using Base = detail::Mechanoid;
 
@@ -67,7 +67,7 @@ private:
     static float _setRatingLevel(int level);
 };
 
-DLL_EXPORT
+P4_ENGINE_API
 float getRatingLevelCap(int level);
 
 } // namespace polygon4

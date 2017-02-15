@@ -46,13 +46,6 @@ if (MSVC OR XCODE)
 endif()
 
 # libraries and dependencies
-if (WIN32)
-    set(Boost_USE_STATIC_LIBS ON)
-else()
-    ADD_DEFINITIONS(-DBOOST_ALL_DYN_LINK)
-endif(WIN32)
-
-find_package(Boost 1.60 REQUIRED filesystem log)
 find_package(SWIG 3.0 REQUIRED)
 
 ################################################################################
@@ -96,38 +89,18 @@ endif(MSVC)
 #
 ################################################################################
 
+add_subdirectory(.cppan)
+
 include(BuildFunctions)
 
-add_definitions(-DUSE_LOGGER)
+add_definitions(-DUSE_LOGGER=1)
 set(POLYGON4_ENGINE 1)
 add_definitions(-DPOLYGON4_ENGINE=1)
 
-include_directories(${Boost_INCLUDE_DIRS})
-link_directories(${Boost_LIBRARY_DIRS})
-
-include_directories(include)
-include_directories(dep)
-set(p dep/lua)
-set(lua_src
-    ${p}/lapi.c ${p}/lcode.c ${p}/lctype.c ${p}/ldebug.c ${p}/ldo.c ${p}/ldump.c ${p}/lfunc.c ${p}/lgc.c ${p}/llex.c
-    ${p}/lmem.c ${p}/lobject.c ${p}/lopcodes.c ${p}/lparser.c ${p}/lstate.c ${p}/lstring.c ${p}/ltable.c
-    ${p}/ltm.c ${p}/lundump.c ${p}/lvm.c ${p}/lzio.c
-    ${p}/lauxlib.c ${p}/lbaselib.c ${p}/lbitlib.c ${p}/lcorolib.c ${p}/ldblib.c ${p}/liolib.c
-	${p}/lmathlib.c ${p}/loslib.c ${p}/lstrlib.c ${p}/ltablib.c ${p}/lutf8lib.c ${p}/loadlib.c ${p}/linit.c
-)
-unset(p)
-include_directories(dep/lua/)
-
-add_library             (lua ${lua_src})
-project_group           (lua Extern)
-
-if (NOT DATA_MANAGER_DIR)
-    message(FATAL_ERROR "Please, set DATA_MANAGER_DIR variable")
+if (WIN32)
+set(x "__declspec(dllexport)")
+add_definitions(-DP4_ENGINE_API=${x})
 endif()
 
-set(SOLUTION_FOLDER Extern)
-add_subdirectory(${DATA_MANAGER_DIR} DataManager)
-include_directories(${DATA_MANAGER_DIR}/include)
-include_directories(${DATA_MANAGER_ADDITIONAL_INCLUDES})
-
+include_directories(include)
 add_subdirectory(src)

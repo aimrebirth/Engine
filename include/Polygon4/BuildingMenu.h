@@ -31,7 +31,7 @@ using FunctionName = String;
 using ScriptParameters = std::vector<String>;
 using ScriptCallback = std::function<void(const FunctionName &, const ScriptParameters &)>;
 
-struct DLL_EXPORT InfoTreeItem
+struct P4_ENGINE_API InfoTreeItem
 {
     enum
     {
@@ -90,7 +90,7 @@ private:
     void assign(const detail::IObjectBase *o);
 };
 
-class DLL_EXPORT BuildingMenu
+class P4_ENGINE_API BuildingMenu
 {
 public:
     BuildingMenu();

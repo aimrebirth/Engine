@@ -20,37 +20,36 @@
 
 #include <string>
 
-#include <Polygon4/DataManager/dll.h>
 #include <Polygon4/DataManager/String.h>
 
 namespace polygon4
 {
-    
-DLL_EXPORT
+
+P4_ENGINE_API
 String read_orig_module_filename();
 
-DLL_EXPORT
+P4_ENGINE_API
 String read_old_module_filename();
 
-DLL_EXPORT
+P4_ENGINE_API
 String read_new_module_filename();
 
-DLL_EXPORT
+P4_ENGINE_API
 String read_orig_module_filename_store();
 
-DLL_EXPORT
+P4_ENGINE_API
 String read_old_module_filename_store();
 
-DLL_EXPORT
+P4_ENGINE_API
 String read_new_module_filename_store();
 
-DLL_EXPORT
+P4_ENGINE_API
 String read_ver_module_filename_store();
 
-DLL_EXPORT
+P4_ENGINE_API
 void write_module_last_write_time(String game_dir, String module_name);
 
-DLL_EXPORT
+P4_ENGINE_API
 String prepare_module_for_hotload(String game_dir, String module_name);
 
 }

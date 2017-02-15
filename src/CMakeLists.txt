@@ -8,19 +8,6 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 ################################################################################
 
 ########################################
-# LIBRARY hotpatchable
-########################################
-
-set(hotpatchable_src
-    Tools/Hotpatch.cpp
-    Tools/Hotpatch.h
-    ${CMAKE_SOURCE_DIR}/include/Polygon4/Hotpatch.h
-)
-add_library             (hotpatchable OBJECT ${hotpatchable_src})
-project_group           (hotpatchable Tools)
-
-
-########################################
 # LIBRARY logger
 ########################################
 
@@ -29,6 +16,7 @@ set(logger_src
     Tools/Logger.h
 )
 add_library             (logger ${logger_src})
+target_link_libraries   (logger pvt.cppan.demo.boost.log)
 project_group           (logger Tools)
 
 
@@ -58,11 +46,17 @@ set(engine_src
     ${engine_src}
     ${api_name}.i
     ${CMAKE_CURRENT_BINARY_DIR}/${api_name}_lua.cpp
-    $<TARGET_OBJECTS:hotpatchable>
+
+    Tools/Hotpatch.cpp
+    Tools/Hotpatch.h
+    ${CMAKE_SOURCE_DIR}/include/Polygon4/Hotpatch.h
 )
 
 add_library             (Engine SHARED ${engine_src} ${engine_inc})
-target_link_libraries   (Engine DataManager logger lua ${Boost_LIBRARIES} dbghelp)
+target_link_libraries   (Engine logger data_manager dbghelp
+    pvt.cppan.demo.boost.filesystem
+    pvt.cppan.demo.lua
+)
 add_dependencies        (Engine clean_hotpatch ${api_name}_lua)
 set_output_directory    (Engine ${library_dir})
 get_target_property     (name Engine NAME)
@@ -82,13 +76,27 @@ if (WIN32)
     )
 endif()
 
+# generate fiels for UE4
+file(GENERATE
+    OUTPUT ${PROJECT_BINARY_DIR}/includes.txt
+    CONTENT $<TARGET_PROPERTY:Engine,INTERFACE_INCLUDE_DIRECTORIES>
+)
+file(GENERATE
+    OUTPUT ${PROJECT_BINARY_DIR}/data_manager.txt
+    CONTENT $<TARGET_FILE:data_manager>
+)
+file(GENERATE
+    OUTPUT ${PROJECT_BINARY_DIR}/schema.txt
+    CONTENT $<TARGET_FILE:schema>
+)
+
 
 ########################################
 # EXECUTABLE Fix PDB
 ########################################
 
 add_executable          (pdbfix Tools/PdbFix.cpp)
-target_link_libraries   (pdbfix dbghelp)
+target_link_libraries   (pdbfix dbghelp pvt.cppan.demo.boost.filesystem)
 set_output_directory    (pdbfix ${library_dir})
 project_group           (pdbfix Tools)
 

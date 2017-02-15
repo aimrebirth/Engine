@@ -27,7 +27,7 @@
 namespace polygon4
 {
 
-class DLL_EXPORT ConfigurationWeapon : public detail::ConfigurationWeapon
+class P4_ENGINE_API ConfigurationWeapon : public detail::ConfigurationWeapon
 {
     using Base = detail::ConfigurationWeapon;
 

@@ -21,25 +21,22 @@
 #include <memory>
 #include <stdint.h>
 
-#include <Polygon4/DataManager/Dll.h>
-
-#ifdef WIN32
-#define POLYGON4_UNREAL_MEMORY_STUB \
-    static void* dll_alloc(size_t size) \
-    { \
-        return FMemory::Malloc(size); \
-    } \
-    \
-    static void dll_free(void *ptr) \
-    { \
-        FMemory::Free(ptr); \
-    } \
-    \
-    extern "C" __declspec(dllexport) \
-    void __cdecl Polygon4InitMemory(void **alloc, void **free) \
-    { \
-        *alloc = (void*)&dll_alloc; \
-        *free = (void*)&dll_free; \
+#ifdef _WIN32
+#define POLYGON4_UNREAL_MEMORY_STUB                                                             \
+    static void *dll_alloc(size_t size)                                                         \
+    {                                                                                           \
+        return FMemory::Malloc(size);                                                           \
+    }                                                                                           \
+                                                                                                \
+    static void dll_free(void *ptr)                                                             \
+    {                                                                                           \
+        FMemory::Free(ptr);                                                                     \
+    }                                                                                           \
+                                                                                                \
+    extern "C" __declspec(dllexport) void __cdecl Polygon4InitMemory(void **alloc, void **free) \
+    {                                                                                           \
+        *alloc = (void *)&dll_alloc;                                                            \
+        *free = (void *)&dll_free;                                                              \
     }
 #else // !WIN32
 #define POLYGON4_UNREAL_MEMORY_STUB

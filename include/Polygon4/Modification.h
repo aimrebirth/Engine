@@ -23,7 +23,7 @@
 namespace polygon4
 {
 
-class DLL_EXPORT Modification : public detail::Modification
+class P4_ENGINE_API Modification : public detail::Modification
 {
     using Base = detail::Modification;
 

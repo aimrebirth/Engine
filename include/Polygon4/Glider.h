@@ -27,7 +27,7 @@
 namespace polygon4
 {
 
-class DLL_EXPORT Glider : public detail::Glider
+class P4_ENGINE_API Glider : public detail::Glider
 {
     using Base = detail::Glider;
 

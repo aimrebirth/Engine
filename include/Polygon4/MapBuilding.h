@@ -23,7 +23,7 @@
 namespace polygon4
 {
 
-class DLL_EXPORT MapBuilding : public detail::MapBuilding
+class P4_ENGINE_API MapBuilding : public detail::MapBuilding
 {
     using Base = detail::MapBuilding;
 

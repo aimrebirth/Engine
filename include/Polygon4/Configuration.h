@@ -29,7 +29,7 @@ namespace polygon4
 
 class Mechanoid;
 
-class DLL_EXPORT Configuration : public detail::Configuration
+class P4_ENGINE_API Configuration : public detail::Configuration
 {
     using Base = detail::Configuration;
 
