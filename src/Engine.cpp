@@ -142,10 +142,11 @@ void Engine::postLoadStorage()
     buildings = storage->buildings.get_key_map(&polygon4::detail::Building::text_id);
 
     // items
-#define ADD_ITEMS(array, type) \
-    do { \
+#define ADD_ITEMS(array, type)                                                 \
+    do                                                                         \
+    {                                                                          \
         auto v = storage->array.get_key_map(&polygon4::detail::type::text_id); \
-        items.insert(v.begin(), v.end()); \
+        items.insert(v.begin(), v.end());                                      \
     } while (0)
 
     items.clear();

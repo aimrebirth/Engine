@@ -48,17 +48,12 @@ endif(MSVC)
 #
 ################################################################################
 
-set(CPPAN_BUILD_SHARED_LIBS 1)
+set(CPPAN_USE_CACHE 0)
+set(CPPAN_BUILD_SHARED_LIBS 0)
+set(CPPAN_HIDE_LOCAL_DEPENDENCIES 1)
 add_subdirectory(.cppan)
 
 add_definitions(-DUSE_LOGGER=1)
-set(POLYGON4_ENGINE 1)
-add_definitions(-DPOLYGON4_ENGINE=1)
-
-if (WIN32)
-set(x "__declspec(dllexport)")
-add_definitions(-DP4_ENGINE_API=${x})
-endif()
 
 include_directories(include)
 add_subdirectory(src)

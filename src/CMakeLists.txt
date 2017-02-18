@@ -63,12 +63,71 @@ set(engine_src
     ${CMAKE_SOURCE_DIR}/include/Polygon4/Hotpatch.h
 )
 
+
+
+function(set_target_property target prop val)
+    get_target_property     (a ${target} ALIASED_TARGET)
+    if (${a} STREQUAL "a-NOTFOUND")
+    set_target_properties   (${target} PROPERTIES ${prop} "${val}")
+    else()
+    set_target_properties   (${a} PROPERTIES ${prop} "${val}")
+    endif()
+endfunction()
+
+function(set_target_cd target def)
+    get_target_property     (a ${target} ALIASED_TARGET)
+    if (${a} STREQUAL "a-NOTFOUND")
+    target_compile_definitions(${target} PRIVATE ${def}=)
+    else()
+    target_compile_definitions(${a} PRIVATE ${def}=)
+    endif()
+endfunction()
+
+function(remove_defs target def)
+    get_target_property(v ${target} INTERFACE_COMPILE_DEFINITIONS)
+    #message("${v}")
+    set(v2)
+    foreach(i ${v})
+        string(FIND "${i}" "${def}" p)
+        if (NOT ${p} EQUAL 0)
+            set(v2 ${v2} ${i})
+        endif()
+    endforeach()
+    #message("${v2}")
+    set_target_property(${target} INTERFACE_COMPILE_DEFINITIONS "${v2}")
+
+    set_target_cd(generator ${def})
+    set_target_cd(data_manager ${def})
+    set_target_cd(schema ${def})
+endfunction()
+
+#remove_defs(data_manager "DATA_MANAGER_API")
+#remove_defs(schema "SCHEMA_API")
+
+
+
+
 add_library             (Engine SHARED ${engine_src} ${engine_inc})
 target_link_libraries   (Engine logger data_manager dbghelp
     pvt.cppan.demo.boost.filesystem
     pvt.cppan.demo.lua
 )
 add_dependencies        (Engine clean_hotpatch ${api_name}_lua)
+
+#set_target_properties(Engine PROPERTIES LINK_FLAGS "/WHOLEARCHIVE")
+
+if (WIN32)
+    #set(x)
+    set(x "__declspec(dllexport)")
+    target_compile_definitions(Engine
+        PRIVATE P4_ENGINE_API=${x}
+        #PRIVATE SCHEMA_API=${x}
+        #PRIVATE DATA_MANAGER_API=${x}
+    )
+endif()
+
+
+set_target_properties   (Engine PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS True)
 
 add_custom_command(TARGET Engine POST_BUILD
     COMMAND pdbfix $<TARGET_FILE:Engine>
@@ -89,11 +148,11 @@ file(GENERATE
 )
 file(GENERATE
     OUTPUT ${PROJECT_BINARY_DIR}/data_manager_$<CONFIG>.txt
-    CONTENT $<TARGET_FILE:data_manager>
+    CONTENT $<TARGET_LINKER_FILE:data_manager>
 )
 file(GENERATE
     OUTPUT ${PROJECT_BINARY_DIR}/schema_$<CONFIG>.txt
-    CONTENT $<TARGET_FILE:schema>
+    CONTENT $<TARGET_LINKER_FILE:schema>
 )
 
 

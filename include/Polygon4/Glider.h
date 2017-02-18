@@ -33,6 +33,7 @@ class P4_ENGINE_API Glider : public detail::Glider
 
 public:
     Glider(const Base &);
+    virtual ~Glider() = default;
 
     virtual float getCapacity() const override final;
 };

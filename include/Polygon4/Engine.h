@@ -29,11 +29,11 @@
 
 #include <Polygon4/DataManager/Settings.h>
 
-#define DECLARE_MENU_VIRTUAL(name) \
-public: \
-    virtual void Show ## name ## Menu() = 0; \
-    virtual void Hide ## name ## Menu() = 0; \
-    virtual void Set ## name ## MenuVisibility(bool visibility) = 0
+#define DECLARE_MENU_VIRTUAL(name)       \
+public:                                  \
+    virtual void Show##name##Menu() = 0; \
+    virtual void Hide##name##Menu() = 0; \
+    virtual void Set##name##MenuVisibility(bool visibility) = 0
 
 namespace polygon4
 {

@@ -15,7 +15,6 @@
 #include "Hotpatch.h"
 
 #include "Logger.h"
-
 DECLARE_STATIC_LOGGER(logger, "hotpatch");
 
 std::string find_executable_in_path(const std::string &file, std::string path = "");
@@ -111,7 +110,7 @@ void write_module_last_write_time(String game_dir, String module_name)
 String prepare_module_for_hotload(String game_dir, String module_name)
 {
     using namespace boost::filesystem;
-    
+
     boost::system::error_code ec;
 
     path base = path(game_dir).normalize();
@@ -257,27 +256,27 @@ String prepare_module_for_hotload(String game_dir, String module_name)
 
 }
 
-std::string find_executable_in_path(const std::string &file, std::string path) 
+std::string find_executable_in_path(const std::string &file, std::string path)
 {
     BOOST_ASSERT(file.find_first_of("\\/") == std::string::npos);
 
-    std::string result; 
-    const char *exts[] = { "", ".exe", ".com", ".bat", NULL }; 
+    std::string result;
+    const char *exts[] = { "", ".exe", ".com", ".bat", NULL };
     const char **ext = exts;
-    while (*ext) 
-    { 
-        char buf[MAX_PATH]; 
+    while (*ext)
+    {
+        char buf[MAX_PATH];
         char *dummy;
-        DWORD size = ::SearchPathA(path.empty() ? NULL : path.c_str(), file.c_str(), *ext, MAX_PATH, buf, &dummy); 
-        BOOST_ASSERT(size < MAX_PATH); 
-        if (size > 0) 
-        { 
-            result = buf; 
-            break; 
-        } 
-        ++ext; 
+        DWORD size = ::SearchPathA(path.empty() ? NULL : path.c_str(), file.c_str(), *ext, MAX_PATH, buf, &dummy);
+        BOOST_ASSERT(size < MAX_PATH);
+        if (size > 0)
+        {
+            result = buf;
+            break;
+        }
+        ++ext;
     }
-    return result; 
+    return result;
 }
 
 std::string &getUe4ModuleName()
@@ -373,7 +372,7 @@ void patch_game_module(const char *module_name, const ExportsOld &exports_orig, 
 
     if (!hProgram)
         return;
-    
+
     PIMAGE_DELAYLOAD_DESCRIPTOR pImportDesc = NULL;
     pImportDesc = (PIMAGE_DELAYLOAD_DESCRIPTOR)ImageDirectoryEntryToData(hProgram, TRUE, IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT, &ulSize);
 
@@ -381,7 +380,7 @@ void patch_game_module(const char *module_name, const ExportsOld &exports_orig, 
 
     if (!(pImportDesc))
         return;
-    
+
     LOG_TRACE(logger, "Imports old:");
     auto imports = find_import_table(hProgram, pImportDesc);
 
@@ -445,7 +444,7 @@ void patch_game_module(const char *module_name, const ExportsOld &exports_orig, 
     {
         getUe4ModuleName() = module_name;
     }
-    
+
     LOG_TRACE(logger, "Imports new:");
     imports = find_import_table(hProgram, pImportDesc);
 }
@@ -486,19 +485,19 @@ void patch_all_game_modules(const ExportsOld &exports_orig, const ExportsOld &ex
 void patch_import_table()
 {
     DWORD ulSize;
-    
+
     const std::string orig_dll = boost::filesystem::path(read_orig_module_filename()).filename().string();
     const std::string old_dll = boost::filesystem::path(read_old_module_filename()).filename().string();
     const std::string new_dll = boost::filesystem::path(read_new_module_filename()).filename().string();
-    
+
     LOG_TRACE(logger, "orig_dll: " << orig_dll);
     LOG_TRACE(logger, "old_dll: " << old_dll);
     LOG_TRACE(logger, "new_dll: " << new_dll);
-    
+
     HMODULE hOrig = GetModuleHandle(orig_dll.c_str());
     HMODULE hOld = GetModuleHandle(old_dll.c_str());
     HMODULE hNew = GetModuleHandle(new_dll.c_str());
-    
+
     LOG_TRACE(logger, "hOrig: " << hOrig);
     LOG_TRACE(logger, "hOld: " << hOld);
     LOG_TRACE(logger, "hNew: " << hNew);
@@ -514,7 +513,7 @@ void patch_import_table()
 
     PIMAGE_EXPORT_DIRECTORY pExportDescNew = NULL;
 	pExportDescNew = (PIMAGE_EXPORT_DIRECTORY)ImageDirectoryEntryToData(hNew, TRUE, IMAGE_DIRECTORY_ENTRY_EXPORT, &ulSize);
-    
+
     LOG_TRACE(logger, "pExportDescOrig: " << pExportDescOrig);
     LOG_TRACE(logger, "pExportDescOld: " << pExportDescOld);
     LOG_TRACE(logger, "pExportDescNew: " << pExportDescNew);
@@ -577,7 +576,7 @@ bool same_pid()
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-	switch (fdwReason) 
+	switch (fdwReason)
     {
     case DLL_PROCESS_ATTACH:
         {
