@@ -51,6 +51,8 @@ endif(MSVC)
 set(CPPAN_USE_CACHE 0)
 set(CPPAN_BUILD_SHARED_LIBS 0)
 set(CPPAN_HIDE_LOCAL_DEPENDENCIES 1)
+set(LIBRARY_TYPE_loc_DataManager_data_manager_local SHARED)
+set(LIBRARY_TYPE_loc_DataManager_schema_local SHARED)
 add_subdirectory(.cppan)
 
 add_definitions(-DUSE_LOGGER=1)

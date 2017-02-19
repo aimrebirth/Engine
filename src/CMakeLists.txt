@@ -108,7 +108,7 @@ endfunction()
 
 
 add_library             (Engine SHARED ${engine_src} ${engine_inc})
-target_link_libraries   (Engine logger data_manager dbghelp
+target_link_libraries   (Engine logger data_manager  dbghelp
     pvt.cppan.demo.boost.filesystem
     pvt.cppan.demo.lua
 )
@@ -127,7 +127,7 @@ if (WIN32)
 endif()
 
 
-set_target_properties   (Engine PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS True)
+#set_target_properties   (Engine PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS True)
 
 add_custom_command(TARGET Engine POST_BUILD
     COMMAND pdbfix $<TARGET_FILE:Engine>
@@ -138,6 +138,12 @@ if (WIN32)
     add_custom_command(TARGET Engine POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:Engine> ${CMAKE_SOURCE_DIR}/../../Binaries/Win64/
         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_PDB_FILE:Engine> ${CMAKE_SOURCE_DIR}/../../Binaries/Win64/
+
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:data_manager> ${CMAKE_SOURCE_DIR}/../../Binaries/Win64/
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_PDB_FILE:data_manager> ${CMAKE_SOURCE_DIR}/../../Binaries/Win64/
+
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:schema> ${CMAKE_SOURCE_DIR}/../../Binaries/Win64/
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_PDB_FILE:schema> ${CMAKE_SOURCE_DIR}/../../Binaries/Win64/
     )
 endif()
 

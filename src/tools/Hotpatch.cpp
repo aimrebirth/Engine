@@ -79,9 +79,9 @@ void write_module_last_write_time(String game_dir, String module_name)
     boost::system::error_code ec;
 
     path base = path(game_dir).normalize();
-    path dll = base / "ThirdParty" / module_name / "lib";
+    path dll = base / "ThirdParty" / module_name / "win64" / "bin" / "RelWithDebInfo";
 
-    const std::string base_name = "Engine.x64.";
+    const std::string base_name = "Engine.";
     const std::string ext_dll = "dll";
     const std::string base_dll = base_name + ext_dll;
 
@@ -115,7 +115,7 @@ String prepare_module_for_hotload(String game_dir, String module_name)
 
     path base = path(game_dir).normalize();
     path bin = base / "Binaries" / "Win64";
-    path dll = base / "ThirdParty" / module_name / "lib";
+    path dll = base / "ThirdParty" / module_name / "win64" / "bin" / "RelWithDebInfo";
     std::string win64dir = "win64";
     path win64 = base / "ThirdParty" / module_name / win64dir;
     path project = win64 / "src" / "Engine.vcxproj.user";
@@ -125,7 +125,7 @@ String prepare_module_for_hotload(String game_dir, String module_name)
 
     LOG_DEBUG(logger, "Preparing module for hot load: " << module_name.toString());
 
-    const std::string base_name = "Engine.x64.";
+    const std::string base_name = "Engine.";
     const std::string ext_dll = "dll";
     const std::string ext_pdb = "pdb";
     const std::string base_dll  = base_name + ext_dll;
@@ -339,10 +339,9 @@ Import find_import_table(HMODULE hProgram, PIMAGE_DELAYLOAD_DESCRIPTOR pImportDe
         LOG_TRACE(logger, "dll: " << dll_name);
 
         bool engine = dll_name.find("Engine") != -1;
-        bool x64 = dll_name.find(".x64.") != -1;
         bool dll = dll_name.find(".dll") != -1;
 
-        if (engine && x64 && dll)
+        if (engine && dll)
         {
             PIMAGE_THUNK_DATA pThunk = (PIMAGE_THUNK_DATA)((PBYTE)hProgram + pImportDesc->ImportAddressTableRVA);
             for (; pThunk->u1.Function; pThunk++)
