@@ -108,7 +108,7 @@ endfunction()
 
 
 add_library             (Engine SHARED ${engine_src} ${engine_inc})
-target_link_libraries   (Engine logger data_manager  dbghelp
+target_link_libraries   (Engine logger pvt.lzwdgc.polygon4.data_manager.data_manager dbghelp
     pvt.cppan.demo.boost.filesystem
     pvt.cppan.demo.lua
 )
@@ -139,11 +139,11 @@ if (WIN32)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:Engine> ${CMAKE_SOURCE_DIR}/../../Binaries/Win64/
         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_PDB_FILE:Engine> ${CMAKE_SOURCE_DIR}/../../Binaries/Win64/
 
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:data_manager> ${CMAKE_SOURCE_DIR}/../../Binaries/Win64/
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_PDB_FILE:data_manager> ${CMAKE_SOURCE_DIR}/../../Binaries/Win64/
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:pvt.lzwdgc.polygon4.data_manager.data_manager> ${CMAKE_SOURCE_DIR}/../../Binaries/Win64/
+        #COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_PDB_FILE:pvt.lzwdgc.polygon4.data_manager.data_manager> ${CMAKE_SOURCE_DIR}/../../Binaries/Win64/
 
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:schema> ${CMAKE_SOURCE_DIR}/../../Binaries/Win64/
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_PDB_FILE:schema> ${CMAKE_SOURCE_DIR}/../../Binaries/Win64/
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:pvt.lzwdgc.polygon4.data_manager.schema> ${CMAKE_SOURCE_DIR}/../../Binaries/Win64/
+        #COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_PDB_FILE:pvt.lzwdgc.polygon4.data_manager.schema> ${CMAKE_SOURCE_DIR}/../../Binaries/Win64/
     )
 endif()
 
@@ -154,11 +154,11 @@ file(GENERATE
 )
 file(GENERATE
     OUTPUT ${PROJECT_BINARY_DIR}/data_manager_$<CONFIG>.txt
-    CONTENT $<TARGET_LINKER_FILE:data_manager>
+    CONTENT $<TARGET_LINKER_FILE:pvt.lzwdgc.polygon4.data_manager.data_manager>
 )
 file(GENERATE
     OUTPUT ${PROJECT_BINARY_DIR}/schema_$<CONFIG>.txt
-    CONTENT $<TARGET_LINKER_FILE:schema>
+    CONTENT $<TARGET_LINKER_FILE:pvt.lzwdgc.polygon4.data_manager.schema>
 )
 
 
