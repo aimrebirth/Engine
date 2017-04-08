@@ -85,6 +85,7 @@ void write_module_last_write_time(String game_dir, String module_name)
     const std::string ext_dll = "dll";
     const std::string base_dll = base_name + ext_dll;
 
+    create_directories(dll);
     auto old_module = canonical(dll / base_dll);
 
     if (!exists(old_module))
