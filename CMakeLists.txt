@@ -14,6 +14,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 set(output_dir ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${output_dir})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${output_dir})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${output_dir})
 
 # Use solution folders.
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
