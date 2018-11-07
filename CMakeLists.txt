@@ -56,6 +56,8 @@ set(CPPAN_BUILD_SHARED_LIBS 0)
 set(LIBRARY_TYPE_pvt_lzwdgc_polygon4_data_manager_data_manager_master SHARED)
 set(LIBRARY_TYPE_pvt_lzwdgc_polygon4_data_manager_schema_master SHARED)
 add_definitions(-DDATA_MANAGER_ALIGNED_ALLOCATOR=1)
+#set(LIBRARY_TYPE_pvt_cppan_demo_intel_tbb_tbbmalloc_2018_7_18 STATIC)
+#set(LIBRARY_TYPE_pvt_cppan_demo_intel_tbb_tbbmalloc_proxy_2018_7_18 STATIC)
 add_subdirectory(.cppan)
 
 add_definitions(-DUSE_LOGGER=1)

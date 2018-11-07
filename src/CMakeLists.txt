@@ -111,6 +111,7 @@ add_library             (Engine SHARED ${engine_src} ${engine_inc})
 target_link_libraries   (Engine logger pvt.lzwdgc.polygon4.data_manager.data_manager dbghelp
     pvt.cppan.demo.boost.filesystem
     pvt.cppan.demo.lua
+    #pvt.cppan.demo.intel.tbb.tbbmalloc_proxy
 )
 add_dependencies        (Engine clean_hotpatch ${api_name}_lua)
 
@@ -152,6 +153,11 @@ file(GENERATE
     OUTPUT ${PROJECT_BINARY_DIR}/includes.txt
     CONTENT $<TARGET_PROPERTY:Engine,INTERFACE_INCLUDE_DIRECTORIES>
 )
+# output will be useless: logger;pvt.lzwdgc.polygon4.data_manager.data_manager;dbghelp;pvt.cppan.demo.boost.filesystem;pvt.cppan.demo.lua
+#file(GENERATE
+    #OUTPUT ${PROJECT_BINARY_DIR}/libs.txt
+    #CONTENT $<TARGET_PROPERTY:Engine,INTERFACE_LINK_LIBRARIES>
+#)
 file(GENERATE
     OUTPUT ${PROJECT_BINARY_DIR}/data_manager_$<CONFIG>.txt
     CONTENT $<TARGET_LINKER_FILE:pvt.lzwdgc.polygon4.data_manager.data_manager>
@@ -159,6 +165,10 @@ file(GENERATE
 file(GENERATE
     OUTPUT ${PROJECT_BINARY_DIR}/schema_$<CONFIG>.txt
     CONTENT $<TARGET_LINKER_FILE:pvt.lzwdgc.polygon4.data_manager.schema>
+)
+file(GENERATE
+    OUTPUT ${PROJECT_BINARY_DIR}/sqlite3_$<CONFIG>.txt
+    CONTENT $<TARGET_LINKER_FILE:pvt.cppan.demo.sqlite3>
 )
 
 

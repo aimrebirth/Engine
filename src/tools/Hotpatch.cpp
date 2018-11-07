@@ -574,12 +574,16 @@ bool same_pid()
     return false;
 }
 
+//void doMallocReplacement();
+
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
 	switch (fdwReason)
     {
     case DLL_PROCESS_ATTACH:
         {
+            //doMallocReplacement();
+
             char filename[MAX_PATH] = { 0 };
             GetModuleFileName(hinstDLL, filename, MAX_PATH);
             auto p = boost::filesystem::path(filename);
