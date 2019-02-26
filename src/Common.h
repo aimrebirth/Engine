@@ -18,6 +18,4 @@
 
 #pragma once
 
-#include <boost/filesystem.hpp>
-namespace fs = boost::filesystem;
-using path = fs::path;
+#include <primitives/filesystem.h>

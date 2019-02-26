@@ -120,7 +120,7 @@ bool Engine::reloadStorage()
 
     try
     {
-        storage = loadStorage(path(getSettings().dirs.mods) / DB_FILENAME);
+        storage = loadStorage(path(getSettings().dirs.mods.c_str()) / DB_FILENAME);
     }
     catch (std::exception &e)
     {
@@ -170,10 +170,10 @@ void Engine::postLoadStorage()
 SavedGames Engine::getSavedGames(bool save) const
 {
     SavedGames games;
-    path p = getSettings().dirs.saves;
+    path p = getSettings().dirs.saves.c_str();
     if (!fs::exists(p))
         return games;
-    for (auto &f : boost::make_iterator_range(fs::directory_iterator(p), {})) // non recursive
+    for (auto &f : fs::directory_iterator(p)) // non recursive
     {
         if (!fs::is_regular_file(f)) // filter files only
             continue;
@@ -197,7 +197,7 @@ void Engine::spawnCurrentPlayer()
 
 path SaveName2path(const String &fn)
 {
-    path p = path(getEngine()->getSettings().dirs.saves) / (fn + SAVEGAME_EXT);
+    path p = path(getEngine()->getSettings().dirs.saves.c_str()) / (fn + SAVEGAME_EXT);
     return p;
 }
 
@@ -224,11 +224,11 @@ bool Engine::_save(const String &fn) const
     bool e = fs::exists(p);
     auto old_p = p;
     if (e)
-        p = SaveName2path(fs::unique_path().string());
+        p = SaveName2path(unique_path().string());
     storage->save(p.string());
     if (e)
     {
-        fs::copy_file(p, old_p, fs::copy_option::overwrite_if_exists);
+        fs::copy_file(p, old_p, fs::copy_options::overwrite_existing);
         fs::remove(p);
     }
     return true;

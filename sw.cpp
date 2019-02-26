@@ -1,0 +1,118 @@
+#pragma sw require pub.egorpugin.primitives.filesystem-master
+#pragma sw require org.sw.sw.client.driver.cpp-*
+
+#include <iostream>
+
+void configure(Build &b)
+{
+    b.Settings.Native.LibrariesType = LibraryType::Static;
+    b.Settings.Native.ConfigurationType = ConfigurationType::ReleaseWithDebugInformation;
+
+    b.registerCallback([](auto &t)
+    {
+        auto &nt = dynamic_cast<NativeExecutedTarget&>(t);
+        nt += "DATA_MANAGER_ALIGNED_ALLOCATOR"_def;
+    }, "pub.lzwdgc.polygon4.datamanager.memory-master", CallbackType::BeginPrepare);
+
+    b.registerCallback([&b](auto &t, auto cbt)
+    {
+        if (cbt == CallbackType::CreateTarget)
+        {
+            if (t.pkg == PackageId{ "pub.lzwdgc.polygon4.datamanager.schema-master" } ||
+                t.pkg == PackageId{ "pub.lzwdgc.polygon4.datamanager-master" } ||
+                t.pkg == PackageId{ "Polygon4.Engine-master" })
+            {
+                //t.Settings.Native.LibrariesType = LibraryType::Shared;
+            }
+        }
+        else if (cbt == CallbackType::EndPrepare)
+        {
+            auto &nt = dynamic_cast<NativeExecutedTarget&>(t);
+
+            if (t.pkg == PackageId{ "Polygon4.Engine-master" })
+            {
+                String str;
+                for (auto &i : nt.gatherIncludeDirectories())
+                    str += i.u8string() + "\n";
+                write_file(b.BinaryDir / ("includes_" + toString(nt.getSolution()->Settings.Native.ConfigurationType) + ".txt"), str);
+            }
+
+            if (t.pkg == PackageId{ "Polygon4.Engine-master" })
+            {
+                String str;
+                for (auto &[k, v] : nt.Definitions)
+                {
+                    if (v.empty())
+                        str += k;
+                    else
+                        str += k + "=" + v;
+                    str += "\n";
+                }
+                write_file(b.BinaryDir / ("definitions_" + toString(nt.getSolution()->Settings.Native.ConfigurationType) + ".txt"), str);
+            }
+
+            if (t.pkg == PackageId{ "Polygon4.Engine-master" })
+            {
+                String str;
+                for (auto &l : nt.LinkLibraries)
+                {
+                    str += l.string();
+                    str += "\n";
+                }
+                write_file(b.BinaryDir / ("link_libraries_" + toString(nt.getSolution()->Settings.Native.ConfigurationType) + ".txt"), str);
+            }
+
+            if (t.pkg == PackageId{ "pub.lzwdgc.polygon4.datamanager.schema-master" })
+                write_file(b.BinaryDir / ("schema_" + toString(nt.getSolution()->Settings.Native.ConfigurationType) + ".txt"), nt.getImportLibrary().u8string());
+            if (t.pkg == PackageId{ "pub.lzwdgc.polygon4.datamanager-master" })
+                write_file(b.BinaryDir / ("data_manager_" + toString(nt.getSolution()->Settings.Native.ConfigurationType) + ".txt"), nt.getImportLibrary().u8string());
+            if (t.pkg.ppath == "org.sw.demo.sqlite3")
+                write_file(b.BinaryDir / ("sqlite3_" + toString(nt.getSolution()->Settings.Native.ConfigurationType) + ".txt"), nt.getImportLibrary().u8string());
+        }
+    });
+}
+
+void build(Solution &s)
+{
+    auto &Engine = s.addSharedLibrary("Polygon4.Engine", "master");
+
+    auto &logger = Engine.addStaticLibrary("logger");
+    logger.CPPVersion = CPPLanguageStandard::CPP17;
+    logger.setRootDirectory("src/tools");
+    logger += "Logger.*"_rr;
+    logger.Public += "org.sw.demo.boost.log-1"_dep;
+    logger.Public += "USE_LOGGER"_def;
+
+    Engine.ApiName = "P4_ENGINE_API";
+    Engine.CPPVersion = CPPLanguageStandard::CPP17;
+    Engine += "include/Polygon4/.*"_rr;
+    Engine += "src/.*"_r;
+    Engine += "src/tools/Hotpatch.*"_rr;
+
+    Engine.Public += logger,
+        "pub.egorpugin.primitives.command-master"_dep,
+        "pub.lzwdgc.polygon4.datamanager-master"_dep,
+        "org.sw.demo.lua-5"_dep
+        ;
+    Engine += "dbghelp.lib"_slib;
+
+    {
+        String prefix = "ScriptAPI";
+        auto c = Engine.addCommand();
+        c << "swig" //cmd::prog("org.sw.demo.swig-master"_dep)
+            << "-c++"
+            << "-lua"
+            << "-o"
+            << cmd::out(prefix + "_lua.cpp", cmd::Skip)
+            << cmd::in("src/" + prefix + ".i")
+            ;
+    }
+
+    auto &pdbfix = Engine.addExecutable("tools.pdbfix");
+    pdbfix += "src/Tools/PdbFix.cpp";
+    pdbfix += "dbghelp.lib"_slib;
+    pdbfix += "pub.egorpugin.primitives.filesystem-master"_dep;
+
+    auto &fixproject = Engine.addExecutable("tools.fixproject");
+    fixproject += "src/Tools/FixProject.cpp";
+}

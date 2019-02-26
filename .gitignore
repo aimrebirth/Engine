@@ -2,3 +2,7 @@ win*
 lib
 x64
 /.cppan
+.sw
+*.sln
+*.lnk
+bin

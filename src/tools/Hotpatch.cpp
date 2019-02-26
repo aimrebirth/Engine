@@ -1,3 +1,8 @@
+#include <Polygon4/Hotpatch.h>
+#include "Hotpatch.h"
+
+#include <primitives/command.h>
+
 #include <fstream>
 #include <map>
 #include <set>
@@ -9,15 +14,8 @@
 #include <Psapi.h>
 #include <Dbghelp.h>
 
-#include <boost/filesystem.hpp>
-
-#include <Polygon4/Hotpatch.h>
-#include "Hotpatch.h"
-
 #include "Logger.h"
 DECLARE_STATIC_LOGGER(logger, "hotpatch");
-
-std::string find_executable_in_path(const std::string &file, std::string path = "");
 
 namespace polygon4
 {
@@ -57,9 +55,9 @@ String read_ver_module_filename_store()
     return make_temp_filename(hotpatch_ver_filename);
 }
 
-std::string convert_time(time_t time)
+std::string convert_time(long long time)
 {
-    if (time <= 0)
+    //if (time <= 0)
         return std::string();
     const int sz = 50;
     char buf[sz] = { 0 };
@@ -74,12 +72,10 @@ std::string convert_time(time_t time)
 
 void write_module_last_write_time(String game_dir, String module_name)
 {
-    using namespace boost::filesystem;
+    error_code ec;
 
-    boost::system::error_code ec;
-
-    path base = path(game_dir).normalize();
-    path dll = base / "ThirdParty" / module_name / "win64" / "bin" / "RelWithDebInfo";
+    path base = path(game_dir.toString()).lexically_normal();
+    path dll = base / "ThirdParty" / module_name.toString() / "win64" / "bin" / "RelWithDebInfo";
 
     const std::string base_name = "Engine.";
     const std::string ext_dll = "dll";
@@ -99,26 +95,24 @@ void write_module_last_write_time(String game_dir, String module_name)
         return;
     }
 
-    auto lwt = last_write_time(old_module, ec);
+    auto lwt = fs::last_write_time(old_module, ec).time_since_epoch().count();
 
     LOG_DEBUG(logger, "last_write_time    : " << convert_time(lwt) << " " << lwt);
 
     std::ofstream ofile_ver(read_ver_module_filename_store());
     if (ofile_ver)
-        ofile_ver << last_write_time(old_module, ec);
+        ofile_ver << fs::last_write_time(old_module, ec).time_since_epoch().count();
 }
 
 String prepare_module_for_hotload(String game_dir, String module_name)
 {
-    using namespace boost::filesystem;
+    error_code ec;
 
-    boost::system::error_code ec;
-
-    path base = path(game_dir).normalize();
+    path base = path(game_dir.toString()).lexically_normal();
     path bin = base / "Binaries" / "Win64";
-    path dll = base / "ThirdParty" / module_name / "win64" / "bin" / "RelWithDebInfo";
+    path dll = base / "ThirdParty" / module_name.toString() / "win64" / "bin" / "RelWithDebInfo";
     std::string win64dir = "win64";
-    path win64 = base / "ThirdParty" / module_name / win64dir;
+    path win64 = base / "ThirdParty" / module_name.toString() / win64dir;
     path project = win64 / "src" / "Engine.vcxproj.user";
     path pdbfix = dll / "pdbfix.exe";
     path fixproject = dll / "fixproject.exe";
@@ -145,18 +139,18 @@ String prepare_module_for_hotload(String game_dir, String module_name)
     LOG_DEBUG(logger, "Checking if module has not changed");
     LOG_DEBUG(logger, "Module: " << main_module_dll.string());
 
-    auto lwt = last_write_time(main_module_dll, ec);
+    auto lwt = fs::last_write_time(main_module_dll, ec).time_since_epoch().count();
     auto lwt_old = read_ver_module_filename();
 
     LOG_DEBUG(logger, "last_write_time    : " << convert_time(lwt) << " " << lwt);
-    LOG_DEBUG(logger, "last_write_time old: " << convert_time(stoi(lwt_old)) << " " << lwt_old);
+    LOG_DEBUG(logger, "last_write_time old: " << convert_time(stoll(lwt_old)) << " " << lwt_old);
 
     if (ec)
     {
         LOG_DEBUG(logger, "Error occured: " << ec.message());
         return L"";
     }
-    if (std::stoi(lwt_old) >= lwt || lwt == -1)
+    if (std::stoll(lwt_old) >= lwt || lwt == 0)
     {
         LOG_DEBUG(logger, "Old module! Nothing to patch...");
         return L"";
@@ -176,7 +170,7 @@ String prepare_module_for_hotload(String game_dir, String module_name)
         int current_i = i++;
         result          = bin / (apply_index(base_name, current_i) + ext_dll);
         path result_pdb = bin / (apply_index(base_name, current_i) + ext_pdb);
-        copy_file(main_module_dll, result, copy_option::overwrite_if_exists, ec);
+        fs::copy_file(main_module_dll, result, fs::copy_options::overwrite_existing, ec);
         if (ec)
         {
             LOG_DEBUG(logger, "dst dll is busy: " << result.string());
@@ -209,20 +203,20 @@ String prepare_module_for_hotload(String game_dir, String module_name)
             GetExitCodeProcess(pi.hProcess, &rc);
             LOG_DEBUG(logger, "fix project rc: " << rc);
         }
-        // cmake build: get new dll with number in name
+        // sw build: get new dll with number in name
         {
-            std::string cmake = find_executable_in_path("cmake");
+            auto sw = primitives::resolve_executable("sw").string();
             std::string cmd;
-            cmd += "cmake --build \"" + win64.string() + "\" --config RelWithDebInfo";
-            LOG_DEBUG(logger, "cmake exe: " << cmake);
-            LOG_DEBUG(logger, "cmake cmd: " << cmd);
+            cmd += "sw -d \"" + win64.parent_path().string() + "\" --config RelWithDebInfo build";
+            LOG_DEBUG(logger, "sw exe: " << sw);
+            LOG_DEBUG(logger, "sw cmd: " << cmd);
             STARTUPINFO si = { 0 };
             PROCESS_INFORMATION pi = { 0 };
-            CreateProcess(cmake.c_str(), (char *)cmd.c_str(), 0, 0, TRUE, CREATE_NO_WINDOW, 0, 0, &si, &pi);
+            CreateProcess(sw.c_str(), (char *)cmd.c_str(), 0, 0, TRUE, CREATE_NO_WINDOW, 0, 0, &si, &pi);
             WaitForSingleObject(pi.hProcess, INFINITE);
             DWORD rc = 0;
             GetExitCodeProcess(pi.hProcess, &rc);
-            LOG_DEBUG(logger, "cmake rc: " << rc);
+            LOG_DEBUG(logger, "sw rc: " << rc);
         }
         // fix pdb: in new dll
         {
@@ -240,13 +234,13 @@ String prepare_module_for_hotload(String game_dir, String module_name)
         }
 
         // copy FIXED dll and NEW pdb
-        copy_file(dll / (apply_index(base_name, current_i) + ext_dll), result, copy_option::overwrite_if_exists, ec);
-        copy_file(dll / (apply_index(base_name, current_i) + ext_pdb), result_pdb, copy_option::overwrite_if_exists, ec);
+        fs::copy_file(dll / (apply_index(base_name, current_i) + ext_dll), result, fs::copy_options::overwrite_existing, ec);
+        fs::copy_file(dll / (apply_index(base_name, current_i) + ext_pdb), result_pdb, fs::copy_options::overwrite_existing, ec);
 
         // should be after dll fix and copy
         std::ofstream ofile_ver(read_ver_module_filename_store());
         if (ofile_ver)
-            ofile_ver << last_write_time(result, ec);
+            ofile_ver << fs::last_write_time(result, ec).time_since_epoch().count();
 
         break;
     }
@@ -255,29 +249,6 @@ String prepare_module_for_hotload(String game_dir, String module_name)
     return result.wstring();
 }
 
-}
-
-std::string find_executable_in_path(const std::string &file, std::string path)
-{
-    BOOST_ASSERT(file.find_first_of("\\/") == std::string::npos);
-
-    std::string result;
-    const char *exts[] = { "", ".exe", ".com", ".bat", NULL };
-    const char **ext = exts;
-    while (*ext)
-    {
-        char buf[MAX_PATH];
-        char *dummy;
-        DWORD size = ::SearchPathA(path.empty() ? NULL : path.c_str(), file.c_str(), *ext, MAX_PATH, buf, &dummy);
-        BOOST_ASSERT(size < MAX_PATH);
-        if (size > 0)
-        {
-            result = buf;
-            break;
-        }
-        ++ext;
-    }
-    return result;
 }
 
 std::string &getUe4ModuleName()
@@ -486,9 +457,9 @@ void patch_import_table()
 {
     DWORD ulSize;
 
-    const std::string orig_dll = boost::filesystem::path(read_orig_module_filename()).filename().string();
-    const std::string old_dll = boost::filesystem::path(read_old_module_filename()).filename().string();
-    const std::string new_dll = boost::filesystem::path(read_new_module_filename()).filename().string();
+    const std::string orig_dll = path(read_orig_module_filename()).filename().string();
+    const std::string old_dll = path(read_old_module_filename()).filename().string();
+    const std::string new_dll = path(read_new_module_filename()).filename().string();
 
     LOG_TRACE(logger, "orig_dll: " << orig_dll);
     LOG_TRACE(logger, "old_dll: " << old_dll);
@@ -586,7 +557,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 
             char filename[MAX_PATH] = { 0 };
             GetModuleFileName(hinstDLL, filename, MAX_PATH);
-            auto p = boost::filesystem::path(filename);
+            auto p = path(filename);
             p = p.parent_path() / p.stem();
             LOGGER_CONFIGURE("Debug", p.string());
 
