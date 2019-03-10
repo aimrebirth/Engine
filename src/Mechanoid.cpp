@@ -163,6 +163,12 @@ void Mechanoid::enterBuilding(detail::MapBuilding *bld)
     bm->refresh();
     e->ShowBuildingMenu();
 
+    // workaround
+    {
+        static Executor e;
+        getExecutor(&e);
+    }
+
     // do async save to not freeze the game
     // the ideal algorithm here is:
     // 1. freeze the game

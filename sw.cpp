@@ -65,6 +65,31 @@ void configure(Build &b)
                 write_file(b.BinaryDir / ("link_libraries_" + toString(nt.getSolution()->Settings.Native.ConfigurationType) + ".txt"), str);
             }
 
+            if (t.pkg == PackageId{ "Polygon4.Engine-master" })
+            {
+                auto tgt = nt.SourceDir.parent_path().parent_path() / "Binaries" / "Win64";
+                if (1
+                    && nt.SourceDir.filename() == "Engine"
+                    && nt.SourceDir.parent_path().filename() == "ThirdParty"
+                    && fs::exists(tgt)
+                    )
+                {
+                    auto in = nt.getOutputFile();
+                    auto out = tgt / in.filename();
+
+                    SW_MAKE_EXECUTE_BUILTIN_COMMAND_AND_ADD(copy_cmd, nt, "sw_copy_file");
+                    copy_cmd->args.push_back(in.u8string());
+                    copy_cmd->args.push_back(out.u8string());
+                    copy_cmd->addInput(in);
+                    copy_cmd->addOutput(out);
+                    copy_cmd->name = "copy: " + normalize_path(out);
+                    copy_cmd->maybe_unused = builder::Command::MU_ALWAYS;
+                    copy_cmd->command_storage = builder::Command::CS_LOCAL;
+                    copy_cmd->dependencies.insert(nt.getCommand());
+                    nt.getCommand()->dependent_commands.insert(copy_cmd);
+                }
+            }
+
             if (t.pkg == PackageId{ "pub.lzwdgc.polygon4.datamanager.schema-master" })
                 write_file(b.BinaryDir / ("schema_" + toString(nt.getSolution()->Settings.Native.ConfigurationType) + ".txt"), nt.getImportLibrary().u8string());
             if (t.pkg == PackageId{ "pub.lzwdgc.polygon4.datamanager-master" })
