@@ -12,11 +12,11 @@ void configure(Build &b)
     {
         auto &nt = dynamic_cast<NativeExecutedTarget&>(t);
         nt += "DATA_MANAGER_ALIGNED_ALLOCATOR"_def;
-    }, "pub.lzwdgc.polygon4.datamanager.memory-master", CallbackType::BeginPrepare);
+    }, "pub.lzwdgc.polygon4.datamanager.memory-master", sw::CallbackType::BeginPrepare);
 
     b.registerCallback([&b](auto &t, auto cbt)
     {
-        if (cbt == CallbackType::CreateTarget)
+        if (cbt == sw::CallbackType::CreateTarget)
         {
             if (t.pkg == PackageId{ "pub.lzwdgc.polygon4.datamanager.schema-master" } ||
                 t.pkg == PackageId{ "pub.lzwdgc.polygon4.datamanager-master" } ||
@@ -25,7 +25,7 @@ void configure(Build &b)
                 //t.Settings.Native.LibrariesType = LibraryType::Shared;
             }
         }
-        else if (cbt == CallbackType::EndPrepare)
+        else if (cbt == sw::CallbackType::EndPrepare)
         {
             auto &nt = dynamic_cast<NativeExecutedTarget&>(t);
 
@@ -45,7 +45,10 @@ void configure(Build &b)
                     if (v.empty())
                         str += k;
                     else
-                        str += k + "=" + v;
+                    {
+                        str += k + "=";
+                        str += v; // msvc bug workaround
+                    }
                     str += "\n";
                 }
                 write_file(b.BinaryDir / ("definitions_" + toString(nt.getSolution()->Settings.Native.ConfigurationType) + ".txt"), str);
@@ -90,6 +93,7 @@ void build(Solution &s)
     Engine += "src/tools/Hotpatch.*"_rr;
 
     Engine.Public += logger,
+        "pub.egorpugin.primitives.executor-master"_dep,
         "pub.egorpugin.primitives.command-master"_dep,
         "pub.lzwdgc.polygon4.datamanager-master"_dep,
         "org.sw.demo.lua-5"_dep

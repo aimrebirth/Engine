@@ -18,15 +18,15 @@
 
 #include <Polygon4/Mechanoid.h>
 
-#include <regex>
+#include "Script.h"
 
 #include <Polygon4/BuildingMenu.h>
 #include <Polygon4/Configuration.h>
 #include <Polygon4/ConfigurationWeapon.h>
 #include <Polygon4/Engine.h>
+#include <primitives/executor.h>
 
-#include "Executor.h"
-#include "Script.h"
+#include <regex>
 
 #include <tools/Logger.h>
 DECLARE_STATIC_LOGGER(logger, "mechanoid");
@@ -167,7 +167,7 @@ void Mechanoid::enterBuilding(detail::MapBuilding *bld)
     // the ideal algorithm here is:
     // 1. freeze the game
     // 2. async({ save(); unfreeze(); });
-    getTaskExecutor().push([e]()
+    getExecutor().push([e]()
     {
         e->saveAuto();
     });
