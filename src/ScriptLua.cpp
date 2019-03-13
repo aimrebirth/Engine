@@ -18,8 +18,6 @@
 
 #include "ScriptLua.h"
 
-#include <Polygon4/DataManager/Exception.h>
-
 #include <lua.hpp>
 
 #include <ScriptAPI_lua.cpp>
