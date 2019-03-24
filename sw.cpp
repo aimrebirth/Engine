@@ -1,8 +1,6 @@
 #pragma sw require pub.egorpugin.primitives.filesystem-master
 #pragma sw require org.sw.sw.client.driver.cpp-*
 
-#include <iostream>
-
 void configure(Build &b)
 {
     b.Settings.Native.LibrariesType = LibraryType::Static;
@@ -128,7 +126,7 @@ void build(Solution &s)
     {
         String prefix = "ScriptAPI";
         auto c = Engine.addCommand();
-        c << "swig" //cmd::prog("org.sw.demo.swig-master"_dep)
+        c << cmd::prog("org.sw.demo.swig-master"_dep)
             << "-c++"
             << "-lua"
             << "-o"

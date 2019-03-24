@@ -1,6 +1,0 @@
-local_settings:
-    dependencies:
-        - pvt.cppan.demo.lua: 5
-        - pvt.lzwdgc.polygon4.data_manager.data_manager: master
-        #- pvt.cppan.demo.intel.tbb.tbbmalloc_proxy: "*"
-
