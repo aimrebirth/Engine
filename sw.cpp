@@ -16,9 +16,9 @@ void configure(Build &b)
     {
         if (cbt == sw::CallbackType::CreateTarget)
         {
-            if (t.pkg == PackageId{ "pub.lzwdgc.polygon4.datamanager.schema-master" } ||
-                t.pkg == PackageId{ "pub.lzwdgc.polygon4.datamanager-master" } ||
-                t.pkg == PackageId{ "Polygon4.Engine-master" })
+            if (t.getPackage() == PackageId{ "pub.lzwdgc.polygon4.datamanager.schema-master" } ||
+                t.getPackage() == PackageId{ "pub.lzwdgc.polygon4.datamanager-master" } ||
+                t.getPackage() == PackageId{ "Polygon4.Engine-master" })
             {
                 //t.Settings.Native.LibrariesType = LibraryType::Shared;
             }
@@ -27,7 +27,7 @@ void configure(Build &b)
         {
             auto &nt = dynamic_cast<NativeExecutedTarget&>(t);
 
-            if (t.pkg == PackageId{ "Polygon4.Engine-master" })
+            if (t.getPackage() == PackageId{ "Polygon4.Engine-master" })
             {
                 String str;
                 for (auto &i : nt.gatherIncludeDirectories())
@@ -35,7 +35,7 @@ void configure(Build &b)
                 write_file(b.BinaryDir / ("includes_" + toString(nt.getSolution()->Settings.Native.ConfigurationType) + ".txt"), str);
             }
 
-            if (t.pkg == PackageId{ "Polygon4.Engine-master" })
+            if (t.getPackage() == PackageId{ "Polygon4.Engine-master" })
             {
                 String str;
                 for (auto &[k, v] : nt.Definitions)
@@ -52,7 +52,7 @@ void configure(Build &b)
                 write_file(b.BinaryDir / ("definitions_" + toString(nt.getSolution()->Settings.Native.ConfigurationType) + ".txt"), str);
             }
 
-            if (t.pkg == PackageId{ "Polygon4.Engine-master" })
+            if (t.getPackage() == PackageId{ "Polygon4.Engine-master" })
             {
                 String str;
                 for (auto &l : nt.LinkLibraries)
@@ -63,7 +63,7 @@ void configure(Build &b)
                 write_file(b.BinaryDir / ("link_libraries_" + toString(nt.getSolution()->Settings.Native.ConfigurationType) + ".txt"), str);
             }
 
-            if (t.pkg == PackageId{ "Polygon4.Engine-master" })
+            if (t.getPackage() == PackageId{ "Polygon4.Engine-master" })
             {
                 auto tgt = nt.SourceDir.parent_path().parent_path() / "Binaries" / "Win64";
                 if (1
@@ -88,11 +88,11 @@ void configure(Build &b)
                 }
             }
 
-            if (t.pkg == PackageId{ "pub.lzwdgc.polygon4.datamanager.schema-master" })
+            if (t.getPackage() == PackageId{ "pub.lzwdgc.polygon4.datamanager.schema-master" })
                 write_file(b.BinaryDir / ("schema_" + toString(nt.getSolution()->Settings.Native.ConfigurationType) + ".txt"), nt.getImportLibrary().u8string());
-            if (t.pkg == PackageId{ "pub.lzwdgc.polygon4.datamanager-master" })
+            if (t.getPackage() == PackageId{ "pub.lzwdgc.polygon4.datamanager-master" })
                 write_file(b.BinaryDir / ("data_manager_" + toString(nt.getSolution()->Settings.Native.ConfigurationType) + ".txt"), nt.getImportLibrary().u8string());
-            if (t.pkg.ppath == "org.sw.demo.sqlite3")
+            if (t.getPackage().ppath == "org.sw.demo.sqlite3")
                 write_file(b.BinaryDir / ("sqlite3_" + toString(nt.getSolution()->Settings.Native.ConfigurationType) + ".txt"), nt.getImportLibrary().u8string());
         }
     });
