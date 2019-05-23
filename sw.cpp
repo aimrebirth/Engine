@@ -3,8 +3,10 @@
 
 void configure(Build &b)
 {
-    b.Settings.Native.LibrariesType = LibraryType::Static;
-    b.Settings.Native.ConfigurationType = ConfigurationType::ReleaseWithDebugInformation;
+    auto ss = b.createSettings();
+    ss.Native.LibrariesType = LibraryType::Static;
+    ss.Native.ConfigurationType = ConfigurationType::ReleaseWithDebugInformation;
+    b.addSettings(ss);
 
     b.registerCallback([](auto &t)
     {
@@ -32,7 +34,7 @@ void configure(Build &b)
                 String str;
                 for (auto &i : nt.gatherIncludeDirectories())
                     str += i.u8string() + "\n";
-                write_file(b.BinaryDir / ("includes_" + toString(nt.getSolution()->Settings.Native.ConfigurationType) + ".txt"), str);
+                write_file(b.BinaryDir / ("includes_" + toString(nt.getSettings().Native.ConfigurationType) + ".txt"), str);
             }
 
             if (t.getPackage() == PackageId{ "Polygon4.Engine-master" })
@@ -49,7 +51,7 @@ void configure(Build &b)
                     }
                     str += "\n";
                 }
-                write_file(b.BinaryDir / ("definitions_" + toString(nt.getSolution()->Settings.Native.ConfigurationType) + ".txt"), str);
+                write_file(b.BinaryDir / ("definitions_" + toString(nt.getSettings().Native.ConfigurationType) + ".txt"), str);
             }
 
             if (t.getPackage() == PackageId{ "Polygon4.Engine-master" })
@@ -60,7 +62,7 @@ void configure(Build &b)
                     str += l.string();
                     str += "\n";
                 }
-                write_file(b.BinaryDir / ("link_libraries_" + toString(nt.getSolution()->Settings.Native.ConfigurationType) + ".txt"), str);
+                write_file(b.BinaryDir / ("link_libraries_" + toString(nt.getSettings().Native.ConfigurationType) + ".txt"), str);
             }
 
             if (t.getPackage() == PackageId{ "Polygon4.Engine-master" })
@@ -89,11 +91,11 @@ void configure(Build &b)
             }
 
             if (t.getPackage() == PackageId{ "pub.lzwdgc.polygon4.datamanager.schema-master" })
-                write_file(b.BinaryDir / ("schema_" + toString(nt.getSolution()->Settings.Native.ConfigurationType) + ".txt"), nt.getImportLibrary().u8string());
+                write_file(b.BinaryDir / ("schema_" + toString(nt.getSettings().Native.ConfigurationType) + ".txt"), nt.getImportLibrary().u8string());
             if (t.getPackage() == PackageId{ "pub.lzwdgc.polygon4.datamanager-master" })
-                write_file(b.BinaryDir / ("data_manager_" + toString(nt.getSolution()->Settings.Native.ConfigurationType) + ".txt"), nt.getImportLibrary().u8string());
+                write_file(b.BinaryDir / ("data_manager_" + toString(nt.getSettings().Native.ConfigurationType) + ".txt"), nt.getImportLibrary().u8string());
             if (t.getPackage().ppath == "org.sw.demo.sqlite3")
-                write_file(b.BinaryDir / ("sqlite3_" + toString(nt.getSolution()->Settings.Native.ConfigurationType) + ".txt"), nt.getImportLibrary().u8string());
+                write_file(b.BinaryDir / ("sqlite3_" + toString(nt.getSettings().Native.ConfigurationType) + ".txt"), nt.getImportLibrary().u8string());
         }
     });
 }
@@ -126,7 +128,7 @@ void build(Solution &s)
     {
         String prefix = "ScriptAPI";
         auto c = Engine.addCommand();
-        c << cmd::prog("org.sw.demo.swig-master"_dep)
+        c << cmd::prog("org.sw.demo.swig"_dep)
             << "-c++"
             << "-lua"
             << "-o"
