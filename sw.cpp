@@ -88,6 +88,8 @@ void configure(Build &b)
                     copy_cmd->dependencies.insert(nt.getCommand());
                     nt.getCommand()->dependent_commands.insert(copy_cmd);
                 }
+
+                write_file(b.BinaryDir / ("engine_" + toString(nt.getSettings().Native.ConfigurationType) + ".txt"), nt.getImportLibrary().u8string());
             }
 
             if (t.getPackage() == PackageId{ "pub.lzwdgc.polygon4.datamanager.schema-master" })
