@@ -77,7 +77,7 @@ void configure(Build &b)
                     auto in = nt.getOutputFile();
                     auto out = tgt / in.filename();
 
-                    SW_MAKE_EXECUTE_BUILTIN_COMMAND_AND_ADD(copy_cmd, nt, "sw_copy_file");
+                    SW_MAKE_EXECUTE_BUILTIN_COMMAND_AND_ADD(copy_cmd, nt, "sw_copy_file", nullptr);
                     copy_cmd->args.push_back(in.u8string());
                     copy_cmd->args.push_back(out.u8string());
                     copy_cmd->addInput(in);
