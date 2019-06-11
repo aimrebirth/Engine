@@ -78,8 +78,8 @@ void configure(Build &b)
                     auto out = tgt / in.filename();
 
                     SW_MAKE_EXECUTE_BUILTIN_COMMAND_AND_ADD(copy_cmd, nt, "sw_copy_file", nullptr);
-                    copy_cmd->args.push_back(in.u8string());
-                    copy_cmd->args.push_back(out.u8string());
+                    copy_cmd->push_back(in.u8string());
+                    copy_cmd->push_back(out.u8string());
                     copy_cmd->addInput(in);
                     copy_cmd->addOutput(out);
                     copy_cmd->name = "copy: " + normalize_path(out);
