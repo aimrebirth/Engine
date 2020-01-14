@@ -1,112 +1,7 @@
-#pragma sw require pub.egorpugin.primitives.filesystem-master
-#pragma sw require org.sw.sw.client.driver.cpp-*
-
-void configure(Build &b)
-{
-#ifndef SW_CPP_DRIVER_API_VERSION
-    auto ss = b.createSettings();
-    ss.Native.LibrariesType = LibraryType::Static;
-    ss.Native.ConfigurationType = ConfigurationType::ReleaseWithDebugInformation;
-    b.addSettings(ss);
-
-    b.registerCallback([](auto &t)
-    {
-        auto &nt = dynamic_cast<NativeExecutedTarget&>(t);
-        nt += "DATA_MANAGER_ALIGNED_ALLOCATOR"_def;
-    }, "pub.lzwdgc.polygon4.datamanager.memory-master", sw::CallbackType::BeginPrepare);
-
-    b.registerCallback([&b](auto &t, auto cbt)
-    {
-        if (cbt == sw::CallbackType::CreateTarget)
-        {
-            if (t.getPackage() == PackageId{ "pub.lzwdgc.polygon4.datamanager.schema-master" } ||
-                t.getPackage() == PackageId{ "pub.lzwdgc.polygon4.datamanager-master" } ||
-                t.getPackage() == PackageId{ "Polygon4.Engine-master" })
-            {
-                //t.Settings.Native.LibrariesType = LibraryType::Shared;
-            }
-        }
-        else if (cbt == sw::CallbackType::EndPrepare)
-        {
-            auto &nt = dynamic_cast<NativeExecutedTarget&>(t);
-
-            if (t.getPackage() == PackageId{ "Polygon4.Engine-master" })
-            {
-                String str;
-                for (auto &i : nt.gatherIncludeDirectories())
-                    str += i.u8string() + "\n";
-                write_file(b.BinaryDir / ("includes_" + toString(nt.getSettings().Native.ConfigurationType) + ".txt"), str);
-            }
-
-            if (t.getPackage() == PackageId{ "Polygon4.Engine-master" })
-            {
-                String str;
-                for (auto &[k, v] : nt.Definitions)
-                {
-                    if (v.empty())
-                        str += k;
-                    else
-                    {
-                        str += k + "=";
-                        str += v; // msvc bug workaround
-                    }
-                    str += "\n";
-                }
-                write_file(b.BinaryDir / ("definitions_" + toString(nt.getSettings().Native.ConfigurationType) + ".txt"), str);
-            }
-
-            if (t.getPackage() == PackageId{ "Polygon4.Engine-master" })
-            {
-                String str;
-                for (auto &l : nt.LinkLibraries)
-                {
-                    str += l.string();
-                    str += "\n";
-                }
-                write_file(b.BinaryDir / ("link_libraries_" + toString(nt.getSettings().Native.ConfigurationType) + ".txt"), str);
-            }
-
-            if (t.getPackage() == PackageId{ "Polygon4.Engine-master" })
-            {
-                auto tgt = nt.SourceDir.parent_path().parent_path() / "Binaries" / "Win64";
-                if (1
-                    && nt.SourceDir.filename() == "Engine"
-                    && nt.SourceDir.parent_path().filename() == "ThirdParty"
-                    && fs::exists(tgt)
-                    )
-                {
-                    auto in = nt.getOutputFile();
-                    auto out = tgt / in.filename();
-
-                    SW_MAKE_EXECUTE_BUILTIN_COMMAND_AND_ADD(copy_cmd, nt, "sw_copy_file", nullptr);
-                    copy_cmd->push_back(in.u8string());
-                    copy_cmd->push_back(out.u8string());
-                    copy_cmd->addInput(in);
-                    copy_cmd->addOutput(out);
-                    copy_cmd->name = "copy: " + normalize_path(out);
-                    copy_cmd->maybe_unused = builder::Command::MU_ALWAYS;
-                    copy_cmd->command_storage = builder::Command::CS_LOCAL;
-                    copy_cmd->dependencies.insert(nt.getCommand());
-                    nt.getCommand()->dependent_commands.insert(copy_cmd);
-                }
-
-                write_file(b.BinaryDir / ("engine_" + toString(nt.getSettings().Native.ConfigurationType) + ".txt"), nt.getImportLibrary().u8string());
-            }
-
-            if (t.getPackage() == PackageId{ "pub.lzwdgc.polygon4.datamanager.schema-master" })
-                write_file(b.BinaryDir / ("schema_" + toString(nt.getSettings().Native.ConfigurationType) + ".txt"), nt.getImportLibrary().u8string());
-            if (t.getPackage() == PackageId{ "pub.lzwdgc.polygon4.datamanager-master" })
-                write_file(b.BinaryDir / ("data_manager_" + toString(nt.getSettings().Native.ConfigurationType) + ".txt"), nt.getImportLibrary().u8string());
-            if (t.getPackage().ppath == "org.sw.demo.sqlite3")
-                write_file(b.BinaryDir / ("sqlite3_" + toString(nt.getSettings().Native.ConfigurationType) + ".txt"), nt.getImportLibrary().u8string());
-        }
-    });
-#endif
-}
-
 void build(Solution &s)
 {
-    auto &Engine = s.addSharedLibrary("Polygon4.Engine", "master");
+    auto &Engine = s.addLibrary("Polygon4.Engine", "master");
+    //auto &Engine = s.addSharedLibrary("Polygon4.Engine", "master");
 
     auto &logger = Engine.addStaticLibrary("logger");
     {
@@ -125,8 +20,8 @@ void build(Solution &s)
         Engine += "src/tools/Hotpatch.*"_rr;
 
         auto d = Engine.Public + "pub.lzwdgc.polygon4.datamanager.memory-master"_dep;
-        d->getOptions()["alligned-allocator"] = "1";
-        d->getOptions()["alligned-allocator"].setRequired();
+        //d->getOptions()["alligned-allocator"] = "1";
+        //d->getOptions()["alligned-allocator"].setRequired();
 
         Engine.Public += logger,
             "pub.egorpugin.primitives.executor-master"_dep,
@@ -150,10 +45,18 @@ void build(Solution &s)
     }
 
     auto &pdbfix = Engine.addExecutable("tools.pdbfix");
-    pdbfix += "src/Tools/PdbFix.cpp";
+    pdbfix += "src/tools/PdbFix.cpp";
     pdbfix += "dbghelp.lib"_slib;
     pdbfix += "pub.egorpugin.primitives.filesystem-master"_dep;
 
     auto &fixproject = Engine.addExecutable("tools.fixproject");
-    fixproject += "src/Tools/FixProject.cpp";
+    fixproject += "src/tools/FixProject.cpp";
+
+    auto &prepare_sw_info = Engine.addExecutable("tools.prepare_sw_info", "0.0.1");
+    {
+        prepare_sw_info += cpp17;
+        prepare_sw_info += "src/tools/prepare_sw_info.cpp";
+        prepare_sw_info += "pub.egorpugin.primitives.sw.main-master"_dep;
+        prepare_sw_info += "org.sw.demo.nlohmann.json"_dep;
+    }
 }
