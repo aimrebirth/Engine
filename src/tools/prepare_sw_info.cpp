@@ -49,6 +49,8 @@ int main(int argc, char **argv)
         }
         for (auto &v : j2["include_directories"])
             idirs.push_back(v.get<String>());
+        for (auto &v : j2["system_link_libraries"])
+            libs.push_back(v.get<String>());
         for (auto &[k,v] : j2["dependencies"]["link"].items())
         {
             for (auto &v2 : j["build"][k])
