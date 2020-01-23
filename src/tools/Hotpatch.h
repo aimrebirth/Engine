@@ -1,8 +1,11 @@
 #pragma once
 
+#include <fstream>
 #include <string>
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
+namespace fs = std::filesystem;
+using path = fs::path;
 
 #define hotpatch_base_filename  "polygon4.engine.dll"
 #define hotpatch_pid_filename   hotpatch_base_filename ".pid"
@@ -11,12 +14,12 @@
 #define hotpatch_new_filename   hotpatch_base_filename ".new"
 #define hotpatch_ver_filename   hotpatch_base_filename ".ver"
 
-inline std::string make_temp_filename(const std::string &filename)
+inline path make_temp_filename(const path &filename)
 {
-    return (boost::filesystem::temp_directory_path() / filename).string();
+    return fs::temp_directory_path() / filename;
 }
 
-inline std::string read_file_in_temp(const std::string &filename)
+inline std::string read_file_in_temp(const path &filename)
 {
     auto temp = make_temp_filename(filename);
     std::ifstream ifile(temp);
@@ -27,25 +30,25 @@ inline std::string read_file_in_temp(const std::string &filename)
     return fn;
 }
 
-inline std::string read_orig_module_filename()
+inline path read_orig_module_filename()
 {
     return read_file_in_temp(hotpatch_orig_filename);
 }
 
-inline std::string read_old_module_filename()
+inline path read_old_module_filename()
 {
     return read_file_in_temp(hotpatch_old_filename);
 }
 
-inline std::string read_new_module_filename()
+inline path read_new_module_filename()
 {
     return read_file_in_temp(hotpatch_new_filename);
 }
 
-inline std::string read_ver_module_filename()
+inline path read_ver_module_filename()
 {
     return read_file_in_temp(hotpatch_ver_filename);
 }
 
-std::string &getUe4ModuleName();
+path &getUe4ModuleName();
 void *loadSymbol(const char *symbol);

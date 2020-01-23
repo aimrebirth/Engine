@@ -45,9 +45,12 @@ void build(Solution &s)
     }
 
     auto &pdbfix = Engine.addExecutable("tools.pdbfix");
-    pdbfix += "src/tools/PdbFix.cpp";
-    pdbfix += "dbghelp.lib"_slib;
-    pdbfix += "pub.egorpugin.primitives.filesystem-master"_dep;
+    {
+        pdbfix += cpp17;
+        pdbfix += "src/tools/PdbFix.cpp";
+        pdbfix += "dbghelp.lib"_slib;
+        pdbfix += "pub.egorpugin.primitives.filesystem-master"_dep;
+    }
 
     auto &fixproject = Engine.addExecutable("tools.fixproject");
     fixproject += "src/tools/FixProject.cpp";

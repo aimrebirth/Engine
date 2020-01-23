@@ -197,7 +197,7 @@ void Engine::spawnCurrentPlayer()
 
 path SaveName2path(const String &fn)
 {
-    path p = path(getEngine()->getSettings().dirs.saves.c_str()) / (fn + SAVEGAME_EXT);
+    path p = path(getEngine()->getSettings().dirs.saves.c_str()) / ((std::string)fn + SAVEGAME_EXT);
     return p;
 }
 

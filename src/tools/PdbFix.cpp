@@ -1,10 +1,10 @@
+#include <filesystem>
+
 #include <stdio.h>
 
 #include <Windows.h>
 #include <Psapi.h>
 #include <Dbghelp.h>
-
-#include <boost/filesystem.hpp>
 
 int main(int argc, char *argv[])
 {
@@ -13,12 +13,12 @@ int main(int argc, char *argv[])
         printf("Usage: %s file.dll", argv[0]);
         return 1;
     }
-    
+
     DWORD ulSize;
 
-    boost::filesystem::path p(argv[1]);
-    boost::system::error_code ec;
-    uint64_t size = boost::filesystem::file_size(p, ec);
+    std::filesystem::path p(argv[1]);
+    std::error_code ec;
+    uint64_t size = std::filesystem::file_size(p, ec);
     if (ec)
         return 2;
     FILE *f = fopen(argv[1], "rb");

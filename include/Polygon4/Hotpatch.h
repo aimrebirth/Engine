@@ -18,7 +18,9 @@
 
 #pragma once
 
-#include <string>
+#include <filesystem>
+namespace fs = std::filesystem;
+using path = fs::path;
 
 #include <Polygon4/DataManager/String.h>
 
@@ -26,30 +28,30 @@ namespace polygon4
 {
 
 P4_ENGINE_API
-String read_orig_module_filename();
+path read_orig_module_filename();
 
 P4_ENGINE_API
-String read_old_module_filename();
+path read_old_module_filename();
 
 P4_ENGINE_API
-String read_new_module_filename();
+path read_new_module_filename();
 
 P4_ENGINE_API
-String read_orig_module_filename_store();
+path read_orig_module_filename_store();
 
 P4_ENGINE_API
-String read_old_module_filename_store();
+path read_old_module_filename_store();
 
 P4_ENGINE_API
-String read_new_module_filename_store();
+path read_new_module_filename_store();
 
 P4_ENGINE_API
-String read_ver_module_filename_store();
+path read_ver_module_filename_store();
 
 P4_ENGINE_API
-void write_module_last_write_time(String game_dir, String module_name);
+void write_module_last_write_time(path game_dir, path module_name);
 
 P4_ENGINE_API
-String prepare_module_for_hotload(String game_dir, String module_name);
+path prepare_module_for_hotload(path game_dir, path module_name);
 
 }

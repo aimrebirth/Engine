@@ -20,37 +20,37 @@ DECLARE_STATIC_LOGGER(logger, "hotpatch");
 namespace polygon4
 {
 
-String read_orig_module_filename()
+path read_orig_module_filename()
 {
     return ::read_orig_module_filename();
 }
 
-String read_old_module_filename()
+path read_old_module_filename()
 {
     return ::read_old_module_filename();
 }
 
-String read_new_module_filename()
+path read_new_module_filename()
 {
     return ::read_new_module_filename();
 }
 
-String read_orig_module_filename_store()
+path read_orig_module_filename_store()
 {
     return make_temp_filename(hotpatch_orig_filename);
 }
 
-String read_old_module_filename_store()
+path read_old_module_filename_store()
 {
     return make_temp_filename(hotpatch_old_filename);
 }
 
-String read_new_module_filename_store()
+path read_new_module_filename_store()
 {
     return make_temp_filename(hotpatch_new_filename);
 }
 
-String read_ver_module_filename_store()
+path read_ver_module_filename_store()
 {
     return make_temp_filename(hotpatch_ver_filename);
 }
@@ -132,7 +132,7 @@ String prepare_module_for_hotload(String game_dir, String module_name)
     if (!exists(main_module_dll))
     {
         LOG_DEBUG(logger, "New module '" << main_module_dll << "' does not exist, cancelling hot load");
-        return L"";
+        return {};
     }
 
     // Check module. If it is not changed, do not reload it.
@@ -143,17 +143,17 @@ String prepare_module_for_hotload(String game_dir, String module_name)
     auto lwt_old = read_ver_module_filename();
 
     LOG_DEBUG(logger, "last_write_time    : " << convert_time(lwt) << " " << lwt);
-    LOG_DEBUG(logger, "last_write_time old: " << convert_time(stoll(lwt_old)) << " " << lwt_old);
+    LOG_DEBUG(logger, "last_write_time old: " << convert_time(std::stoll(lwt_old)) << " " << lwt_old);
 
     if (ec)
     {
         LOG_DEBUG(logger, "Error occured: " << ec.message());
-        return L"";
+        return {};
     }
     if (std::stoll(lwt_old) >= lwt || lwt == 0)
     {
         LOG_DEBUG(logger, "Old module! Nothing to patch...");
-        return L"";
+        return {};
     }
     LOG_DEBUG(logger, "We have a new module. Going to patch...");
 
@@ -246,21 +246,21 @@ String prepare_module_for_hotload(String game_dir, String module_name)
     }
     i--;
 
-    return result.wstring();
+    return result.u8string();
 }
 
 }
 
-std::string &getUe4ModuleName()
+path &getUe4ModuleName()
 {
-    static std::string ue4_module_name;
+    static path ue4_module_name;
     return ue4_module_name;
 }
 
 void *loadSymbol(const char *symbol)
 {
     LOG_TRACE(logger, "loadSymbol: " << symbol << " from module: " << getUe4ModuleName());
-    HMODULE h = LoadLibraryA(getUe4ModuleName().c_str());
+    HMODULE h = LoadLibraryW(getUe4ModuleName().c_str());
     LOG_TRACE(logger, "LoadLibraryA returned: " << h);
     auto s = GetProcAddress(h, symbol);
     LOG_TRACE(logger, "GetProcAddress returned: " << s);

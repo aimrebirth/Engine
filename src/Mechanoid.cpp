@@ -80,7 +80,7 @@ detail::Configuration *Mechanoid::getConfiguration()
     configuration->deepCopyFrom(*initial_configuration);
 
     // to differ from initial configurations in DB Tool
-    configuration->text_id += L" - " + getName();
+    configuration->text_id += u" - " + getName();
 
     // replace pointers
     auto c = replace<Configuration>(configuration.get());
@@ -252,7 +252,7 @@ void Mechanoid::setRating(float r, RatingType type)
 String Mechanoid::getRatingLevelName(RatingType type) const
 {
     auto level = getRatingLevel(type);
-    auto m = (detail::Message*)getEngine()->getObjects()[L"RATING." + std::to_wstring(level)];
+    auto m = (detail::Message*)getEngine()->getObjects()["RATING." + std::to_string(level)];
     if (m->txt)
         return m->txt->string;
     return m->getName();
@@ -296,8 +296,8 @@ void Mechanoid::sell(float money)
 bool Mechanoid::setName(const String &n)
 {
     // name: min 2, max 30 symbols
-    static std::wregex r_name(LR"([\w\d][\w\d-_]+)");
-    if (!std::regex_match(n, r_name) || n.size() > 30)
+    //static std::regex r_name(R"([\w\d][\w\d-_]+)");
+    if (/*!std::regex_match((std::string)n, r_name) || */n.size() > 30)
         return false;
     if (!name)
     {

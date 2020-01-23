@@ -72,7 +72,7 @@ Script *ScriptEngine::getScript(const std::string &name)
             script = std::make_unique<ScriptLua>();
             break;
         default:
-            LOG_FATAL(logger, "This language '" << str(language) << "' is not supported!");
+            LOG_FATAL(logger, "This language '" << (std::string)str(language) << "' is not supported!");
             script = std::make_unique<Script>();
             break;
         }

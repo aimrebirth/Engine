@@ -385,7 +385,7 @@ void BuildingMenu::addTheme(const String &obj)
     if (o)
         addTheme(o);
     else
-        addText(obj + L" reference was not found");
+        addText(obj + u" reference was not found");
 }
 
 void BuildingMenu::addThemeBuilding(const String &obj)
@@ -394,7 +394,7 @@ void BuildingMenu::addThemeBuilding(const String &obj)
     if (o)
         addTheme(o);
     else
-        addText(obj + L" reference was not found");
+        addText(obj + u" reference was not found");
 }
 
 void BuildingMenu::addThemeItem(const String &obj)
@@ -403,7 +403,7 @@ void BuildingMenu::addThemeItem(const String &obj)
     if (o)
         addTheme(o);
     else
-        addText(obj + L" reference was not found");
+        addText(obj + u" reference was not found");
 }
 
 void BuildingMenu::addThemeMessage(const String &obj)
@@ -412,7 +412,7 @@ void BuildingMenu::addThemeMessage(const String &obj)
     if (o)
         addTheme(o);
     else
-        addText(obj + L" reference was not found");
+        addText(obj + u" reference was not found");
 }
 
 void BuildingMenu::addMessage(const detail::Message *m)
@@ -470,7 +470,7 @@ void BuildingMenu::printTitle(const String &t)
 {
     if (t.empty())
         return;
-    auto title = String(BIG_SPACE) + L"<span color=\"yellow\">" + t + L"</>";
+    auto title = String(BIG_SPACE) + u"<span color=\"yellow\">" + t + u"</>";
     printText(title);
 }
 
