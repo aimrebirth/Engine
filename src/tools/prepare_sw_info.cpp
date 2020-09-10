@@ -25,6 +25,7 @@ int main(int argc, char **argv)
 {
     cl::opt<path> output_dir(cl::Positional, cl::Required);
     cl::opt<path> input_json(cl::Positional, cl::Required);
+    cl::opt<path> sw_root(cl::Positional, cl::Required);
     cl::opt<String> main_target(cl::Positional, cl::Required);
 
     cl::ParseCommandLineOptions(argc, argv);
@@ -35,35 +36,51 @@ int main(int argc, char **argv)
 
     auto j = nlohmann::json::parse(read_file(input_json));
 
-    std::function<void(nlohmann::json &)> process_deps;
-    process_deps = [&process_deps, &libs, &defs, &idirs, &j](nlohmann::json &j2)
+    auto prepare_path = [&sw_root](const path &p)
     {
-        if (j2.contains("import_library"))
-            libs.push_back(j2["import_library"]);
-        for (auto &[k, v] : j2["definitions"].items())
+        if (p.is_absolute())
+            return to_string(to_path_string(normalize_path(p)));
+        return to_string(to_path_string(normalize_path(sw_root / p)));
+    };
+
+    std::function<void(nlohmann::json &)> process_deps;
+    process_deps = [&process_deps, &prepare_path, &libs, &defs, &idirs, &j](nlohmann::json &j1)
+    {
+        for (auto &[k, v] : j1.items())
         {
-            if (v.get<String>().empty())
-                defs.push_back(k);
-            else
-                defs.push_back(k + "=" + v.get<String>());
-        }
-        for (auto &v : j2["include_directories"])
-            idirs.push_back(v.get<String>());
-        for (auto &v : j2["system_link_libraries"])
-            libs.push_back(v.get<String>());
-        for (auto &[k,v] : j2["dependencies"]["link"].items())
-        {
-            for (auto &v2 : j["build"][k])
+            if ((std::stoi(k) & 4) == 0)
+                continue;
+            auto &j2 = v;
+            for (auto &[k, v] : j2["definitions"].items())
             {
-                if (v2["key"] == v)
+                if (v.get<String>().empty())
+                    defs.push_back(k);
+                else
+                    defs.push_back(k + "=" + v.get<String>());
+            }
+            for (auto &v : j2["include_directories"])
+                idirs.push_back(prepare_path(v.get<String>()));
+            for (auto &v : j2["link_libraries"])
+                libs.push_back(prepare_path(v.get<String>()));
+            for (auto &v : j2["system_link_libraries"])
+                libs.push_back(v.get<String>());
+            for (auto &droot : j2["dependencies"])
+            {
+                for (auto &[k, v] : droot.items())
                 {
-                    process_deps(v2["value"]);
-                    break;
+                    for (auto &v2 : j["build"][k])
+                    {
+                        if (v2["key"] == v)
+                        {
+                            process_deps(v2["value"]["properties"]);
+                            break;
+                        }
+                    }
                 }
             }
         }
     };
-    process_deps(j["build"][boost::to_lower_copy(String(main_target))][0]["value"]);
+    process_deps(j["build"][boost::to_lower_copy(String(main_target))][0]["value"]["properties"]);
 
     auto write_var = [&output_dir](const String &name, const auto &a)
     {

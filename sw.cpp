@@ -5,7 +5,7 @@ void build(Solution &s)
 
     auto &logger = Engine.addStaticLibrary("logger");
     {
-        logger.CPPVersion = CPPLanguageStandard::CPP17;
+        logger += cpp20;
         logger.setRootDirectory("src/tools");
         logger += "Logger.*"_rr;
         logger.Public += "org.sw.demo.boost.log"_dep;
@@ -14,7 +14,7 @@ void build(Solution &s)
 
     {
         Engine.ApiName = "P4_ENGINE_API";
-        Engine.CPPVersion = CPPLanguageStandard::CPP17;
+        Engine += cpp20;
         Engine += "include/Polygon4/.*"_rr;
         Engine += "src/.*"_r;
         Engine += "src/tools/Hotpatch.*"_rr;
@@ -46,7 +46,7 @@ void build(Solution &s)
 
     auto &pdbfix = Engine.addExecutable("tools.pdbfix");
     {
-        pdbfix += cpp17;
+        pdbfix += cpp20;
         pdbfix += "src/tools/PdbFix.cpp";
         pdbfix += "dbghelp.lib"_slib;
         pdbfix += "pub.egorpugin.primitives.filesystem-master"_dep;
@@ -57,7 +57,7 @@ void build(Solution &s)
 
     auto &prepare_sw_info = Engine.addExecutable("tools.prepare_sw_info", "0.0.1");
     {
-        prepare_sw_info += cpp17;
+        prepare_sw_info += cpp20;
         prepare_sw_info += "src/tools/prepare_sw_info.cpp";
         prepare_sw_info += "pub.egorpugin.primitives.sw.main-master"_dep;
         prepare_sw_info += "org.sw.demo.nlohmann.json"_dep;

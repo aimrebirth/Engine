@@ -246,7 +246,7 @@ String prepare_module_for_hotload(String game_dir, String module_name)
     }
     i--;
 
-    return result.u8string();
+    return to_string(to_path_string(result));
 }
 
 }
