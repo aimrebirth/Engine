@@ -20,6 +20,7 @@
 
 #include <boost/range.hpp>
 
+#include <Polygon4/DataManager/Database.h>
 #include <Polygon4/DataManager/Storage.h>
 #include <Polygon4/Modification.h>
 
@@ -102,11 +103,11 @@ bool Engine::reloadMods()
     return true;
 }
 
-std::shared_ptr<Storage> loadStorage(const path &p)
+static auto loadStorage(Database &db)
 {
-    auto s = initStorage(p.string());
+    auto s = initStorage();
     LOG_DEBUG(logger, "Loading data to storage");
-    s->load();
+    s->load(db, {});
     LOG_TRACE(logger, "Loaded data to storage");
     LOG_TRACE(logger, "Storage ptr is: " << s);
     return s;
@@ -120,7 +121,9 @@ bool Engine::reloadStorage()
 
     try
     {
-        storage = loadStorage(path(getSettings().dirs.mods.c_str()) / DB_FILENAME);
+        auto p = path(getSettings().dirs.mods.c_str()) / DB_FILENAME;
+        auto database = std::make_unique<Database>(p);
+        storage = loadStorage(*database);
     }
     catch (std::exception &e)
     {
@@ -225,7 +228,10 @@ bool Engine::_save(const String &fn) const
     auto old_p = p;
     if (e)
         p = SaveName2path(unique_path().string());
-    storage->save(p.string());
+    auto database = std::make_unique<Database>(p);
+    storage->create(*database);
+    storage->save(*database, {});
+    database->save();
     if (e)
     {
         fs::copy_file(p, old_p, fs::copy_options::overwrite_existing);
@@ -270,7 +276,8 @@ bool Engine::load(const String &fn)
     }
     try
     {
-        auto s = loadStorage(p);
+        auto database = std::make_unique<Database>(p);
+        auto s = loadStorage(*database);
         if (s->saveGames.empty())
         {
             LOG_ERROR(logger, "No mod started in this savegame: " << fn.toString() << ", " << p.string());
@@ -280,7 +287,8 @@ bool Engine::load(const String &fn)
         backupSettings();
 
         // storage is not loaded into the engine
-        storage = s;
+        // we load it
+        storage = std::move(s);
 
         restoreSettings();
         postLoadStorage();

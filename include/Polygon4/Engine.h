@@ -118,7 +118,7 @@ public:
     virtual void spawnCurrentPlayer() override;
 
 protected:
-	std::shared_ptr<Storage> storage;
+	std::unique_ptr<Storage> storage;
     Modification *currentModification = nullptr;
 
     bool _save(const String &fn) const;
