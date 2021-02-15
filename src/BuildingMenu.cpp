@@ -507,7 +507,7 @@ void BuildingMenu::printText(String t)
     boost::algorithm::replace_all(t, L"%QUEST", currentQuest);
 
     text += t;
-    text += SMALL_DELIMETER;
+    text += String(SMALL_DELIMETER);
 }
 
 void BuildingMenu::JournalRecordAdded()

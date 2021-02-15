@@ -17,7 +17,8 @@ void build(Solution &s)
         Engine += cpp20;
         Engine += "include/Polygon4/.*"_rr;
         Engine += "src/.*"_r;
-        Engine += "src/tools/Hotpatch.*"_rr;
+        if (Engine.getBuildSettings().TargetOS.is(OSType::Windows))
+            Engine += "src/tools/Hotpatch.*"_rr;
 
         auto d = Engine.Public + "pub.lzwdgc.polygon4.datamanager.memory-master"_dep;
         //d->getOptions()["alligned-allocator"] = "1";
@@ -29,7 +30,8 @@ void build(Solution &s)
             "pub.lzwdgc.polygon4.datamanager-master"_dep,
             "org.sw.demo.lua"_dep
             ;
-        Engine += "dbghelp.lib"_slib;
+        if (Engine.getBuildSettings().TargetOS.is(OSType::Windows))
+            Engine += "dbghelp.lib"_slib;
 
         {
             String prefix = "ScriptAPI";
@@ -46,6 +48,8 @@ void build(Solution &s)
 
     auto &pdbfix = Engine.addExecutable("tools.pdbfix");
     {
+        if (!pdbfix.getBuildSettings().TargetOS.is(OSType::Windows))
+            pdbfix.HeaderOnly = true;
         pdbfix += cpp20;
         pdbfix += "src/tools/PdbFix.cpp";
         pdbfix += "dbghelp.lib"_slib;
