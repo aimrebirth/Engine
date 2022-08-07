@@ -25,8 +25,8 @@ void build(Solution &s)
         //d->getOptions()["alligned-allocator"].setRequired();
 
         Engine.Public += logger,
-            "pub.egorpugin.primitives.executor-master"_dep,
-            "pub.egorpugin.primitives.command-master"_dep,
+            "pub.egorpugin.primitives.executor"_dep,
+            "pub.egorpugin.primitives.command"_dep,
             "pub.lzwdgc.polygon4.datamanager-master"_dep,
             "org.sw.demo.lua"_dep
             ;
@@ -50,20 +50,23 @@ void build(Solution &s)
     {
         if (!pdbfix.getBuildSettings().TargetOS.is(OSType::Windows))
             pdbfix.HeaderOnly = true;
+        pdbfix.PackageDefinitions = true;
         pdbfix += cpp20;
         pdbfix += "src/tools/PdbFix.cpp";
         pdbfix += "dbghelp.lib"_slib;
-        pdbfix += "pub.egorpugin.primitives.filesystem-master"_dep;
+        pdbfix += "pub.egorpugin.primitives.filesystem"_dep;
     }
 
     auto &fixproject = Engine.addExecutable("tools.fixproject");
+    fixproject.PackageDefinitions = true;
     fixproject += "src/tools/FixProject.cpp";
 
     auto &prepare_sw_info = Engine.addExecutable("tools.prepare_sw_info", "0.0.1");
     {
+        prepare_sw_info.PackageDefinitions = true;
         prepare_sw_info += cpp20;
         prepare_sw_info += "src/tools/prepare_sw_info.cpp";
-        prepare_sw_info += "pub.egorpugin.primitives.sw.main-master"_dep;
+        prepare_sw_info += "pub.egorpugin.primitives.sw.main"_dep;
         prepare_sw_info += "org.sw.demo.nlohmann.json"_dep;
     }
 }

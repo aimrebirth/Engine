@@ -21,7 +21,7 @@ private:
     std::set<T> unique;
 };
 
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
     cl::opt<path> output_dir(cl::Positional, cl::Required);
     cl::opt<path> input_json(cl::Positional, cl::Required);
