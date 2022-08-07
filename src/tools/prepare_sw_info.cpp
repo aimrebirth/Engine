@@ -43,8 +43,9 @@ int main(int argc, char *argv[])
         return to_string(to_path_string(normalize_path(sw_root / p)));
     };
 
-    std::function<void(nlohmann::json &)> process_deps;
-    process_deps = [&process_deps, &prepare_path, &libs, &defs, &idirs, &j](nlohmann::json &j1)
+    std::set<nlohmann::json> visited;
+
+    auto process_deps = [&](this auto &&f, auto &&j1) -> void
     {
         for (auto &[k, v] : j1.items())
         {
@@ -66,13 +67,32 @@ int main(int argc, char *argv[])
                 libs.push_back(v.get<String>());
             for (auto &droot : j2["dependencies"])
             {
-                for (auto &[k, v] : droot.items())
+                for (auto [k, v] : droot.items())
                 {
                     for (auto &v2 : j["build"][k])
                     {
-                        if (v2["key"] == v)
+                        auto kk = v2["key"];
+                        if (visited.contains(k)) {
+                            continue;
+                        }
+                        if (kk == v)
                         {
-                            process_deps(v2["value"]["properties"]);
+                            visited.insert(k);
+                            //std::cerr << "processing " << k << "\n";
+                            f(v2["value"]["properties"]);
+                            break;
+                        }
+
+                        v.erase("include_directories_only");
+                        v.erase("include_directories_only_used_in_hash");
+                        if (visited.contains(k)) {
+                            continue;
+                        }
+                        if (kk == v)
+                        {
+                            visited.insert(k);
+                            //std::cerr << "processing " << k << "\n";
+                            f(v2["value"]["properties"]);
                             break;
                         }
                     }

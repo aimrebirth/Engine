@@ -3,9 +3,11 @@ void build(Solution &s)
     auto &Engine = s.addLibrary("Polygon4.Engine", "master");
     //auto &Engine = s.addSharedLibrary("Polygon4.Engine", "master");
 
+    auto cppstd = cpp23;
+
     auto &logger = Engine.addStaticLibrary("logger");
     {
-        logger += cpp20;
+        logger += cppstd;
         logger.setRootDirectory("src/tools");
         logger += "Logger.*"_rr;
         logger.Public += "org.sw.demo.boost.log"_dep;
@@ -14,7 +16,7 @@ void build(Solution &s)
 
     {
         Engine.ApiName = "P4_ENGINE_API";
-        Engine += cpp20;
+        Engine += cppstd;
         Engine += "include/Polygon4/.*"_rr;
         Engine += "src/.*"_r;
         if (Engine.getBuildSettings().TargetOS.is(OSType::Windows))
@@ -51,7 +53,7 @@ void build(Solution &s)
         if (!pdbfix.getBuildSettings().TargetOS.is(OSType::Windows))
             pdbfix.HeaderOnly = true;
         pdbfix.PackageDefinitions = true;
-        pdbfix += cpp20;
+        pdbfix += cppstd;
         pdbfix += "src/tools/PdbFix.cpp";
         pdbfix += "dbghelp.lib"_slib;
         pdbfix += "pub.egorpugin.primitives.filesystem"_dep;
@@ -64,7 +66,7 @@ void build(Solution &s)
     auto &prepare_sw_info = Engine.addExecutable("tools.prepare_sw_info", "0.0.1");
     {
         prepare_sw_info.PackageDefinitions = true;
-        prepare_sw_info += cpp20;
+        prepare_sw_info += cppstd;
         prepare_sw_info += "src/tools/prepare_sw_info.cpp";
         prepare_sw_info += "pub.egorpugin.primitives.sw.main"_dep;
         prepare_sw_info += "org.sw.demo.nlohmann.json"_dep;
