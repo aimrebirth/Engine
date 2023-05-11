@@ -33,6 +33,7 @@ int main(int argc, char *argv[])
     UniqueVector<String> defs;
     UniqueVector<String> idirs;
     UniqueVector<String> libs;
+    UniqueVector<String> deps;
 
     auto j = nlohmann::json::parse(read_file(input_json));
 
@@ -61,8 +62,10 @@ int main(int argc, char *argv[])
             }
             for (auto &v : j2["include_directories"])
                 idirs.push_back(prepare_path(v.get<String>()));
-            for (auto &v : j2["link_libraries"])
+            for (auto &v : j2["link_libraries"]) {
                 libs.push_back(prepare_path(v.get<String>()));
+                deps.push_back(path{prepare_path(v.get<String>())}.stem().string());
+            }
             for (auto &v : j2["system_link_libraries"])
                 libs.push_back(v.get<String>());
             for (auto &droot : j2["dependencies"])
@@ -112,6 +115,7 @@ int main(int argc, char *argv[])
     write_var("defs", defs);
     write_var("idirs", idirs);
     write_var("libs", libs);
+    write_var("deps", deps);
 
     return 0;
 }
