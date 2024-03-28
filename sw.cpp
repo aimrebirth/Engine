@@ -10,6 +10,7 @@ void build(Solution &s)
         logger += cppstd;
         logger.setRootDirectory("src/tools");
         logger += "Logger.*"_rr;
+        logger.Public += "org.sw.demo.boost.format"_dep;
         logger.Public += "org.sw.demo.boost.log"_dep;
         logger.Public += "USE_LOGGER"_def;
     }
